@@ -1,0 +1,111 @@
+buildscript {
+	repositories {
+		mavenLocal()
+		mavenCentral()
+	}
+
+	dependencies {
+		/* See above for the correct groupId */
+		classpath 'org.jooq:jooq-codegen:3.18.3'
+		classpath 'mysql:mysql-connector-java:8.0.13'
+	}
+}
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.0.6'
+	id 'io.spring.dependency-management' version '1.1.0'
+	id 'org.asciidoctor.jvm.convert' version '3.3.2'
+}
+
+group = 'com.fooddiary'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('testcontainersVersion', "1.18.0")
+	set('snippetsDir', file("build/generated-snippets"))
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation ('org.springframework.boot:spring-boot-starter-jooq') {
+		exclude group: 'org.jooq', module: 'jooq'
+	}
+	// https://mvnrepository.com/artifact/org.jooq/jooq
+	implementation group: 'org.jooq', name: 'jooq', version: '3.18.3'
+
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:mysql'
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+	testImplementation "org.testcontainers:mysql:1.17.2"
+	testImplementation "org.testcontainers:testcontainers:1.17.2"
+
+	// https://mvnrepository.com/artifact/org.jetbrains/annotations
+	implementation group: 'org.jetbrains', name: 'annotations', version: '24.0.1'
+
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+	}
+}
+
+tasks.named('test') {
+	outputs.dir snippetsDir
+	useJUnitPlatform()
+}
+
+tasks.named('asciidoctor') {
+	inputs.dir snippetsDir
+	dependsOn test
+}
+
+import org.jooq.codegen.GenerationTool
+import org.jooq.meta.jaxb.*
+
+abstract class GenerateJooqCode extends DefaultTask {
+	@Input
+	String projectPath
+
+	@TaskAction
+	def generate() {
+		GenerationTool.generate(new Configuration()
+				.withJdbc(new Jdbc()
+						.withDriver('com.mysql.cj.jdbc.Driver')
+						.withUrl('jdbc:mysql://localhost/my_food_diary_book_test?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false')
+						.withUser('root')
+						.withPassword('1212'))
+				.withGenerator(new Generator()
+						.withDatabase(new Database().withInputSchema("my_food_diary_book_test"))
+						.withGenerate(new Generate()
+								.withPojos(true)
+								.withDaos(true))
+						.withTarget(new Target()
+								.withPackageName('com.fooddiary.api.jooq')
+								.withDirectory(projectPath+ '/src/main/java'))))
+		println 'codegen end, dir:' + projectPath
+	}
+}
+
+tasks.register('generateJooqCode', GenerateJooqCode) {
+	projectPath = projectDir.toPath().toString()
+}
