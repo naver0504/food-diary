@@ -11,7 +11,11 @@ testcontainers
 
 ## 빌드 전에 할일
 ### jooq codeGen으로 JOOQ에서 쓰일 class들을 생성해야 한다.
-.\gradlew -q generateJooqCode
+`.\gradlew -q generateJooqCode`
+## 실행하려면 project 폴더에서 다음을 입력후 
+`gradlew bootJar` 
+## build/libs 폴더에 가서 생성된 jar를 다음과 같이 profile 에 맞게 실행하면 된다.
+`java -jar api-0.0.1-SNAPSHOT.jar --spring.profiles.active=production`
 
 ## test시 주의점
 ### docker가 실행중이어야 합니다.

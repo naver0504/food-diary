@@ -38,4 +38,4 @@ out/
 
 
 ### jooqCode ###
-/com/fooddiary/api/jooq/
+!**/com/fooddiary/api/jooq/
