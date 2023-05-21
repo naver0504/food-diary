@@ -29,7 +29,7 @@ public class FileStorageService {
      */
     public byte[] getObject(final String key) throws IOException {
         // todo - mysql이용하여 s3용 key값으로 변환해야 함
-        final S3ObjectId s3ObjectId = new S3ObjectId(bucket, "production/lesserafim.JPG");
+        final S3ObjectId s3ObjectId = new S3ObjectId(bucket, key);
         final GetObjectRequest objectRequest = new GetObjectRequest(s3ObjectId);
         final InputStream inputStream = amazonS3.getObject(objectRequest).getObjectContent();
         final int length = (int) amazonS3.getObject(objectRequest).getObjectMetadata().getContentLength();

@@ -45,7 +45,10 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.jooq/jooq
 	implementation group: 'org.jooq', name: 'jooq', version: '3.18.3'
 	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
-	implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.468'
+	implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.471'
+	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-ses
+	implementation group: 'com.amazonaws', name: 'aws-java-sdk-ses', version: '1.12.471'
+
 
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
