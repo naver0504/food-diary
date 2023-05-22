@@ -53,7 +53,7 @@ public class AwsConfigTest {
     static final String SUBJECT = "Amazon SES test (AWS SDK for Java)";
 
     // The HTML body for the email.
-    static final String HTMLBODY = "<h1>Amazon SES test (AWS SDK for Java)</h1>"
+    static final String HTMLBODY = "<h1>테스트 Amazon SES test (AWS SDK for Java)</h1>"
             + "<p>This email was sent with <a href='https://aws.amazon.com/ses/'>"
             + "Amazon SES</a> using the <a href='https://aws.amazon.com/sdk-for-java/'>"
             + "AWS SDK for Java</a>";
@@ -101,7 +101,7 @@ public class AwsConfigTest {
 
     }
 
-    //@Test
+    @Test
     void mainSendTest() {
         try {
             BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);

@@ -15,9 +15,10 @@ import java.util.logging.Logger;
 public class UserController {
 
 
-    // @GetMapping("/test")
-    public void test() {
+    @GetMapping("/test")
+    public void test() throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         System.out.println(1);
+        throw new Exception("2222");
     }
 }

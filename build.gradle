@@ -97,7 +97,7 @@ abstract class GenerateJooqCode extends DefaultTask {
 		GenerationTool.generate(new Configuration()
 				.withJdbc(new Jdbc()
 						.withDriver('com.mysql.cj.jdbc.Driver')
-						.withUrl('jdbc:mysql://database-1.cgrwvnezm0bf.us-east-2.rds.amazonaws.com/my_food_diarybook?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false')
+						.withUrl('jdbc:mysql://my-food-diarybook.cuvruxzyxphr.ap-northeast-2.rds.amazonaws.com/my_food_diarybook?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false')
 						.withUser('my_food_diary')
 						.withPassword('myfooddiary2'))
 				.withGenerator(new Generator()
