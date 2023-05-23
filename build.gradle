@@ -48,6 +48,10 @@ dependencies {
 	implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.471'
 	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-ses
 	implementation group: 'com.amazonaws', name: 'aws-java-sdk-ses', version: '1.12.471'
+	// https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail
+	implementation group: 'com.sun.mail', name: 'jakarta.mail', version: '2.0.1'
+
+
 
 
 

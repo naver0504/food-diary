@@ -23,9 +23,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/css/**", "/images/**", "/js/**");
     }
 
+    /*
     @Override
     public void extendHandlerExceptionResolvers(List<HandlerExceptionResolver> resolvers) {
-        resolvers.add(exceptionHandler);
+        // exceptionHandler 가 이미 component 로 등록되어서 중복 이벤트 발생됩니다.
+       // resolvers.add(exceptionHandler);
     }
-
+*/
 }
