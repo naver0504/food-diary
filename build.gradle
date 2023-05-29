@@ -44,6 +44,12 @@ dependencies {
 	}
 	// https://mvnrepository.com/artifact/org.jooq/jooq
 	implementation group: 'org.jooq', name: 'jooq', version: '3.18.3'
+	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
+	implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.471'
+	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-ses
+	implementation group: 'com.amazonaws', name: 'aws-java-sdk-ses', version: '1.12.471'
+	// https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail
+	implementation group: 'com.sun.mail', name: 'jakarta.mail', version: '2.0.1'
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -91,7 +97,7 @@ abstract class GenerateJooqCode extends DefaultTask {
 		GenerationTool.generate(new Configuration()
 				.withJdbc(new Jdbc()
 						.withDriver('com.mysql.cj.jdbc.Driver')
-						.withUrl('jdbc:mysql://database-1.cgrwvnezm0bf.us-east-2.rds.amazonaws.com/my_food_diarybook?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false')
+						.withUrl('jdbc:mysql://my-food-diarybook.cuvruxzyxphr.ap-northeast-2.rds.amazonaws.com/my_food_diarybook?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false')
 						.withUser('my_food_diary')
 						.withPassword('myfooddiary2'))
 				.withGenerator(new Generator()
