@@ -1,16 +1,3 @@
-buildscript {
-	repositories {
-		mavenLocal()
-		mavenCentral()
-	}
-
-	dependencies {
-		/* See above for the correct groupId */
-		classpath 'org.jooq:jooq-codegen:3.18.3'
-		classpath 'mysql:mysql-connector-java:8.0.13'
-	}
-}
-
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.0.6'
@@ -39,11 +26,6 @@ ext {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation ('org.springframework.boot:spring-boot-starter-jooq') {
-		exclude group: 'org.jooq', module: 'jooq'
-	}
-	// https://mvnrepository.com/artifact/org.jooq/jooq
-	implementation group: 'org.jooq', name: 'jooq', version: '3.18.3'
 	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
 	implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.471'
 	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-ses
@@ -52,6 +34,7 @@ dependencies {
 	implementation group: 'com.sun.mail', name: 'jakarta.mail', version: '2.0.1'
 	// https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
 	implementation 'com.google.code.findbugs:jsr305:3.0.2'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -85,35 +68,4 @@ tasks.named('test') {
 tasks.named('asciidoctor') {
 	inputs.dir snippetsDir
 	dependsOn test
-}
-
-import org.jooq.codegen.GenerationTool
-import org.jooq.meta.jaxb.*
-
-abstract class GenerateJooqCode extends DefaultTask {
-	@Input
-	String projectPath
-
-	@TaskAction
-	def generate() {
-		GenerationTool.generate(new Configuration()
-				.withJdbc(new Jdbc()
-						.withDriver('com.mysql.cj.jdbc.Driver')
-						.withUrl('jdbc:mysql://my-food-diarybook.cuvruxzyxphr.ap-northeast-2.rds.amazonaws.com/my_food_diarybook?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false')
-						.withUser('my_food_diary')
-						.withPassword('myfooddiary2'))
-				.withGenerator(new Generator()
-						.withDatabase(new Database().withInputSchema("my_food_diarybook"))
-						.withGenerate(new Generate()
-								.withPojos(true)
-								.withDaos(true))
-						.withTarget(new Target()
-								.withPackageName('com.fooddiary.api.jooq')
-								.withDirectory(projectPath+ '/src/main/java'))))
-		println 'codegen end, dir:' + projectPath
-	}
-}
-
-tasks.register('generateJooqCode', GenerateJooqCode) {
-	projectPath = projectDir.toPath().toString()
 }

@@ -1,0 +1,21 @@
+# default profile
+spring:
+  profiles:
+    active: local
+  # exclude logging
+  security:
+    user:
+      password: password
+
+cloud:
+  aws:
+    credentials:
+      accessKey: AKIARTXXBLOWWNKTV4GJ
+      secretKey: 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
+    s3:
+      bucket: my.food.diarybook
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+
