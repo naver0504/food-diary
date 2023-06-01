@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 public class UserRepositoryTest {
 
     @Autowired
