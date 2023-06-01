@@ -4,7 +4,7 @@
 ## 사용기술
 jdk 17   
 Spring boot   
-JPA
+JPA   
 MySQL 8.0   
 AWS EC2, S3   
 testcontainers
