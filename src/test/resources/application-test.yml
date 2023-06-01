@@ -1,0 +1,25 @@
+
+spring:
+  datasource:
+    url: jdbc:tc:mysql:8.0.32://localhost/my_food_diarybook?serverTimezone=Asia/Tokyo&useCursorFetch=true&useSSL=false&zeroDateTimeBehavior=convertToNull&characterEncoding=UTF-8&user=test&password=1234&TC_INITSCRIPT=file:src/test/resources/data/testcontainer-init.sql
+    username: test
+    password: 1234
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 3
+      connection-timeout: 10000
+      connection-test-sql: select 1
+
+
+# exclude logging
+  security:
+    user:
+      password: password
+
+  jpa:
+    database: mysql
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
