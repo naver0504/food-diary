@@ -4,14 +4,11 @@
 ## 사용기술
 jdk 17   
 Spring boot   
-JOOQ   
+JPA
 MySQL 8.0   
 AWS EC2, S3   
 testcontainers
 
-## 빌드 전에 할일
-### jooq codeGen으로 JOOQ에서 쓰일 class들을 생성해야 한다.
-`.\gradlew -q generateJooqCode`
 ## 실행하려면 project 폴더에서 다음을 입력후 
 `gradlew bootJar` 
 ## build/libs 폴더에 가서 생성된 jar를 다음과 같이 profile 에 맞게 실행하면 된다.
