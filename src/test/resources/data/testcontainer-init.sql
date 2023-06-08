@@ -2,6 +2,7 @@ CREATE TABLE `user` (
   `id` int NOT NULL AUTO_INCREMENT,
   `pw` varchar(1000) DEFAULT NULL,
   `name` varchar(200) NOT NULL,
+  `status` enum('active','delete','suspended') DEFAULT NULL,
   `email` varchar(1000) NOT NULL,
   `create_path` enum('google','kakao','none') NOT NULL DEFAULT 'none',
   `create_at` datetime DEFAULT CURRENT_TIMESTAMP,
