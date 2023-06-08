@@ -1,16 +1,20 @@
 package com.fooddiary.api.repository;
 
-import com.fooddiary.api.entity.CreatePath;
-import com.fooddiary.api.entity.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fooddiary.api.entity.user.CreatePath;
+import com.fooddiary.api.entity.user.Status;
+import com.fooddiary.api.entity.user.User;
 
-@SpringBootTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = Replace.NONE)
 @ActiveProfiles("test")
 public class UserRepositoryTest {
 
@@ -20,11 +24,14 @@ public class UserRepositoryTest {
     @Test
     @Transactional
     void query_test() {
-        User user = new User();
-        user.setCreatePath(CreatePath.GOOGLE);
+        final User user = new User();
         user.setEmail("jasuil@daum.net");
         user.setName("성일짱");
+
         userRepository.save(user);
-        Assertions.assertNotEquals(userRepository.count(), 0);
+
+        Assertions.assertEquals(user.getCreatePath(), CreatePath.NONE);
+        Assertions.assertEquals(user.getStatus(), Status.ACTIVE);
+        Assertions.assertNotNull(user.getCreateAt());
     }
 }

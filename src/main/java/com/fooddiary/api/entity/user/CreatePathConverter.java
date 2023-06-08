@@ -1,14 +1,17 @@
-package com.fooddiary.api.entity;
+package com.fooddiary.api.entity.user;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 import java.util.stream.Stream;
 
-@Converter(autoApply = true)
+import javax.annotation.Nullable;
+
+@Converter
 public class CreatePathConverter implements AttributeConverter<CreatePath, String> {
 
     @Override
+    @Nullable
     public String convertToDatabaseColumn(CreatePath category) {
         if (category == null) {
             return null;
@@ -17,6 +20,7 @@ public class CreatePathConverter implements AttributeConverter<CreatePath, Strin
     }
 
     @Override
+    @Nullable
     public CreatePath convertToEntityAttribute(String code) {
         if (code == null) {
             return null;
