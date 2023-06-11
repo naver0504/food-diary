@@ -32,6 +32,12 @@ dependencies {
 	implementation group: 'com.amazonaws', name: 'aws-java-sdk-ses', version: '1.12.471'
 	// https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail
 	implementation group: 'com.sun.mail', name: 'jakarta.mail', version: '2.0.1'
+	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-dynamodb
+	implementation group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.12.479'
+	// https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb-enhanced
+	implementation group: 'software.amazon.awssdk', name: 'dynamodb-enhanced', version: '2.20.77'
+
+
 	// https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
 	implementation 'com.google.code.findbugs:jsr305:3.0.2'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
