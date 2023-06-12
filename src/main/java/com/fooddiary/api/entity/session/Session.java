@@ -16,7 +16,6 @@ public class Session {
     @ManyToOne
     @JoinColumn(name="user_id")
     private User user;
-    private String userEmail;
     @Column(nullable = false, updatable = false)
     private LocalDateTime createAt;
     private LocalDateTime terminateAt;

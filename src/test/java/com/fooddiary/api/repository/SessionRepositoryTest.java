@@ -1,26 +1,22 @@
 package com.fooddiary.api.repository;
 
-import com.fooddiary.api.common.config.SecurityConfig;
-import com.fooddiary.api.entity.session.Session;
-import com.fooddiary.api.entity.user.CreatePath;
-import com.fooddiary.api.entity.user.Status;
-import com.fooddiary.api.entity.user.User;
-import jakarta.persistence.EntityManager;
-import org.junit.Assert;
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
+import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.User;
+
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("local")
 public class SessionRepositoryTest {
 
     @Autowired
@@ -44,17 +40,22 @@ public class SessionRepositoryTest {
 
         userRepository.save(user);
 
-        Session session = new Session();
-        session.setToken(passwordEncoder.encode(user.getEmail()+LocalDateTime.now().plusDays(1)));
+        final Session session = new Session();
+        session.setToken(passwordEncoder.encode(user.getEmail() + LocalDateTime.now().plusDays(1)));
         session.setTerminateAt(LocalDateTime.now().plusDays(1));
         session.setUser(user);
 
         sessionRepository.save(session);
 
+        // 다음 조회 전에 commit 해야 join이 동기화 된다.
         entityManager.flush();
         entityManager.clear();
 
-        user = userRepository.findById(session.getUser().getId()).orElseGet(() -> new User());
+        user = userRepository.findById(session.getUser().getId()).orElseGet(User::new);
         Assertions.assertNotNull(user);
+        // fetch lazy
+        Assertions.assertEquals(user.getSession().size(), 1);
+        Assertions.assertTrue(sessionRepository.findByToken(session.getToken()).getTerminateAt()
+                                               .isAfter(LocalDateTime.now()));
     }
 }
