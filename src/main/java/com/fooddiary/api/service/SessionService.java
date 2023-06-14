@@ -27,8 +27,16 @@ public class SessionService {
         return sessionRepository.save(session);
     }
 
-    public boolean isValid(String token) {
-        final Session session =  sessionRepository.findByToken(token);
+    public Session getSession(Integer userId, String token) {
+        return sessionRepository.findByUserIdAndTokenAndTerminateAtGreaterThanEqual(userId, token,
+                                                                                    LocalDateTime.now());
+    }
+
+    public boolean isValidToken(String token) {
+        return isValidSession(sessionRepository.findByToken(token));
+    }
+
+    public boolean isValidSession(Session session) {
         if (session == null) {return false;}
         return !LocalDateTime.now().isAfter(session.getTerminateAt());
     }

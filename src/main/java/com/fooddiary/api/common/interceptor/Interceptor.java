@@ -1,5 +1,6 @@
 package com.fooddiary.api.common.interceptor;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,9 +14,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.fooddiary.api.FileStorageService;
+import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Interceptor implements HandlerInterceptor {
 
+    private  static final String MAIL_NAME = "email";
+    private static final String TOKEN_NAME = "token";
     private final FileStorageService fileStorageService;
     private final UserService userService;
-    private final Set<String> bypassUri = new HashSet<>() {{
+    private final Set<String> bypassUri = new HashSet<>() {
+        @Serial
+        private static final long serialVersionUID = 924643924179276764L;
+        {
         add("/user/new");
     }};
 
@@ -36,16 +42,14 @@ public class Interceptor implements HandlerInterceptor {
 
         if (bypassUri.contains(request.getRequestURI())) {return true;}
 
-        Cookie[] cookies = request.getCookies();
-        // userService.isValid();
+        final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
 
-        String key = "test";
-        String principal = "user";
-        ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
+        if (user == null) {return false;}
+        final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
         simpleGrantedAuthority.add(new SimpleGrantedAuthority("all"));
-        RememberMeAuthenticationToken usernamePasswordAuthenticationToken = new RememberMeAuthenticationToken(
-                key, principal, simpleGrantedAuthority);
-        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+        final RememberMeAuthenticationToken userDataAuthenticationTokenByEmail = new RememberMeAuthenticationToken(
+                user.getEmail(), user, simpleGrantedAuthority);
+        SecurityContextHolder.getContext().setAuthentication(userDataAuthenticationTokenByEmail);
 
         return true;
     }

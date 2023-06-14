@@ -1,10 +1,19 @@
 package com.fooddiary.api.service;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.fooddiary.api.dto.UserDto;
 import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.UserRepository;
 
@@ -19,7 +28,8 @@ public class UserService {
 
     public String createUser(UserDto userDto) {
         final User user = new User();
-        user.setEmail(user.getEmail());
+        user.setEmail(userDto.getEmail());
+        user.setName(userDto.getName());
         user.setPw(passwordEncoder.encode(userDto.getPassword()));
         userRepository.save(user);
 
@@ -33,10 +43,25 @@ public class UserService {
      * 2. kakao, google 등 외부로 가입한 경우 access token 만료를 확인
      * @param email request header 에서 가져옴
      * @param token request header 에서 가져옴
-     * @return 유효하면 true
+     * @return 유효하면 User 객체반환
      */
-    public boolean isValid(String email, String token) {
+    @Nullable
+    public User getValidUser(String email, String token) {
         // todo
-        return true;
+        if (!StringUtils.hasText(email) || !StringUtils.hasText(token)) {return null;}
+
+        List<User> userList = userRepository.findByEmail(email);
+        userList = userList.stream().filter(u -> u.getStatus() == Status.ACTIVE).collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(userList)) {return null;}
+
+        final Session session = sessionService.getSession(userList.get(0).getId(), token);
+
+        if (session != null) {
+            userList.get(0).setSession(List.of(session));
+            return userList.get(0);
+        }
+
+        return null;
     }
 }

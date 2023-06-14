@@ -25,7 +25,6 @@ public class UserController {
     public void test() throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         System.out.println(1);
-        throw new Exception("2222");
     }
 
     @PostMapping("/new")
