@@ -16,7 +16,7 @@ import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 public class SessionRepositoryTest {
 
     @Autowired

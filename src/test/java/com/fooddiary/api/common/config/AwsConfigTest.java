@@ -26,7 +26,7 @@ import com.amazonaws.services.s3.AmazonS3;
  * aws에 직접 접속하여 테스트하므로 pr전 자동화 테스트에는 포함시키지 않도록 합니다.
  */
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
 public class AwsConfigTest {
 
