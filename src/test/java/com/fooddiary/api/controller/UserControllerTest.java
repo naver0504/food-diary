@@ -1,5 +1,6 @@
 package com.fooddiary.api.controller;
 
+import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ExtendWith({RestDocumentationExtension.class, SpringExtension.class})
-@ActiveProfiles("test")
+@ActiveProfiles(Profiles.TEST)
 public class UserControllerTest {
 
     @MockBean
@@ -42,18 +43,18 @@ public class UserControllerTest {
 
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
+        mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(documentationConfiguration(restDocumentation)).build();
         given(interceptor.preHandle(any(), any(), any())).willReturn(true);
     }
 
     @Test
     void test() throws Exception {
-        HttpHeaders httpHeaders = new HttpHeaders();
+        final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
 
-        this.mockMvc.perform(get("/user/test")
+        mockMvc.perform(get("/user/test")
                         .contentType(MediaType.APPLICATION_JSON)
                         .headers(httpHeaders))
                 .andExpect(status().isOk())
@@ -63,7 +64,7 @@ public class UserControllerTest {
     @Test
     void create_user() throws Exception {
         given(userService.createUser(any())).willReturn("2$asdf1g1");
-        String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
+        final String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
         this.mockMvc.perform(post("/user/new")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))

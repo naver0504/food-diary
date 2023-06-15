@@ -10,13 +10,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.entity.session.Session;
 import com.fooddiary.api.entity.user.User;
 
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles(Profiles.TEST)
 public class SessionRepositoryTest {
 
     @Autowired
