@@ -22,6 +22,7 @@ public class ExceptionHandler implements HandlerExceptionResolver {
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response,
                                          Object handler, Exception ex) {
 
+        /*
         final String username = "jasuil1212@gmail.com";
         final String password = "vyyqzspyrhfmzivy";
 
@@ -55,6 +56,8 @@ public class ExceptionHandler implements HandlerExceptionResolver {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+         */
 
         return null;
     }
