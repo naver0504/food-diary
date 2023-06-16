@@ -1,8 +1,14 @@
 package com.fooddiary.api.controller;
 
-import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.service.UserService;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,17 +25,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fooddiary.api.common.constants.Profiles;
+import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.response.CreateUserResponseDto;
+import com.fooddiary.api.service.UserService;
 
+/**
+ * 컨트롤러 계층에 대한 테스트 입니다. API 문서생성도 같이하고 있습니다.
+ */
 @SpringBootTest
-@ExtendWith({RestDocumentationExtension.class, SpringExtension.class})
+@ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
 @ActiveProfiles(Profiles.TEST)
 public class UserControllerTest {
 
@@ -44,7 +50,7 @@ public class UserControllerTest {
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(documentationConfiguration(restDocumentation)).build();
+                                 .apply(documentationConfiguration(restDocumentation)).build();
         given(interceptor.preHandle(any(), any(), any())).willReturn(true);
     }
 
@@ -55,22 +61,26 @@ public class UserControllerTest {
         httpHeaders.add("token", "asdf");
 
         mockMvc.perform(get("/user/test")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .headers(httpHeaders))
-                .andExpect(status().isOk())
-                .andDo(document("test"));
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .headers(httpHeaders))
+               .andExpect(status().isOk())
+               .andDo(document("test"));
     }
 
     @Test
     void create_user() throws Exception {
         given(userService.createUser(any())).willReturn("2$asdf1g1");
         final String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
-        this.mockMvc.perform(post("/user/new")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpectAll(status().isOk(),
-                        content().string("2$asdf1g1"))
-                .andDo(document("create user"));
+        final CreateUserResponseDto createUserResponseDto = new CreateUserResponseDto();
+        createUserResponseDto.setToken("2$asdf1g1");
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(post("/user/new")
+                                     .contentType(MediaType.APPLICATION_JSON)
+                                     .content(body))
+                    .andExpectAll(status().isOk(),
+                                  content().json(objectMapper.writeValueAsString(createUserResponseDto)))
+                    .andDo(document("create user"));
     }
 
 }

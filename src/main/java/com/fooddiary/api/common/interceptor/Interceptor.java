@@ -25,16 +25,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Interceptor implements HandlerInterceptor {
 
-    private  static final String MAIL_NAME = "email";
+    private static final String MAIL_NAME = "email";
     private static final String TOKEN_NAME = "token";
     private final FileStorageService fileStorageService;
     private final UserService userService;
     private final Set<String> bypassUri = new HashSet<>() {
         @Serial
         private static final long serialVersionUID = 924643924179276764L;
+
         {
-        add("/user/new");
-    }};
+            add("/");
+            add("/index.html"); // 두 path /, /index.html 는 상태확인용으로 넣었습니다.
+            add("/user/new");
+        }
+    };
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -47,8 +51,9 @@ public class Interceptor implements HandlerInterceptor {
         if (user == null) {return false;}
         final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
         simpleGrantedAuthority.add(new SimpleGrantedAuthority("all"));
-        final RememberMeAuthenticationToken userDataAuthenticationTokenByEmail = new RememberMeAuthenticationToken(
-                user.getEmail(), user, simpleGrantedAuthority);
+        final RememberMeAuthenticationToken userDataAuthenticationTokenByEmail =
+                new RememberMeAuthenticationToken(
+                        user.getEmail(), user, simpleGrantedAuthority);
         SecurityContextHolder.getContext().setAuthentication(userDataAuthenticationTokenByEmail);
 
         return true;

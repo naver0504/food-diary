@@ -1,4 +1,4 @@
-package com.fooddiary.api.dto;
+package com.fooddiary.api.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +7,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class UserDto {
+public class CreateUserRequestDto {
     private String email;
     private String name;
     private String password;

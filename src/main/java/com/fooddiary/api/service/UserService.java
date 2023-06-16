@@ -1,6 +1,5 @@
 package com.fooddiary.api.service;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.fooddiary.api.dto.UserDto;
+import com.fooddiary.api.dto.request.CreateUserRequestDto;
 import com.fooddiary.api.entity.session.Session;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
@@ -26,7 +25,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
 
-    public String createUser(UserDto userDto) {
+    public String createUser(CreateUserRequestDto userDto) {
         final User user = new User();
         user.setEmail(userDto.getEmail());
         user.setName(userDto.getName());

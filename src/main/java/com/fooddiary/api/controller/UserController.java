@@ -9,11 +9,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fooddiary.api.dto.UserDto;
+import com.fooddiary.api.dto.request.CreateUserRequestDto;
+import com.fooddiary.api.dto.response.CreateUserResponseDto;
 import com.fooddiary.api.service.UserService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
@@ -21,15 +24,18 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/test")
+    @GetMapping("/test") // 이것은 나중에 지우도록 하겠습니다.
     public void test() throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println(1);
+        log.debug("call /test");
     }
 
     @PostMapping("/new")
-    public ResponseEntity<String> createUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<CreateUserResponseDto> createUser(@RequestBody
+                                                            CreateUserRequestDto userDto) {
         final String token = userService.createUser(userDto);
-        return ResponseEntity.ok(token);
+        final CreateUserResponseDto createUserResponseDto = new CreateUserResponseDto();
+        createUserResponseDto.setToken(token);
+        return ResponseEntity.ok(createUserResponseDto);
     }
 }
