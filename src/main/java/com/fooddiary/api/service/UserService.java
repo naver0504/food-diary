@@ -1,22 +1,20 @@
 package com.fooddiary.api.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-
+import com.fooddiary.api.dto.request.UserRequestDto;
+import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Status;
+import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.fooddiary.api.dto.request.CreateUserRequestDto;
-import com.fooddiary.api.entity.session.Session;
-import com.fooddiary.api.entity.user.Status;
-import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.repository.UserRepository;
-
-import lombok.RequiredArgsConstructor;
+import javax.annotation.Nullable;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +23,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
 
-    public String createUser(CreateUserRequestDto userDto) {
+    public String createUser(UserRequestDto userDto) {
         final User user = new User();
         user.setEmail(userDto.getEmail());
         user.setName(userDto.getName());
@@ -33,6 +31,19 @@ public class UserService {
         userRepository.save(user);
 
         final Session session = sessionService.createSession(user);
+        return session.getToken();
+    }
+
+    public String loginUser(UserRequestDto userDto) {
+        User user = userRepository.findByEmailAndStatus(userDto.getEmail(), Status.ACTIVE);
+        if (user == null || !passwordEncoder.matches(userDto.getPassword(), user.getPw())) return null;
+        List<Session> sessionList = user.getSession();
+
+        if (sessionList.size() > 10) {
+            sessionList.stream().sorted(Comparator.comparing(Session::getTerminateAt).reversed()).skip(10).forEach(sessionService::deleteSession);
+        }
+
+        Session session = sessionService.createSession(user);
         return session.getToken();
     }
 

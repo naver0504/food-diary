@@ -1,6 +1,7 @@
 package com.fooddiary.api.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
@@ -9,6 +10,7 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fooddiary.api.entity.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +30,7 @@ import org.springframework.web.context.WebApplicationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.response.CreateUserResponseDto;
+import com.fooddiary.api.dto.response.UserResponseDto;
 import com.fooddiary.api.service.UserService;
 
 /**
@@ -55,31 +57,32 @@ public class UserControllerTest {
     }
 
     @Test
-    void test() throws Exception {
+    void isLogin() throws Exception {
+        given(userService.getValidUser(anyString(), anyString())).willReturn(new User());
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
 
-        mockMvc.perform(get("/user/test")
+        mockMvc.perform(get("/user/is-login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .headers(httpHeaders))
                .andExpect(status().isOk())
-               .andDo(document("test"));
+               .andDo(document("is login"));
     }
 
     @Test
     void create_user() throws Exception {
         given(userService.createUser(any())).willReturn("2$asdf1g1");
         final String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
-        final CreateUserResponseDto createUserResponseDto = new CreateUserResponseDto();
-        createUserResponseDto.setToken("2$asdf1g1");
+        final UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setToken("2$asdf1g1");
         final ObjectMapper objectMapper = new ObjectMapper();
 
         mockMvc.perform(post("/user/new")
                                      .contentType(MediaType.APPLICATION_JSON)
                                      .content(body))
                     .andExpectAll(status().isOk(),
-                                  content().json(objectMapper.writeValueAsString(createUserResponseDto)))
+                                  content().json(objectMapper.writeValueAsString(userResponseDto)))
                     .andDo(document("create user"));
     }
 

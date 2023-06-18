@@ -1,15 +1,13 @@
 package com.fooddiary.api.service;
 
-import java.time.LocalDateTime;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.fooddiary.api.entity.session.Session;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.SessionRepository;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -32,12 +30,7 @@ public class SessionService {
                                                                                     LocalDateTime.now());
     }
 
-    public boolean isValidToken(String token) {
-        return isValidSession(sessionRepository.findByToken(token));
-    }
-
-    public boolean isValidSession(Session session) {
-        if (session == null) {return false;}
-        return !LocalDateTime.now().isAfter(session.getTerminateAt());
+    public void deleteSession(Session session) {
+        sessionRepository.delete(session);
     }
 }

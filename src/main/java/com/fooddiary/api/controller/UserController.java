@@ -1,20 +1,15 @@
 package com.fooddiary.api.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.fooddiary.api.dto.request.CreateUserRequestDto;
-import com.fooddiary.api.dto.response.CreateUserResponseDto;
+import com.fooddiary.api.dto.request.UserRequestDto;
+import com.fooddiary.api.dto.response.UserResponseDto;
+import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
-
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -22,20 +17,32 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UserController {
 
+    private static final String MAIL_NAME = "email";
+    private static final String TOKEN_NAME = "token";
     private final UserService userService;
 
-    @GetMapping("/test") // 이것은 나중에 지우도록 하겠습니다.
-    public void test() throws Exception {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        log.debug("call /test");
+    @GetMapping("/is-login")
+    public ResponseEntity<HttpStatus> isLogin(HttpServletRequest request) {
+        User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
+        return user == null ? ResponseEntity.badRequest().build() : ResponseEntity.ok().build();
+        
     }
 
     @PostMapping("/new")
-    public ResponseEntity<CreateUserResponseDto> createUser(@RequestBody
-                                                            CreateUserRequestDto userDto) {
+    public ResponseEntity<UserResponseDto> createUser(@RequestBody
+                                                      UserRequestDto userDto) {
         final String token = userService.createUser(userDto);
-        final CreateUserResponseDto createUserResponseDto = new CreateUserResponseDto();
-        createUserResponseDto.setToken(token);
-        return ResponseEntity.ok(createUserResponseDto);
+        final UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setToken(token);
+        return ResponseEntity.ok(userResponseDto);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponseDto> loginUser(@RequestBody
+                                                                UserRequestDto userDto) {
+        final String token = userService.loginUser(userDto);
+        final UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setToken(token);
+        return ResponseEntity.ok(userResponseDto);
     }
 }

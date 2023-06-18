@@ -1,10 +1,11 @@
 package com.fooddiary.api.common.interceptor;
 
-import java.io.Serial;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-
+import com.fooddiary.api.FileStorageService;
+import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,13 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.fooddiary.api.FileStorageService;
-import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.service.UserService;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import java.io.Serial;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -37,6 +35,9 @@ public class Interceptor implements HandlerInterceptor {
             add("/");
             add("/index.html"); // 두 path /, /index.html 는 상태확인용으로 넣었습니다.
             add("/user/new");
+            add("/user/login");
+            add("/user/info");
+            add("/user/is-login");
         }
     };
 

@@ -7,6 +7,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class CreateUserResponseDto {
+public class UserResponseDto {
     private String token;
 }
