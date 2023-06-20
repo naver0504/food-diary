@@ -1,15 +1,11 @@
 package com.fooddiary.api.entity.user;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
+import com.fooddiary.api.entity.session.Session;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,12 +26,15 @@ public class User {
     @Convert(converter = CreatePathConverter.class)
     private CreatePath createPath;
     @Column(nullable = false, updatable = false)
-    private Timestamp createAt;
-    private Timestamp updateAt;
+    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
+
+    @OneToMany(mappedBy = "user")
+    private List<Session> session = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
-        createAt = createAt == null ? Timestamp.valueOf(LocalDateTime.now()) : createAt;
+        createAt = createAt == null ? LocalDateTime.now() : createAt;
         status = status == null ? Status.ACTIVE : status;
         createPath = createPath == null ? CreatePath.NONE : createPath;
     }

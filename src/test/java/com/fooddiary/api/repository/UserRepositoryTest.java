@@ -9,13 +9,14 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.entity.user.CreatePath;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)
-@ActiveProfiles("test")
+@ActiveProfiles(Profiles.TEST)
 public class UserRepositoryTest {
 
     @Autowired

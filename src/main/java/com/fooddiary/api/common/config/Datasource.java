@@ -14,6 +14,14 @@ import com.zaxxer.hikari.HikariDataSource;
 
 @Configuration
 public class Datasource {
+    @Value("${spring.datasource.url}")
+    private String url;
+    @Value("${spring.datasource.username}")
+    private String username;
+    @Value("${spring.datasource.password}")
+    private String password;
+    @Value("${spring.datasource.driver-class-name}")
+    private String driverClassName;
     @Value("${spring.datasource.hikari.maximum-pool-size}")
     private int maxPoolSize;
     @Value("${spring.datasource.hikari.minimum-idle}")
@@ -27,10 +35,10 @@ public class Datasource {
     public DataSource setDataSource(DataSourceProperties dataSourceProperties) throws SQLException {
 
         HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setJdbcUrl(dataSourceProperties.getUrl());
-        hikariConfig.setUsername(dataSourceProperties.getUsername());
-        hikariConfig.setDriverClassName(dataSourceProperties.getDriverClassName());
-        hikariConfig.setPassword(dataSourceProperties.getPassword());
+        hikariConfig.setJdbcUrl(url);
+        hikariConfig.setUsername(username);
+        hikariConfig.setPassword(password);
+        hikariConfig.setDriverClassName(driverClassName);
         hikariConfig.setConnectionTimeout(connectionTimeout);
         hikariConfig.setMaximumPoolSize(maxPoolSize);
         hikariConfig.setMinimumIdle(minIdle);
