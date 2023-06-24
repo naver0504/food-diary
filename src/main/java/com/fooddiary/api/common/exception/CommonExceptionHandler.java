@@ -1,24 +1,25 @@
 package com.fooddiary.api.common.exception;
 
-import io.micrometer.common.util.StringUtils;
-import jakarta.mail.Message;
-import jakarta.mail.PasswordAuthentication;
-import jakarta.mail.Session;
-import jakarta.mail.Transport;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerExceptionResolver;
-import org.springframework.web.servlet.ModelAndView;
-
+import com.fooddiary.api.dto.response.ErrorResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.ModelAndView;
 
-import java.util.Properties;
+@Slf4j
+@ControllerAdvice
+public class CommonExceptionHandler {
+    @ExceptionHandler(RuntimeException.class)
+    protected ResponseEntity<ErrorResponseDto> RuntimeExceptionHandler(RuntimeException e) {
+        log.error("handleMethodArgumentNotValidException", e);
+        final ErrorResponseDto response = new ErrorResponseDto("system error");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
-@Component
-public class ExceptionHandler implements HandlerExceptionResolver {
-    @Override
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response,
                                          Object handler, Exception ex) {
 
