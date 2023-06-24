@@ -1,3 +1,4 @@
+# https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html
 # default profile
 spring:
   profiles:
@@ -6,6 +7,19 @@ spring:
   security:
     user:
       password: password
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+server:
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    max-connections: 8192
+    accept-count: 100 
+    connection-timeout: 10000 # 10초 대기 스레드는 타임아웃
+  port: 8080
 
 cloud:
   aws:
