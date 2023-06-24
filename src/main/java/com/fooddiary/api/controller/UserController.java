@@ -1,6 +1,7 @@
 package com.fooddiary.api.controller;
 
-import com.fooddiary.api.dto.request.UserRequestDto;
+import com.fooddiary.api.dto.request.UserLoginRequestDto;
+import com.fooddiary.api.dto.request.UserNewRequestDto;
 import com.fooddiary.api.dto.response.UserResponseDto;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
@@ -25,12 +26,11 @@ public class UserController {
     public ResponseEntity<HttpStatus> isLogin(HttpServletRequest request) {
         User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
         return user == null ? ResponseEntity.badRequest().build() : ResponseEntity.ok().build();
-        
     }
 
     @PostMapping("/new")
     public ResponseEntity<UserResponseDto> createUser(@RequestBody
-                                                      UserRequestDto userDto) {
+                                                      UserNewRequestDto userDto) {
         final String token = userService.createUser(userDto);
         final UserResponseDto userResponseDto = new UserResponseDto();
         userResponseDto.setToken(token);
@@ -39,10 +39,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<UserResponseDto> loginUser(@RequestBody
-                                                                UserRequestDto userDto) {
-        final String token = userService.loginUser(userDto);
-        final UserResponseDto userResponseDto = new UserResponseDto();
-        userResponseDto.setToken(token);
-        return ResponseEntity.ok(userResponseDto);
+                                                     UserLoginRequestDto userDto) {
+        return ResponseEntity.ok(userService.loginUser(userDto));
     }
 }

@@ -1,6 +1,8 @@
 package com.fooddiary.api.service;
 
-import com.fooddiary.api.dto.request.UserRequestDto;
+import com.fooddiary.api.dto.request.UserLoginRequestDto;
+import com.fooddiary.api.dto.request.UserNewRequestDto;
+import com.fooddiary.api.dto.response.UserResponseDto;
 import com.fooddiary.api.entity.session.Session;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
@@ -23,7 +25,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
 
-    public String createUser(UserRequestDto userDto) {
+    public String createUser(UserNewRequestDto userDto) {
         final User user = new User();
         user.setEmail(userDto.getEmail());
         user.setName(userDto.getName());
@@ -34,9 +36,17 @@ public class UserService {
         return session.getToken();
     }
 
-    public String loginUser(UserRequestDto userDto) {
+    public UserResponseDto loginUser(UserLoginRequestDto userDto) {
+        UserResponseDto userResponseDto = new UserResponseDto();
         User user = userRepository.findByEmailAndStatus(userDto.getEmail(), Status.ACTIVE);
-        if (user == null || !passwordEncoder.matches(userDto.getPassword(), user.getPw())) return null;
+
+        if (user == null){
+            userResponseDto.setStatus(UserResponseDto.Status.INVALID_USER);
+            return userResponseDto;
+        } else if (!passwordEncoder.matches(userDto.getPassword(), user.getPw())) {
+            userResponseDto.setStatus(UserResponseDto.Status.INVALID_PASSWORD);
+            return userResponseDto;
+        }
         List<Session> sessionList = user.getSession();
 
         if (sessionList.size() > 10) {
@@ -44,7 +54,10 @@ public class UserService {
         }
 
         Session session = sessionService.createSession(user);
-        return session.getToken();
+        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+        userResponseDto.setToken(session.getToken());
+
+        return userResponseDto;
     }
 
     /**
