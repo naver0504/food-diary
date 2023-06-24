@@ -9,4 +9,9 @@ import lombok.ToString;
 @ToString
 public class UserResponseDto {
     private String token;
+    private Status status;
+
+    public enum Status {
+        SUCCESS, INVALID_USER, INVALID_PASSWORD
+    }
 }

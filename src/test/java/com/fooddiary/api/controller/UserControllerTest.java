@@ -108,11 +108,12 @@ public class UserControllerTest {
         userNewRequestDto.setEmail("jasuil@daum.net");
         userNewRequestDto.setPassword("1212");
         final String token = "2$asdf1g1";
-
-        given(userService.loginUser(any())).willReturn(token);
-
         final UserResponseDto userResponseDto = new UserResponseDto();
         userResponseDto.setToken(token);
+        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+
+        given(userService.loginUser(any())).willReturn(userResponseDto);
+
         final ObjectMapper objectMapper = new ObjectMapper();
 
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/login")
