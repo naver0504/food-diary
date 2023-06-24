@@ -1,6 +1,7 @@
 package com.fooddiary.api.controller;
 
-import com.fooddiary.api.dto.request.UserRequestDto;
+import com.fooddiary.api.dto.request.UserLoginRequestDto;
+import com.fooddiary.api.dto.request.UserNewRequestDto;
 import com.fooddiary.api.dto.response.UserResponseDto;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
@@ -30,7 +31,7 @@ public class UserController {
 
     @PostMapping("/new")
     public ResponseEntity<UserResponseDto> createUser(@RequestBody
-                                                      UserRequestDto userDto) {
+                                                      UserNewRequestDto userDto) {
         final String token = userService.createUser(userDto);
         final UserResponseDto userResponseDto = new UserResponseDto();
         userResponseDto.setToken(token);
@@ -39,7 +40,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<UserResponseDto> loginUser(@RequestBody
-                                                                UserRequestDto userDto) {
+                                                     UserLoginRequestDto userDto) {
         final String token = userService.loginUser(userDto);
         final UserResponseDto userResponseDto = new UserResponseDto();
         userResponseDto.setToken(token);
