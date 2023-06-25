@@ -1,20 +1,13 @@
 package com.fooddiary.api.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.timeout;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fooddiary.api.common.constants.Profiles;
+import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.UserLoginRequestDto;
+import com.fooddiary.api.dto.response.ErrorResponseDto;
+import com.fooddiary.api.dto.response.UserResponseDto;
+import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,13 +29,19 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.UserNewRequestDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
-import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.service.UserService;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.timeout;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * 컨트롤러 계층에 대한 테스트 입니다. API 문서생성도 같이하고 있습니다.
@@ -70,7 +69,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void isLogin() throws Exception {
+    void is_login() throws Exception {
         given(userService.getValidUser(anyString(), anyString())).willReturn(new User());
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
@@ -137,6 +136,35 @@ public class UserControllerTest {
         Assertions.assertEquals(servletLoginRequest.size(), 1);
         Assertions.assertEquals(servletLoginRequest.get(0).getEmail(), userNewRequestDto.getEmail());
         Assertions.assertEquals(servletLoginRequest.get(0).getPassword(), userNewRequestDto.getPassword());
+    }
+
+    /**
+     * 서버에러 응답값의 문서화를 위한 테스트
+     */
+    @Test
+    void login_error() throws Exception {
+        final UserLoginRequestDto userNewRequestDto = new UserLoginRequestDto();
+        userNewRequestDto.setEmail("jasuil@daum.net");
+        userNewRequestDto.setPassword("1212");
+        final ErrorResponseDto errorResponseDto = new ErrorResponseDto("system error");
+
+        given(userService.loginUser(any())).willThrow(new RuntimeException("test"));
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/login")
+                        .contentType(
+                                MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        userNewRequestDto)))
+                .andDo(document("error response"))
+                .andReturn()
+                .getResponse();
+
+        Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR.value());
+        Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
+                objectMapper.writeValueAsString(errorResponseDto));
     }
 
 }
