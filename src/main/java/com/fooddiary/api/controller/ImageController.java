@@ -22,6 +22,11 @@ public class ImageController {
         dayImageService.saveImage(imageCreateDto.getMultipartFile(), imageCreateDto.getLocalDateTime());
     }
 
+
+    /***
+     * /image?year=2023,month=6,day=30
+     *
+     */
     @GetMapping("/image")
     public ResponseEntity<DayImageDtos> showImage(@RequestParam int year, @RequestParam int month, @RequestParam int day) {
         List<DayImageDto> dayImageDto = dayImageService.getDayImage(year, month, day);

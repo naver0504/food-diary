@@ -39,15 +39,24 @@ public class DayImageService {
         DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day);
         List<Image> images = imageService.storeImage(files, dateTime);
 
+        /***
+         * 해당 날짜에 사진들이 있는 지 확인
+         * 있다면 사진들을 추가하고 첫 번째 사진 썸네일로
+         * 없다면 해당 날짜 이미지 엔티티 생성 후 사진 썸네일 설정
+         */
         if (dayImage == null) {
             DayImage newDayImage = DayImage.createDayImage(images, dateTime);
-            dayImageRepository.save(dayImage);
+            dayImageRepository.save(newDayImage);
+            newDayImage.setThumbNailImage(images.get(0));
         } else {
             for (Image image : images) {
                 dayImage.getImages().add(image);
             }
             dayImage.setThumbNailImage(images.get(0));
+
         }
+
+
     }
 
     /***

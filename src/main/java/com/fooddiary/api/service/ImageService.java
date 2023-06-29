@@ -41,6 +41,7 @@ public class ImageService {
         for (MultipartFile file : files) {
 
             String originalFilename = file.getOriginalFilename();
+            //파일 명 겹치면 안되므로 UUID + '-' + 원래 파일 이름으로 저장
             String storeFilename = UUID.randomUUID()+"-"+ originalFilename.split("\\.")[0];
             String ext = originalFilename.split("\\.")[1];
             Image image = Image.createImage(localDateTime, storeFilename);
@@ -49,23 +50,26 @@ public class ImageService {
             //content-type을 지정해서 올려주지 않으면 자동으로 "application/octet-stream"으로 고정이 되서 링크 클릭시 웹에서 열리는게 아니라 자동 다운이 시작됨.
             contentType = getContentType(ext);
 
-            try {
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentType(contentType);
-                amazonS3.putObject(new PutObjectRequest(bucket, storeFilename, file.getInputStream(), metadata)
-                        .withCannedAcl(CannedAccessControlList.PublicRead));
 
-            } catch (AmazonServiceException e) {
-                log.info("AmazonServiceException = {}", e.getMessage());
-                throw new RuntimeException(e.getMessage());
-            } catch (SdkClientException e) {
-                log.info("SdkClientException = {}", e.getMessage());
-                throw new RuntimeException(e.getMessage());
-            }
+                //S3에 저장하는 로직
+                try {
+                    ObjectMetadata metadata = new ObjectMetadata();
+                    metadata.setContentType(contentType);
+                    amazonS3.putObject(new PutObjectRequest(bucket, storeFilename, file.getInputStream(), metadata)
+                            .withCannedAcl(CannedAccessControlList.PublicRead));
 
-                Image saveImage = imageRepository.save(image);
-                images.add(saveImage);
-            }
+                } catch (AmazonServiceException e) {
+                    log.info("AmazonServiceException = {}", e.getMessage());
+                    throw new RuntimeException(e.getMessage());
+                } catch (SdkClientException e) {
+                    log.info("SdkClientException = {}", e.getMessage());
+                    throw new RuntimeException(e.getMessage());
+                }
+
+
+            Image saveImage = imageRepository.save(image);
+            images.add(saveImage);
+        }
         return images;
 
     }
