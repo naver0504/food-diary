@@ -37,9 +37,17 @@ public class DayImage {
     public static DayImage createDayImage(List<Image> images, LocalDateTime dateTime) {
         DayImage dayImage = new DayImage();
         dayImage.time = new Time(dateTime);
-        dayImage.images = images;
+        dayImage.setImages(images);
         dayImage.thumbNailImage = images.get(0);
         return dayImage;
+    }
+
+    public void setImages(List<Image> images) {
+        for (Image image : images) {
+            this.images.add(image);
+            image.setDayImage(this);
+        }
+
     }
 
 

@@ -6,12 +6,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 
 @Repository
 public interface DayImageRepository extends JpaRepository<DayImage, Integer> {
 
     @Query("select d from DayImage d where d.time.year = :year and d.time.month = :month")
-    public DayImage findByYearAndMonth(@Param("year") int year, @Param("month") int month);
+    public List<DayImage> findByYearAndMonth(@Param("year") int year, @Param("month") int month);
 
     @Query("select d from DayImage d " +
             "where d.time.year = :year and d.time.month = :month and d.time.day = :day")

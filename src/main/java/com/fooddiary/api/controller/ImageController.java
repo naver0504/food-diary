@@ -1,7 +1,7 @@
 package com.fooddiary.api.controller;
 import com.fooddiary.api.dto.request.ImageCreateDto;
 import com.fooddiary.api.dto.response.DayImageDto;
-import com.fooddiary.api.dto.response.DayImageDtos;
+import com.fooddiary.api.dto.response.DayImagesDto;
 import com.fooddiary.api.service.DayImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,19 +19,31 @@ public class ImageController {
 
     @PostMapping("/saveImage")
     public void saveImage(@RequestBody ImageCreateDto imageCreateDto) throws IOException {
+
         dayImageService.saveImage(imageCreateDto.getMultipartFile(), imageCreateDto.getLocalDateTime());
     }
 
 
     /***
      * /image?year=2023,month=6,day=30
-     *
+     * 하루 사진 받기
      */
     @GetMapping("/image")
-    public ResponseEntity<DayImageDtos> showImage(@RequestParam int year, @RequestParam int month, @RequestParam int day) {
+    public ResponseEntity<List<DayImageDto>> showImage(@RequestParam int year, @RequestParam int month, @RequestParam int day) {
         List<DayImageDto> dayImageDto = dayImageService.getDayImage(year, month, day);
-        DayImageDtos dayImageDtos = new DayImageDtos(dayImageDto);
-        return ResponseEntity.ok(dayImageDtos);
+        return ResponseEntity.ok(dayImageDto);
+    }
+
+    /***
+     *
+     * /image?year=2023,month=7
+     * 한 달의 사진 받기
+     */
+    @GetMapping("/images")
+    public ResponseEntity<List<DayImagesDto>> showImages(@RequestParam int year, @RequestParam int month) {
+        List<DayImagesDto> dayImages = dayImageService.getDayImages(year, month);
+
+        return ResponseEntity.ok(dayImages);
     }
 
 

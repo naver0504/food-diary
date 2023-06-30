@@ -3,8 +3,10 @@ package com.fooddiary.api.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.dto.response.DayImageDto;
+import com.fooddiary.api.dto.response.DayImagesDto;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Image;
+import com.fooddiary.api.entity.image.Time;
 import com.fooddiary.api.repository.DayImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,13 +49,13 @@ public class DayImageService {
         if (dayImage == null) {
             DayImage newDayImage = DayImage.createDayImage(images, dateTime);
             dayImageRepository.save(newDayImage);
-            newDayImage.setThumbNailImage(images.get(0));
         } else {
-            for (Image image : images) {
-                dayImage.getImages().add(image);
-            }
-            dayImage.setThumbNailImage(images.get(0));
 
+            /**
+             * 변경 감지로 알아서 update 쿼리
+             */
+            dayImage.setImages(images);
+            dayImage.setThumbNailImage(images.get(0));
         }
 
 
@@ -69,14 +71,24 @@ public class DayImageService {
 
         DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day);
         List<Image> images = dayImage.getImages();
-        List<DayImageDto> dayImageDtos = new ArrayList<>();
+        List<DayImageDto> dayImageDto = new ArrayList<>();
         for (Image storedImage : images) {
             URL url = amazonS3.getUrl(bucket, storedImage.getStoredFileName());
             String timeStatus = storedImage.getTimeStatus().getCode();
-            dayImageDtos.add(new DayImageDto(url, timeStatus));
+            dayImageDto.add(new DayImageDto(url, timeStatus));
         }
-        return dayImageDtos;
+        return dayImageDto;
+    }
 
+    public List<DayImagesDto> getDayImages(int year, int month) {
+        List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month);
+        List<DayImagesDto> dayImagesDtos = new ArrayList<>();
+        for (DayImage dayImage : dayImages) {
+            URL url = amazonS3.getUrl(bucket, dayImage.getThumbNailImage().getStoredFileName());
+            Time time = dayImage.getTime();
+            dayImagesDtos.add(new DayImagesDto(url, time));
+        }
+        return dayImagesDtos;
 
     }
 

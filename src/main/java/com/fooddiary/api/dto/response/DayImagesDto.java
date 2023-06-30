@@ -1,0 +1,21 @@
+package com.fooddiary.api.dto.response;
+
+import com.fooddiary.api.entity.image.DayImage;
+import com.fooddiary.api.entity.image.Image;
+import com.fooddiary.api.entity.image.Time;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.net.URL;
+import java.util.List;
+
+@Getter
+@Setter
+@AllArgsConstructor
+public class DayImagesDto {
+
+    URL url;
+    Time time;
+
+}

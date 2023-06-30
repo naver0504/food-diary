@@ -3,13 +3,14 @@ package com.fooddiary.api.entity.image;
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@ToString
+@Setter
 public class Image {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
