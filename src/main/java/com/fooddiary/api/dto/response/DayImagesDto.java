@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DayImagesDto {
 
-    URL url;
+    byte[] bytes;
     Time time;
 
 }

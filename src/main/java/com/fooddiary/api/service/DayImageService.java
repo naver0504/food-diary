@@ -2,13 +2,16 @@ package com.fooddiary.api.service;
 
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.dto.response.DayImageDto;
 import com.fooddiary.api.dto.response.DayImagesDto;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.image.Time;
+import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.DayImageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,22 +26,24 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class DayImageService {
 
     private final DayImageRepository dayImageRepository;
     private final ImageService imageService;
     private final AmazonS3 amazonS3;
+    private final FileStorageService fileStorageService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
     @Transactional
-    public void saveImage(List<MultipartFile> files, LocalDateTime dateTime) throws IOException {
+    public void saveImage(List<MultipartFile> files, LocalDateTime dateTime, User user) throws IOException {
 
         int year = dateTime.getYear();
         int month = dateTime.getMonthValue();
         int day = dateTime.getDayOfMonth();
-        DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day);
+        DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         List<Image> images = imageService.storeImage(files, dateTime);
 
         /***
@@ -48,6 +53,7 @@ public class DayImageService {
          */
         if (dayImage == null) {
             DayImage newDayImage = DayImage.createDayImage(images, dateTime);
+            newDayImage.setUser(user);
             dayImageRepository.save(newDayImage);
         } else {
 
@@ -59,6 +65,7 @@ public class DayImageService {
         }
 
 
+
     }
 
     /***
@@ -67,26 +74,26 @@ public class DayImageService {
      *
      */
 
-    public List<DayImageDto> getDayImage(int year, int month, int day) {
+    public List<DayImageDto> getDayImage(int year, int month, int day, User user) throws IOException {
 
-        DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day);
+        DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         List<Image> images = dayImage.getImages();
         List<DayImageDto> dayImageDto = new ArrayList<>();
         for (Image storedImage : images) {
-            URL url = amazonS3.getUrl(bucket, storedImage.getStoredFileName());
+            byte[] bytes = fileStorageService.getObject(storedImage.getStoredFileName());
             String timeStatus = storedImage.getTimeStatus().getCode();
-            dayImageDto.add(new DayImageDto(url, timeStatus));
+            dayImageDto.add(new DayImageDto(bytes, timeStatus));
         }
         return dayImageDto;
     }
 
-    public List<DayImagesDto> getDayImages(int year, int month) {
-        List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month);
+    public List<DayImagesDto> getDayImages(int year, int month, User user) throws IOException {
+        List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
         List<DayImagesDto> dayImagesDtos = new ArrayList<>();
         for (DayImage dayImage : dayImages) {
-            URL url = amazonS3.getUrl(bucket, dayImage.getThumbNailImage().getStoredFileName());
+            byte[] bytes = fileStorageService.getObject(dayImage.getThumbNailImage().getStoredFileName());
             Time time = dayImage.getTime();
-            dayImagesDtos.add(new DayImagesDto(url, time));
+            dayImagesDtos.add(new DayImagesDto(bytes, time));
         }
         return dayImagesDtos;
 

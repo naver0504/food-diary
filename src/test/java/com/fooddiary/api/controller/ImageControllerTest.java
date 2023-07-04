@@ -1,22 +1,13 @@
 package com.fooddiary.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.ImageCreateDto;
-import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
-import com.fooddiary.api.service.ImageService;
-import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.restdocs.RestDocumentationContextProvider;
@@ -24,16 +15,15 @@ import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -64,24 +54,36 @@ public class ImageControllerTest {
     @Test
     public void storeImage() throws Exception {
 
-        final String contentType = "png"; //파일타입
-        LocalDateTime localDateTime = LocalDateTime.now().minusDays(2);
-        FileInputStream fileInputStream = new FileInputStream("C:\\Users\\qortm\\OneDrive\\사진\\Saved Pictures\\images\\apple.png");
+        //Mock파일생성
         MockMultipartFile image1 = new MockMultipartFile(
                 "apple", //name
-                "apple" + "." + contentType, //originalFilename
-                contentType,
-                fileInputStream
+                "apple.png", //originalFilename
+                "png",
+                new FileInputStream("C:\\Users\\qortm\\OneDrive\\사진\\Saved Pictures\\images\\apple.png")
         );
-        MockHttpServletResponse result = mockMvc.perform(
-                        multipart("/imageTest")
-                                .file(image1)
-                                .param("localDateTime", String.valueOf(localDateTime))
-                ).andReturn()
-                .getResponse();
 
-        System.out.println("result.getContentAsString() = " + result.getContentAsString());
+        MockHttpServletResponse result = mockMvc.perform(
+                multipart("/saveImage")
+                        .file(image1)
+                        .param("localDateTime", LocalDateTime.now().toString())
+        ).andReturn().getResponse();
+
+        String contentAsString = result.getContentAsString();
+
+        System.out.println("contentAsString = " + contentAsString);
+
     }
+
+    @Test
+    public void byteArrayConvertToImageFile(byte[] imageByte) throws IOException {
+
+
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(imageByte);
+        BufferedImage bufferedImage = ImageIO.read(inputStream);
+
+        ImageIO.write(bufferedImage, "png", new File("/var/opt/image.png")); //저장하고자 하는 파일 경로를 입력합니다.
+    }
+
 
 
 }

@@ -34,37 +34,33 @@ public class ImageService {
     private String bucket;
 
     @Transactional
-    public List<Image> storeImage(List<MultipartFile> files, LocalDateTime localDateTime) throws IOException {
+    public List<Image> storeImage(List<MultipartFile> files, LocalDateTime localDateTime)  {
 
         List<Image> images = new ArrayList<>();
 
         for (MultipartFile file : files) {
 
-            String originalFilename = file.getOriginalFilename();
             //파일 명 겹치면 안되므로 UUID + '-' + 원래 파일 이름으로 저장
-            String storeFilename = UUID.randomUUID()+"-"+ originalFilename.split("\\.")[0];
-            String ext = originalFilename.split("\\.")[1];
+
+            String storeFilename = UUID.randomUUID().toString()+"_"+file.getOriginalFilename();
             Image image = Image.createImage(localDateTime, storeFilename);
-            String contentType = "";
-
-            //content-type을 지정해서 올려주지 않으면 자동으로 "application/octet-stream"으로 고정이 되서 링크 클릭시 웹에서 열리는게 아니라 자동 다운이 시작됨.
-            contentType = getContentType(ext);
-
 
                 //S3에 저장하는 로직
-                try {
-                    ObjectMetadata metadata = new ObjectMetadata();
-                    metadata.setContentType(contentType);
-                    amazonS3.putObject(new PutObjectRequest(bucket, storeFilename, file.getInputStream(), metadata)
-                            .withCannedAcl(CannedAccessControlList.PublicRead));
+            try {
+                ObjectMetadata metadata = new ObjectMetadata();
+                amazonS3.putObject(new PutObjectRequest(bucket, storeFilename, file.getInputStream(), metadata)
+                        .withCannedAcl(CannedAccessControlList.PublicRead));
 
-                } catch (AmazonServiceException e) {
-                    log.info("AmazonServiceException = {}", e.getMessage());
-                    throw new RuntimeException(e.getMessage());
-                } catch (SdkClientException e) {
-                    log.info("SdkClientException = {}", e.getMessage());
-                    throw new RuntimeException(e.getMessage());
-                }
+            } catch (AmazonServiceException e) {
+                log.info("AmazonServiceException ", e);
+                throw new RuntimeException(e.getMessage());
+            } catch (SdkClientException e) {
+                log.info("SdkClientException ", e);
+                throw new RuntimeException(e.getMessage());
+            } catch (IOException e) {
+                log.info("IOException ", e);
+                throw new RuntimeException(e.getMessage());
+            }
 
 
             Image saveImage = imageRepository.save(image);
@@ -72,19 +68,6 @@ public class ImageService {
         }
         return images;
 
-    }
-
-    private  String getContentType(String ext) {
-        String contentType = "";
-        switch (ext) {
-            case "jpeg":
-                contentType = "image/jpeg";
-                break;
-            case "png":
-                contentType = "image/png";
-                break;
-        }
-        return contentType;
     }
 
 }

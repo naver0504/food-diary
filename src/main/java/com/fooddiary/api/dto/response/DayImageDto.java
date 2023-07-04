@@ -13,6 +13,6 @@ import java.net.URL;
 @AllArgsConstructor
 public class DayImageDto {
 
-    URL url;
+    byte[] bytes;
     String timeStatus;
 }

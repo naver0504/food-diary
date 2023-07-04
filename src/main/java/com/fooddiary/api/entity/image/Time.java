@@ -13,14 +13,14 @@ import java.time.LocalDateTime;
 @ToString
 public class Time {
 
-    private String year;
-    private String month;
-    private String day;
+    private int year;
+    private int month;
+    private int day;
 
 
     public Time(LocalDateTime dateTime) {
-        this.year = String.valueOf(dateTime.getYear());
-        this.month = String.valueOf(dateTime.getMonth());
-        this.day = String.valueOf(dateTime.getDayOfMonth());
+        this.year = dateTime.getYear();
+        this.month = dateTime.getMonth().getValue();
+        this.day = dateTime.getDayOfMonth();
     }
 }

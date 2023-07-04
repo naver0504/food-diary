@@ -5,6 +5,7 @@ import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@ToString
 public class DayImage {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,6 +49,12 @@ public class DayImage {
             this.images.add(image);
             image.setDayImage(this);
         }
+
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+        user.getDayImages().add(this);
 
     }
 
