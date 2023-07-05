@@ -48,17 +48,15 @@ public class ImageService {
                 //S3에 저장하는 로직
             try {
                 ObjectMetadata metadata = new ObjectMetadata();
-                amazonS3.putObject(new PutObjectRequest(bucket, storeFilename, file.getInputStream(), metadata)
-                        .withCannedAcl(CannedAccessControlList.PublicRead));
-
+                amazonS3.putObject(bucket, storeFilename, file.getInputStream(), metadata);
             } catch (AmazonServiceException e) {
-                log.info("AmazonServiceException ", e);
+                log.error("AmazonServiceException ", e);
                 throw new RuntimeException(e.getMessage());
             } catch (SdkClientException e) {
-                log.info("SdkClientException ", e);
+                log.error("SdkClientException ", e);
                 throw new RuntimeException(e.getMessage());
             } catch (IOException e) {
-                log.info("IOException ", e);
+                log.error("IOException ", e);
                 throw new RuntimeException(e.getMessage());
             }
 

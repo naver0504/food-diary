@@ -27,9 +27,8 @@ public class DayImage {
     @OneToMany(mappedBy = "dayImage", cascade = CascadeType.ALL)
     private List<Image> images = new ArrayList<>();
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "thumb_nail_image_id")
-    private Image thumbNailImage;
+
+    private String thumbNailImagePath;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -40,7 +39,7 @@ public class DayImage {
         DayImage dayImage = new DayImage();
         dayImage.time = new Time(dateTime);
         dayImage.setImages(images);
-        dayImage.thumbNailImage = images.get(0);
+        dayImage.setThumbNailImagePath(images.get(0).getStoredFileName());
         return dayImage;
     }
 

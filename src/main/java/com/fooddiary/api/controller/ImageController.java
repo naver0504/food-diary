@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,9 +35,12 @@ public class ImageController {
     public void saveImage(@RequestPart("files") List<MultipartFile> multipartFiles,
                           @RequestParam("localDateTime") LocalDateTime localDateTime,
                           HttpServletRequest request) throws IOException {
+
         User user = getUser(request);
         dayImageService.saveImage(multipartFiles, localDateTime, user);
     }
+
+
 
     /***
      * /image?year=2023&month=6&day=30
@@ -45,7 +49,7 @@ public class ImageController {
     @GetMapping("/image")
     public ResponseEntity<List<DayImageDto>> showImage(@RequestParam int year, @RequestParam int month,
                                                        @RequestParam int day,  HttpServletRequest request) throws IOException {
-        User user = getUser(request);
+        User user = getUser();
         List<DayImageDto> dayImageDto = dayImageService.getDayImage(year, month, day, user);
         return ResponseEntity.ok(dayImageDto);
     }
@@ -58,11 +62,16 @@ public class ImageController {
     @GetMapping("/images")
     public ResponseEntity<List<DayImagesDto>> showImages(@RequestParam int year, @RequestParam int month,
                                                          HttpServletRequest request) throws IOException {
-        User user = getUser(request);
+        User user = getUser();
         List<DayImagesDto> dayImages = dayImageService.getDayImages(year, month, user);
         return ResponseEntity.ok(dayImages);
     }
 
+
+    private static User getUser() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return user;
+    }
 
     private User getUser(HttpServletRequest request) {
         User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));

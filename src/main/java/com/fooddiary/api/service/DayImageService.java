@@ -61,7 +61,7 @@ public class DayImageService {
              * 변경 감지로 알아서 update 쿼리
              */
             dayImage.setImages(images);
-            dayImage.setThumbNailImage(images.get(0));
+            dayImage.setThumbNailImagePath(images.get(0).getStoredFileName());
         }
 
 
@@ -91,7 +91,7 @@ public class DayImageService {
         List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
         List<DayImagesDto> dayImagesDtos = new ArrayList<>();
         for (DayImage dayImage : dayImages) {
-            byte[] bytes = fileStorageService.getObject(dayImage.getThumbNailImage().getStoredFileName());
+            byte[] bytes = fileStorageService.getObject(dayImage.getThumbNailImagePath());
             Time time = dayImage.getTime();
             dayImagesDtos.add(new DayImagesDto(bytes, time));
         }
