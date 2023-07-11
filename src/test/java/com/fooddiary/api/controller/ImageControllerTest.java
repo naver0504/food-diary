@@ -1,32 +1,24 @@
 package com.fooddiary.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.request.UserNewRequestDto;
 import com.fooddiary.api.dto.response.DayImageDto;
 import com.fooddiary.api.dto.response.SaveImageResponseDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
 import com.fooddiary.api.entity.image.TimeStatus;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.UserRepository;
 import com.fooddiary.api.service.DayImageService;
 import com.fooddiary.api.service.UserService;
-import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -39,26 +31,15 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.timeout;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles(Profiles.TEST)
@@ -110,7 +91,7 @@ public class ImageControllerTest {
                 "files",
                 "apple.png",
                 "image/png",
-                new FileInputStream("C:\\Users\\qortm\\OneDrive\\사진\\Saved Pictures\\images\\apple.png")
+                new FileInputStream("src/test/resources/image/apple.png")
         );
 
         MockMultipartFile jsonFile = new MockMultipartFile("json", "", "application/json", "{\"localDateTime\": \"2021-11-08T11:58:20.551705\n\"}".getBytes());
@@ -147,7 +128,7 @@ public class ImageControllerTest {
         httpHeaders.add("token", token);
 
         List<DayImageDto> dayImageDtos = new ArrayList<>();
-        FileInputStream fileInputStream = new FileInputStream("C:\\Users\\qortm\\OneDrive\\사진\\Saved Pictures\\images\\apple.png");
+        FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
         byte[] bytes = fileInputStream.readAllBytes();
         DayImageDto dayImageDto = new DayImageDto();
         dayImageDto.setBytes(bytes);
