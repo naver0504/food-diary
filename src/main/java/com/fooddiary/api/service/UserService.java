@@ -14,6 +14,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,10 +27,13 @@ public class UserService {
     private final SessionService sessionService;
 
     public String createUser(UserNewRequestDto userDto) {
+        LocalDateTime now = LocalDateTime.now();
         final User user = new User();
         user.setEmail(userDto.getEmail());
         user.setName(userDto.getName());
         user.setPw(passwordEncoder.encode(userDto.getPassword()));
+        user.setPwUpdateAt(now);
+        user.setPwUpdateDelayAt(now);
         userRepository.save(user);
 
         final Session session = sessionService.createSession(user);
