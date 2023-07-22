@@ -3,6 +3,7 @@ package com.fooddiary.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.UserLoginRequestDto;
 import com.fooddiary.api.dto.response.ErrorResponseDto;
 import com.fooddiary.api.dto.response.UserResponseDto;
@@ -48,7 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
-@ActiveProfiles(Profiles.TEST)
+@ActiveProfiles(Profiles.LOCAL)
 public class UserControllerTest {
 
     @MockBean
