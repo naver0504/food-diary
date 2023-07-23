@@ -16,6 +16,6 @@ public class UserResponseDto {
     private Boolean pwExpired;
 
     public enum Status {
-        SUCCESS, INVALID_USER, INVALID_PASSWORD
+        SUCCESS, INVALID_USER, INVALID_PASSWORD, PASSWORD_LIMIT_OVER
     }
 }

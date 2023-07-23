@@ -3,7 +3,6 @@ package com.fooddiary.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.UserLoginRequestDto;
 import com.fooddiary.api.dto.response.ErrorResponseDto;
 import com.fooddiary.api.dto.response.UserResponseDto;
@@ -39,8 +38,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.timeout;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -166,6 +164,24 @@ public class UserControllerTest {
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
                 objectMapper.writeValueAsString(errorResponseDto));
+    }
+
+    @Test
+    void pw_reset() throws Exception {
+        UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+        given(userService.passwordReset()).willReturn(userResponseDto);
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("token", "asdf");
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(put("/user/pw/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .headers(httpHeaders))
+                .andExpectAll(status().isOk(),
+                        content().json(objectMapper.writeValueAsString(userResponseDto)))
+                .andDo(document("reset password"));
     }
 
 }

@@ -43,9 +43,9 @@ public class UserController {
         return ResponseEntity.ok(userService.loginUser(userDto));
     }
 
-    @GetMapping("/pw-reset/{email}")
-    public ResponseEntity<UserResponseDto> passwordReset(@PathVariable(name = "email") String email) {
-        return ResponseEntity.ok(userService.passwordReset(email));
+    @PutMapping("/pw/reset")
+    public ResponseEntity<UserResponseDto> passwordReset() {
+        return ResponseEntity.ok(userService.passwordReset());
     }
 
     @PutMapping("/pw")

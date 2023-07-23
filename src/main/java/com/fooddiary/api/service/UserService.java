@@ -16,6 +16,7 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,6 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
-import java.util.random.RandomGenerator;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -37,6 +37,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
+    @Value("food-diary.pw-try-limit")
+    private Integer pwTryLimit;
+    @Value("food-diary.pw-reset-size")
+    private Integer pwResetSize;
+
 
     public String createUser(UserNewRequestDto userDto) {
         LocalDateTime now = LocalDateTime.now();
@@ -58,6 +63,9 @@ public class UserService {
 
         if (user == null){
             userResponseDto.setStatus(UserResponseDto.Status.INVALID_USER);
+            return userResponseDto;
+        } else if (user.getPwTry() >= pwTryLimit) {
+            userResponseDto.setStatus(UserResponseDto.Status.PASSWORD_LIMIT_OVER);
             return userResponseDto;
         } else if (!passwordEncoder.matches(userDto.getPassword(), user.getPw())) {
             userResponseDto.setStatus(UserResponseDto.Status.INVALID_PASSWORD);
@@ -119,15 +127,16 @@ public class UserService {
         return userList.get(0);
     }
 
-    public UserResponseDto passwordReset(String email) {
+    public UserResponseDto passwordReset() {
         UserResponseDto userResponseDto = new UserResponseDto();
+        User user = (User) SecurityContextHolder.getContext().getAuthentication();
+        user = getValidUser(user.getEmail());
 
-        User user = getValidUser(email);
         if (user == null) {
             userResponseDto.setStatus(UserResponseDto.Status.INVALID_USER);
         } else {
             // pw reset
-            String tempPw = Random.RandomString(10);
+            String tempPw = Random.RandomString(pwResetSize);
 
             final String username = "jasuil1212@gmail.com";
             final String password = "vyyqzspyrhfmzivy";
@@ -152,7 +161,7 @@ public class UserService {
                 message.setFrom(new InternetAddress("jasuil1212@gmail.com"));
                 message.setRecipients(
                         Message.RecipientType.TO,
-                        InternetAddress.parse(email)
+                        InternetAddress.parse(user.getEmail())
                 );
                 message.setSubject("식사일기 임시 비밀번호입니다.");
                 String origin = "임시비밀번호: " + tempPw;
