@@ -31,7 +31,7 @@ create table day_image (
     day integer not null,
     month integer not null,
     year integer not null,
-    thumb_nail_image_id integer,
+    thumb_nail_image_path varchar(255),
     user_id integer,
     primary key (day_image_id)
 ) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
