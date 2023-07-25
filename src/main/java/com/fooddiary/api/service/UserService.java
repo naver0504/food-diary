@@ -127,7 +127,7 @@ public class UserService {
         return userList.get(0);
     }
 
-    public UserResponseDto passwordReset() {
+    public UserResponseDto resetPw() {
         UserResponseDto userResponseDto = new UserResponseDto();
         User user = (User) SecurityContextHolder.getContext().getAuthentication();
         user = getValidUser(user.getEmail());
@@ -178,21 +178,21 @@ public class UserService {
         return userResponseDto;
     }
 
-    public void updatePw(String pw) throws BizException {
-        pw = pw.trim();
-        if (pw.length() < 8) throw new BizException("pw length is short");
+    public void updatePw(String newPw) throws BizException {
+        newPw = newPw.trim();
+        if (newPw.length() < 8) throw new BizException("pw length is short");
         boolean isSymbol = false;
         boolean isAlphabet = false;
         boolean isDigit = false;
-        for (int i = 0; i < pw.length(); i++) {
-            if (!isAlphabet && Character.isAlphabetic(pw.charAt(i))) isAlphabet = true;
-            if (!isDigit && Character.isDigit(pw.charAt(i))) isDigit = true;
-            if (!isSymbol && String.valueOf(pw.charAt(i)).matches("[^a-zA-Z0-9\\s]")) isSymbol = true;
+        for (int i = 0; i < newPw.length(); i++) {
+            if (!isAlphabet && Character.isAlphabetic(newPw.charAt(i))) isAlphabet = true;
+            if (!isDigit && Character.isDigit(newPw.charAt(i))) isDigit = true;
+            if (!isSymbol && String.valueOf(newPw.charAt(i)).matches("[^a-zA-Z0-9\\s]")) isSymbol = true;
         }
         if (!isAlphabet || !isDigit || !isSymbol) throw new BizException("invalid pw");
 
         User user = (User) SecurityContextHolder.getContext().getAuthentication();
-        user.setPw(pw);
+        user.setPw(newPw);
         userRepository.save(user);
     }
 }

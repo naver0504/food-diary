@@ -44,12 +44,13 @@ public class UserController {
     }
 
     @PutMapping("/pw/reset")
-    public ResponseEntity<UserResponseDto> passwordReset() {
-        return ResponseEntity.ok(userService.passwordReset());
+    public ResponseEntity<UserResponseDto> resetPw() {
+        return ResponseEntity.ok(userService.resetPw());
     }
 
-    @PutMapping("/pw")
-    public void updatePw(@RequestBody String pw) {
-        userService.updatePw(pw);
+    @PutMapping("/pw/{new-pw}")
+    public ResponseEntity updatePw(@PathVariable(name = "new-pw") String newPw) {
+        userService.updatePw(newPw);
+        return ResponseEntity.ok().build();
     }
 }
