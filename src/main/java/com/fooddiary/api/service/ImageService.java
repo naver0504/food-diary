@@ -55,9 +55,9 @@ public class ImageService {
                 ObjectMetadata metadata = new ObjectMetadata();
 
                 String dirPath = String.valueOf(userId) + '/';
-                int count = dayImageRepository.getDayImageBy(userId);
+                int count = dayImageRepository.getDayImageCount(userId);
                 if(count == 0) {
-                    amazonS3.putObject(bucket, String.valueOf(userId) + "/", new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
+                    amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
                 }
                 amazonS3.putObject(bucket, dirPath+storeFilename, file.getInputStream(), metadata);
             } catch (AmazonServiceException e) {

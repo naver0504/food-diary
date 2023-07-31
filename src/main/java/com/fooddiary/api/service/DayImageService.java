@@ -83,7 +83,7 @@ public class DayImageService {
         for (Image storedImage : images) {
             byte[] bytes;
             try {
-                bytes = fileStorageService.getObject(dirPath+storedImage.getStoredFileName());
+                bytes = fileStorageService.getObject(dirPath + storedImage.getStoredFileName());
             } catch (IOException e) {
                 log.error("IOException ", e);
                 throw new RuntimeException(e);
