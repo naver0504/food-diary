@@ -1,6 +1,5 @@
 package com.fooddiary.api.entity.image;
 
-import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,12 +7,15 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 
+
 @Entity
 @Getter
 @Setter
+@ToString
 public class Image {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false)
@@ -25,6 +27,7 @@ public class Image {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "day_image_id")
     private DayImage dayImage;
+
 
     public void setTimeStatus(LocalDateTime dateTime) {
         this.timeStatus = TimeStatus.getTime(dateTime);

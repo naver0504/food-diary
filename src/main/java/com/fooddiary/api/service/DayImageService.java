@@ -1,7 +1,6 @@
 package com.fooddiary.api.service;
 
 
-import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.dto.response.DayImageDto;
 import com.fooddiary.api.dto.response.DayImagesDto;
@@ -30,19 +29,19 @@ public class DayImageService {
 
     private final DayImageRepository dayImageRepository;
     private final ImageService imageService;
-    private final AmazonS3 amazonS3;
     private final FileStorageService fileStorageService;
 
 
     @Transactional
-    public SaveImageResponseDto saveImage(List<MultipartFile> files, LocalDateTime dateTime, User user) {
+    public SaveImageResponseDto saveImage(List<MultipartFile> files, LocalDateTime dateTime,User user) {
+
 
 
         int year = dateTime.getYear();
         int month = dateTime.getMonthValue();
         int day = dateTime.getDayOfMonth();
         DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
-        List<Image> images = imageService.storeImage(files, dateTime);
+        List<Image> images = imageService.storeImage(files, dateTime, user);
 
         /***
          * 해당 날짜에 사진들이 있는 지 확인
@@ -79,11 +78,12 @@ public class DayImageService {
         DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         List<Image> images = dayImage.getImages();
         List<DayImageDto> dayImageDto = new ArrayList<>();
+        String dirPath = user.getId() + "/";
 
         for (Image storedImage : images) {
-            byte[] bytes = new byte[0];
+            byte[] bytes;
             try {
-                bytes = fileStorageService.getObject(storedImage.getStoredFileName());
+                bytes = fileStorageService.getObject(dirPath+storedImage.getStoredFileName());
             } catch (IOException e) {
                 log.error("IOException ", e);
                 throw new RuntimeException(e);
@@ -97,10 +97,11 @@ public class DayImageService {
     public List<DayImagesDto> getDayImages(int year, int month, User user)  {
         List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
         List<DayImagesDto> dayImagesDtos = new ArrayList<>();
+        String dirPath = user.getId() + "/";
         for (DayImage dayImage : dayImages) {
-            byte[] bytes = new byte[0];
+            byte[] bytes;
             try {
-                bytes = fileStorageService.getObject(dayImage.getThumbNailImagePath());
+                bytes = fileStorageService.getObject(dirPath + dayImage.getThumbNailImagePath());
             } catch (IOException e) {
                 log.error("IOException ", e);
                 throw new RuntimeException(e);

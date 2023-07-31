@@ -5,6 +5,8 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fooddiary.api.entity.image.Image;
+import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.repository.DayImageRepository;
 import com.fooddiary.api.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,6 +29,7 @@ import java.util.UUID;
 public class ImageService {
 
     private final ImageRepository imageRepository;
+    private final DayImageRepository dayImageRepository;
 
     private final AmazonS3 amazonS3;
 
@@ -32,7 +37,7 @@ public class ImageService {
     private String bucket;
 
     @Transactional
-    public List<Image> storeImage(List<MultipartFile> files, LocalDateTime localDateTime)  {
+    public List<Image> storeImage(List<MultipartFile> files, LocalDateTime localDateTime, User user)  {
 
         List<Image> images = new ArrayList<>();
 
@@ -42,11 +47,19 @@ public class ImageService {
 
             String storeFilename = UUID.randomUUID().toString()+"_"+file.getOriginalFilename();
             Image image = Image.createImage(localDateTime, storeFilename);
+            int userId = user.getId();
 
-                //S3에 저장하는 로직
+
+            //S3에 저장하는 로직
             try {
                 ObjectMetadata metadata = new ObjectMetadata();
-                amazonS3.putObject(bucket, storeFilename, file.getInputStream(), metadata);
+
+                String dirPath = String.valueOf(userId) + '/';
+                int count = dayImageRepository.getDayImageBy(userId);
+                if(count == 0) {
+                    amazonS3.putObject(bucket, String.valueOf(userId) + "/", new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
+                }
+                amazonS3.putObject(bucket, dirPath+storeFilename, file.getInputStream(), metadata);
             } catch (AmazonServiceException e) {
                 log.error("AmazonServiceException ", e);
                 throw new RuntimeException(e.getMessage());

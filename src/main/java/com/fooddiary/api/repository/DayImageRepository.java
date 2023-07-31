@@ -20,6 +20,10 @@ public interface DayImageRepository extends JpaRepository<DayImage, Integer> {
     public DayImage findByYearAndMonthAndDay(@Param("year") int year,
                                              @Param("month") int month, @Param("day") int day, @Param("userId") int userId);
 
+    @Query("select count(*) from DayImage d where d.user.id = :userId")
+    public int getDayImageBy(@Param("userId") int userId);
+
+
 
 
 }
