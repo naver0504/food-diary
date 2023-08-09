@@ -12,9 +12,9 @@ public enum TimeStatus {
         this.code = code;
     }
 
-    public static TimeStatus getTime(LocalDateTime dateTime) {
-        int hour = dateTime.getHour();
-        int minute = dateTime.getMinute();
+    public static TimeStatus getTime(final LocalDateTime dateTime) {
+        final int hour = dateTime.getHour();
+        final int minute = dateTime.getMinute();
 
         if (hour >= 21 || hour < 4) {
             return TimeStatus.LATESNACK;

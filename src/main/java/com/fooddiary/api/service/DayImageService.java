@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.fooddiary.api.dto.response.SaveImageResponseDto.*;
+
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
@@ -33,15 +35,15 @@ public class DayImageService {
 
 
     @Transactional
-    public SaveImageResponseDto saveImage(List<MultipartFile> files, LocalDateTime dateTime,User user) {
+    public SaveImageResponseDto saveImage(final List<MultipartFile> files, final LocalDateTime dateTime,final User user) {
 
 
 
-        int year = dateTime.getYear();
-        int month = dateTime.getMonthValue();
-        int day = dateTime.getDayOfMonth();
-        DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
-        List<Image> images = imageService.storeImage(files, dateTime, user);
+        final int year = dateTime.getYear();
+        final int month = dateTime.getMonthValue();
+        final int day = dateTime.getDayOfMonth();
+        final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
+        final List<Image> images = imageService.storeImage(files, dateTime, user);
 
         /***
          * 해당 날짜에 사진들이 있는 지 확인
@@ -49,21 +51,24 @@ public class DayImageService {
          * 없다면 해당 날짜 이미지 엔티티 생성 후 사진 썸네일 설정
          */
         if (dayImage == null) {
-            DayImage newDayImage = DayImage.createDayImage(images, dateTime);
+            final DayImage newDayImage = DayImage.createDayImage(images, dateTime);
             newDayImage.setUser(user);
+
             dayImageRepository.save(newDayImage);
         } else {
 
             /**
              * 변경 감지로 알아서 update 쿼리
              */
+
             dayImage.setImages(images);
-            dayImage.setThumbNailImagePath(images.get(0).getStoredFileName());
+            dayImage.updateThumbNailImageName(images.get(0).getStoredFileName());
         }
 
-        SaveImageResponseDto saveImageResponseDto = new SaveImageResponseDto();
-        saveImageResponseDto.setStatus(SaveImageResponseDto.Status.SUCCESS);
-        return saveImageResponseDto;
+
+        return SaveImageResponseDto.builder()
+                .status(Status.SUCCESS)
+                .build();
 
     }
 
@@ -75,10 +80,10 @@ public class DayImageService {
 
     public List<DayImageDto> getDayImage(int year, int month, int day, User user) {
 
-        DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
-        List<Image> images = dayImage.getImages();
-        List<DayImageDto> dayImageDto = new ArrayList<>();
-        String dirPath = user.getId() + "/";
+        final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
+        final List<Image> images = dayImage.getImages();
+        final List<DayImageDto> dayImageDto = new ArrayList<>();
+        final String dirPath = ImageUtils.getDirPath(user);
 
         for (Image storedImage : images) {
             byte[] bytes;
@@ -88,16 +93,22 @@ public class DayImageService {
                 log.error("IOException ", e);
                 throw new RuntimeException(e);
             }
-            String timeStatus = storedImage.getTimeStatus().getCode();
-            dayImageDto.add(new DayImageDto(bytes, timeStatus));
+            final String timeStatus = storedImage.getTimeStatus().getCode();
+            dayImageDto.add(
+                    DayImageDto.builder()
+                    .bytes(bytes)
+                    .timeStatus(timeStatus)
+                    .id(storedImage.getId())
+                    .build()
+            );
         }
         return dayImageDto;
     }
 
-    public List<DayImagesDto> getDayImages(int year, int month, User user)  {
-        List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
-        List<DayImagesDto> dayImagesDtos = new ArrayList<>();
-        String dirPath = user.getId() + "/";
+    public List<DayImagesDto> getDayImages(final int year, final int month, final User user)  {
+        final List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
+        final List<DayImagesDto> dayImagesDtos = new ArrayList<>();
+        final String dirPath = ImageUtils.getDirPath(user);
         for (DayImage dayImage : dayImages) {
             byte[] bytes;
             try {
@@ -106,12 +117,21 @@ public class DayImageService {
                 log.error("IOException ", e);
                 throw new RuntimeException(e);
             }
-            Time time = dayImage.getTime();
-            dayImagesDtos.add(new DayImagesDto(bytes, time));
+            final Time time = dayImage.getTime();
+            dayImagesDtos.add(
+                    DayImagesDto.builder()
+                            .id(dayImage.getId())
+                            .time(time)
+                            .bytes(bytes)
+                            .build()
+            );
+
         }
         return dayImagesDtos;
 
     }
+
+
 
 
 }

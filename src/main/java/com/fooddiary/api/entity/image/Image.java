@@ -1,17 +1,17 @@
 package com.fooddiary.api.entity.image;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 
 @Entity
 @Getter
-@Setter
 @ToString
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Image {
 
     @Id
@@ -29,14 +29,19 @@ public class Image {
     private DayImage dayImage;
 
 
-    public void setTimeStatus(LocalDateTime dateTime) {
+    public void setTimeStatus(final LocalDateTime dateTime) {
         this.timeStatus = TimeStatus.getTime(dateTime);
     }
 
-    public static Image createImage(LocalDateTime dateTime, String fileName) {
-        Image image = new Image();
+    public void setDayImage(final DayImage dayImage) {
+        this.dayImage = dayImage;
+    }
+
+    public static Image createImage(final LocalDateTime dateTime, final String fileName) {
+        final Image image = Image.builder()
+                .storedFileName(fileName)
+                .build();
         image.setTimeStatus(dateTime);
-        image.storedFileName = fileName;
         return image;
     }
 

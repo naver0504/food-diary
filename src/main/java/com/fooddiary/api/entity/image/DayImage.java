@@ -3,9 +3,7 @@ package com.fooddiary.api.entity.image;
 
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,8 +11,10 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
 @ToString
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class DayImage {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,15 +35,22 @@ public class DayImage {
     private User user;
 
 
-    public static DayImage createDayImage(List<Image> images, LocalDateTime dateTime) {
-        DayImage dayImage = new DayImage();
-        dayImage.time = new Time(dateTime);
-        dayImage.setImages(images);
-        dayImage.setThumbNailImagePath(images.get(0).getStoredFileName());
+    public static DayImage createDayImage(final List<Image> images, final LocalDateTime dateTime) {
+
+        DayImage dayImage = DayImage.builder()
+                .time(new Time(dateTime))
+                .images(images)
+                .build();
+
+        dayImage.updateThumbNailImageName(images.get(0).getStoredFileName());
         return dayImage;
     }
 
-    public void setImages(List<Image> images) {
+    public void updateThumbNailImageName(final String thumbNailImagePath) {
+        this.thumbNailImagePath = thumbNailImagePath;
+    }
+
+    public void setImages(final List<Image> images) {
         for (Image image : images) {
             this.images.add(image);
             image.setDayImage(this);
@@ -51,10 +58,9 @@ public class DayImage {
 
     }
 
-    public void setUser(User user) {
+    public void setUser(final User user) {
         this.user = user;
         user.getDayImages().add(this);
-
     }
 
 
