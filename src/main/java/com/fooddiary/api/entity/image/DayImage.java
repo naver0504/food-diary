@@ -25,6 +25,7 @@ public class DayImage {
     private Time time;
 
     @OneToMany(mappedBy = "dayImage", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Image> images = new ArrayList<>();
 
 
@@ -35,14 +36,15 @@ public class DayImage {
     private User user;
 
 
-    public static DayImage createDayImage(final List<Image> images, final LocalDateTime dateTime) {
+    public static DayImage createDayImage(final List<Image> images, final LocalDateTime dateTime, final User user) {
 
-        DayImage dayImage = DayImage.builder()
+        final DayImage dayImage = DayImage.builder()
                 .time(new Time(dateTime))
-                .images(images)
+                .user(user)
                 .build();
 
         dayImage.updateThumbNailImageName(images.get(0).getStoredFileName());
+        dayImage.setImages(images);
         return dayImage;
     }
 
@@ -55,7 +57,6 @@ public class DayImage {
             this.images.add(image);
             image.setDayImage(this);
         }
-
     }
 
     public void setUser(final User user) {

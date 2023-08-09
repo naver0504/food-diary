@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Entity
@@ -35,6 +36,10 @@ public class Image {
 
     public void setDayImage(final DayImage dayImage) {
         this.dayImage = dayImage;
+    }
+
+    public static void setDayImage(List<Image> images, DayImage dayImage) {
+        images.forEach(image -> image.setDayImage(dayImage));
     }
 
     public static Image createImage(final LocalDateTime dateTime, final String fileName) {

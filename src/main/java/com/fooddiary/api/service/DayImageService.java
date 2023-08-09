@@ -51,16 +51,13 @@ public class DayImageService {
          * 없다면 해당 날짜 이미지 엔티티 생성 후 사진 썸네일 설정
          */
         if (dayImage == null) {
-            final DayImage newDayImage = DayImage.createDayImage(images, dateTime);
-            newDayImage.setUser(user);
-
+            final DayImage newDayImage = DayImage.createDayImage(images, dateTime, user);
             dayImageRepository.save(newDayImage);
-        } else {
 
+        } else {
             /**
              * 변경 감지로 알아서 update 쿼리
              */
-
             dayImage.setImages(images);
             dayImage.updateThumbNailImageName(images.get(0).getStoredFileName());
         }
