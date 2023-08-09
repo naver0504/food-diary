@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,28 +39,29 @@ public class ImageService {
     private String bucket;
 
     @Transactional
-    public List<Image> storeImage(List<MultipartFile> files, LocalDateTime localDateTime, User user)  {
+    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user)  {
 
-        List<Image> images = new ArrayList<>();
+        final List<Image> images = new ArrayList<>();
 
         for (MultipartFile file : files) {
 
             //파일 명 겹치면 안되므로 UUID + '-' + 원래 파일 이름으로 저장
 
-            String storeFilename = UUID.randomUUID().toString()+"_"+file.getOriginalFilename();
-            Image image = Image.createImage(localDateTime, storeFilename);
-            int userId = user.getId();
+            final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
+            final Image image = Image.createImage(localDateTime, storeFilename);
+            final int userId = user.getId();
 
 
             //S3에 저장하는 로직
             try {
                 ObjectMetadata metadata = new ObjectMetadata();
 
-                String dirPath = String.valueOf(userId) + '/';
+                final String dirPath = ImageUtils.getDirPath(user);
                 int count = dayImageRepository.getDayImageCount(userId);
                 if(count == 0) {
                     amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
                 }
+
                 amazonS3.putObject(bucket, dirPath+storeFilename, file.getInputStream(), metadata);
             } catch (AmazonServiceException e) {
                 log.error("AmazonServiceException ", e);
@@ -72,7 +75,7 @@ public class ImageService {
             }
 
 
-            Image saveImage = imageRepository.save(image);
+            final Image saveImage = imageRepository.save(image);
             images.add(saveImage);
         }
         return images;
