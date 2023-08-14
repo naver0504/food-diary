@@ -103,15 +103,15 @@ public class ImageControllerTest {
         httpHeaders.add("token", token);
 
         //Mock파일생성
-        MockMultipartFile image1 = new MockMultipartFile(
+        final MockMultipartFile image1 = new MockMultipartFile(
                 "files",
                 "apple.png",
                 "image/png",
                 new FileInputStream("src/test/resources/image/apple.png")
         );
 
-        SaveImageResponseDto saveImageResponseDto = new SaveImageResponseDto();
-        saveImageResponseDto.setStatus(SaveImageResponseDto.Status.SUCCESS);
+        final SaveImageResponseDto saveImageResponseDto = SaveImageResponseDto.builder()
+                .status(SaveImageResponseDto.Status.SUCCESS).build();
 
         when(userService.getValidUser(any(), any())).thenReturn(principal);
         given(dayImageService.saveImage(any(), any(), any())).willReturn(saveImageResponseDto);
@@ -135,28 +135,34 @@ public class ImageControllerTest {
         httpHeaders.add("email", "qortmdwls1234@naver.com");
         httpHeaders.add("token", token);
 
-        List<DayImageDto> dayImageDtos = new ArrayList<>();
-        FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
-        byte[] bytes = fileInputStream.readAllBytes();
-        DayImageDto dayImageDto = new DayImageDto();
-        dayImageDto.setBytes(bytes);
-        dayImageDto.setTimeStatus(TimeStatus.DINNER.getCode());
+        final List<DayImageDto> dayImageDtos = new ArrayList<>();
+        final FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
+        final byte[] bytes = fileInputStream.readAllBytes();
+
+        final DayImageDto dayImageDto = DayImageDto.builder()
+                .bytes(bytes)
+                .id(1)
+                .timeStatus(TimeStatus.BREAKFAST.getCode())
+                .build();
+
         dayImageDtos.add(dayImageDto);
-        DayImageDto dayImageDto2 = new DayImageDto();
-        dayImageDto2.setBytes(bytes);
-        dayImageDto2.setTimeStatus(TimeStatus.BREAKFAST.getCode());
+        final DayImageDto dayImageDto2 = DayImageDto.builder()
+                .bytes(bytes)
+                .id(2)
+                .timeStatus(TimeStatus.DINNER.getCode())
+                .build();
         dayImageDtos.add(dayImageDto2);
 
-        int year = LocalDateTime.now().getYear();
-        int month = LocalDateTime.now().getMonth().getValue();
-        int day = LocalDateTime.now().getDayOfMonth();
+        final int year = LocalDateTime.now().getYear();
+        final int month = LocalDateTime.now().getMonth().getValue();
+        final int day = LocalDateTime.now().getDayOfMonth();
 
 
         when(userService.getValidUser(any(), any())).thenReturn(principal);
         when(dayImageService.getDayImage(year, month, day, principal)).thenReturn(dayImageDtos);
 
 
-        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
 
         queryParams.add("year", String.valueOf(year));
         queryParams.add("month", String.valueOf(month));
@@ -177,29 +183,34 @@ public class ImageControllerTest {
         httpHeaders.add("email", "qortmdwls1234@naver.com");
         httpHeaders.add("token", token);
 
-        List<DayImagesDto> dayImagesDtos = new ArrayList<>();
-        FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
-        Time time1 = new Time(LocalDateTime.now().minusDays(1));
-        byte[] bytes = fileInputStream.readAllBytes();
-        DayImagesDto dayImagesDto = new DayImagesDto();
-        dayImagesDto.setBytes(bytes);
-        dayImagesDto.setTime(time1);
+        final List<DayImagesDto> dayImagesDtos = new ArrayList<>();
+        final FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
+        final Time time1 = new Time(LocalDateTime.now().minusDays(1));
+        final byte[] bytes = fileInputStream.readAllBytes();
+        final DayImagesDto dayImagesDto = DayImagesDto.builder()
+                .id(1)
+                .bytes(bytes)
+                .time(time1)
+                .build();
         dayImagesDtos.add(dayImagesDto);
-        Time time2 = new Time(LocalDateTime.now());
+        final Time time2 = new Time(LocalDateTime.now());
 
-        DayImagesDto dayImagesDto2 = new DayImagesDto();
-        dayImagesDto2.setBytes(bytes);
-        dayImagesDto2.setTime(time2);
+        final DayImagesDto dayImagesDto2 = DayImagesDto.builder()
+                .id(2)
+                .bytes(bytes)
+                .time(time2)
+                .build();
+
         dayImagesDtos.add(dayImagesDto2);
 
-        int year = LocalDateTime.now().getYear();
-        int month = LocalDateTime.now().getMonth().getValue();
+        final int year = LocalDateTime.now().getYear();
+        final int month = LocalDateTime.now().getMonth().getValue();
 
         when(userService.getValidUser(any(), any())).thenReturn(principal);
         when(dayImageService.getDayImages(year, month, principal)).thenReturn(dayImagesDtos);
 
 
-        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
 
         queryParams.add("year", String.valueOf(year));
         queryParams.add("month", String.valueOf(month));
