@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class ImageService {
     private String bucket;
 
     @Transactional
-    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user)  {
+    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user) throws IOException {
 
         final List<Image> images = new ArrayList<>();
 

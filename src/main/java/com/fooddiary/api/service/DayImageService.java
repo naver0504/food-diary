@@ -32,6 +32,7 @@ public class DayImageService {
     private final DayImageRepository dayImageRepository;
     private final ImageService imageService;
     private final FileStorageService fileStorageService;
+    private final ImageUtils imageUtils;
 
 
     @Transactional
@@ -43,7 +44,13 @@ public class DayImageService {
         final int month = dateTime.getMonthValue();
         final int day = dateTime.getDayOfMonth();
         final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
-        final List<Image> images = imageService.storeImage(files, dateTime, user);
+        final List<Image> images;
+
+        try {
+            images = imageService.storeImage(files, dateTime, user);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
 
         /***
          * 해당 날짜에 사진들이 있는 지 확인
@@ -53,13 +60,20 @@ public class DayImageService {
         if (dayImage == null) {
             final DayImage newDayImage = DayImage.createDayImage(images, dateTime, user);
             dayImageRepository.save(newDayImage);
+            newDayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user));
+
 
         } else {
             /**
              * 변경 감지로 알아서 update 쿼리
              */
             dayImage.setImages(images);
-            dayImage.updateThumbNailImageName(images.get(0).getStoredFileName());
+            final String originalThumbnailPath = dayImage.getThumbNailImagePath();
+            final String dirPath = ImageUtils.getDirPath(user);
+
+            fileStorageService.deleteImage(user.getId(), dirPath + originalThumbnailPath);
+            dayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user));
+
         }
 
 
@@ -127,6 +141,8 @@ public class DayImageService {
         return dayImagesDtos;
 
     }
+
+
 
 
 

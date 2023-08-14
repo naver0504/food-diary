@@ -3,6 +3,7 @@ package com.fooddiary.api;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.fooddiary.api.service.ImageUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,5 +38,21 @@ public class FileStorageService {
         final byte[] buffer = new byte[length];
         IOUtils.readFully(inputStream, buffer, 0, length);
         return buffer;
+    }
+
+    /***
+     *
+     * 파일 삭제
+     *
+     */
+    public void deleteImage(final int userId, final String key) {
+
+        boolean isObjectExist = amazonS3.doesObjectExist(bucket, key);
+        if (isObjectExist) {
+            amazonS3.deleteObject(bucket, key);
+        }
+
+
+
     }
 }

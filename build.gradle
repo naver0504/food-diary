@@ -37,6 +37,10 @@ dependencies {
 	// https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb-enhanced
 	implementation group: 'software.amazon.awssdk', name: 'dynamodb-enhanced', version: '2.20.77'
 
+	// https://mvnrepository.com/artifact/net.coobird/thumbnailator
+	implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.20'
+
+
 
 	// https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
 	implementation 'com.google.code.findbugs:jsr305:3.0.2'
