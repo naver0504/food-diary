@@ -17,6 +17,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -25,8 +26,8 @@ import java.util.UUID;
 @Slf4j
 public class ImageUtils {
 
-    public static final int THUMBNAIL_WIDTH = 100;
-    public static final int THUMBNAIL_HEIGHT = 100;
+    public static final int THUMBNAIL_WIDTH = 44;
+    public static final int THUMBNAIL_HEIGHT = 44;
 
 
     private final AmazonS3 amazonS3;
@@ -53,7 +54,6 @@ public class ImageUtils {
         final String fileContentType = getFileContentType(file.getContentType());
 
         final BufferedImage originalImage;
-
         try {
             originalImage = ImageIO.read(file.getInputStream());
         } catch (IOException e) {
@@ -61,18 +61,17 @@ public class ImageUtils {
             throw new RuntimeException(e.getMessage());
         }
 
+
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
 
         try {
 
-
             Thumbnails.of(originalImage)
                     .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
+                    .keepAspectRatio(false)
                     .outputFormat(fileContentType)
                     .toOutputStream(outputStream);
-
-
 
         } catch (IOException e) {
             log.error("IOException ", e);
@@ -80,6 +79,7 @@ public class ImageUtils {
         }
 
         final ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+
 
         try {
             ObjectMetadata metadata = new ObjectMetadata();
@@ -97,6 +97,8 @@ public class ImageUtils {
 
         return storeFilename;
     }
+
+
 
     private String getFileContentType(String contentType) {
         if (contentType == "image/jpeg") {
