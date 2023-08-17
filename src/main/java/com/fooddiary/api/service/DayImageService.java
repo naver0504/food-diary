@@ -1,6 +1,7 @@
 package com.fooddiary.api.service;
 
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.dto.response.DayImageDto;
 import com.fooddiary.api.dto.response.DayImagesDto;
@@ -12,6 +13,7 @@ import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.DayImageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +35,10 @@ public class DayImageService {
     private final ImageService imageService;
     private final FileStorageService fileStorageService;
     private final ImageUtils imageUtils;
+    private final AmazonS3 amazonS3;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
 
     @Transactional
@@ -60,7 +66,7 @@ public class DayImageService {
         if (dayImage == null) {
             final DayImage newDayImage = DayImage.createDayImage(images, dateTime, user);
             dayImageRepository.save(newDayImage);
-            newDayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user));
+            newDayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user, amazonS3, bucket));
 
 
         } else {
@@ -71,8 +77,8 @@ public class DayImageService {
             final String originalThumbnailPath = dayImage.getThumbNailImagePath();
             final String dirPath = ImageUtils.getDirPath(user);
 
-            fileStorageService.deleteImage(user.getId(), dirPath + originalThumbnailPath);
-            dayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user));
+            fileStorageService.deleteImage(dirPath + originalThumbnailPath);
+            dayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user, amazonS3, bucket));
 
         }
 

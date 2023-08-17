@@ -30,11 +30,6 @@ public class ImageUtils {
     public static final int THUMBNAIL_HEIGHT = 44;
 
 
-    private final AmazonS3 amazonS3;
-
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
-
     @NotNull
     public static String getDirPath(final User user) {
         final String dirPath = user.getId() + "/";
@@ -48,14 +43,17 @@ public class ImageUtils {
         return storeFilename;
     }
 
-    public String createThumbnailName(final MultipartFile file, final User user) {
+    public static String createThumbnailName(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket) {
         final String originalFilename = file.getOriginalFilename();
         final String storeFilename = "t_"+ UUID.randomUUID().toString() + "_" + originalFilename;
         final String fileContentType = getFileContentType(file.getContentType());
 
         final BufferedImage originalImage;
+
         try {
             originalImage = ImageIO.read(file.getInputStream());
+
+
         } catch (IOException e) {
             log.error("IOException ", e);
             throw new RuntimeException(e.getMessage());
@@ -72,6 +70,8 @@ public class ImageUtils {
                     .keepAspectRatio(false)
                     .outputFormat(fileContentType)
                     .toOutputStream(outputStream);
+
+
 
         } catch (IOException e) {
             log.error("IOException ", e);
@@ -99,8 +99,7 @@ public class ImageUtils {
     }
 
 
-
-    private String getFileContentType(String contentType) {
+    private static String getFileContentType(String contentType) {
         if (contentType == "image/jpeg") {
             return "jpg";
         } else if (contentType == "image/png") {
