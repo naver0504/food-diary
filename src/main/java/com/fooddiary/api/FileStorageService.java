@@ -45,7 +45,7 @@ public class FileStorageService {
      * 파일 삭제
      *
      */
-    public void deleteImage(final int userId, final String key) {
+    public void deleteImage(final String key) {
 
         boolean isObjectExist = amazonS3.doesObjectExist(bucket, key);
         if (isObjectExist) {
