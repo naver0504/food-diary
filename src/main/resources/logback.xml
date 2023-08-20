@@ -41,20 +41,20 @@
   </appender>
 
   <springProfile name="local">
-    <root level="DEBUG">
-      <appender-ref ref="STDOUT" />
+    <root level="ERROR">
+      <appender-ref ref="FILE" />
     </root>
-    <root level="INFO">
+    <logger name="com.fooddiary.api.common.filter.LoggingFilter" level="INFO">
       <appender-ref ref="ApiLogFile" />
-    </root>
+    </logger>
   </springProfile>
   <springProfile name="production">
     <root level="ERROR">
       <appender-ref ref="FILE" />
     </root>
-    <root level="INFO">
+    <logger name="com.fooddiary.api.common.filter.LoggingFilter" level="INFO">
       <appender-ref ref="ApiLogFile" />
-    </root>
+    </logger>
   </springProfile>
 
 </configuration>

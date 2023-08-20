@@ -1,6 +1,8 @@
 package com.fooddiary.api.common.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
@@ -19,16 +20,38 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
+import static com.fooddiary.api.common.constants.UserConstants.MAIL_NAME;
+import static com.fooddiary.api.common.constants.UserConstants.TOKEN_NAME;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class LoggingFilter extends OncePerRequestFilter {
-    private final ObjectMapper objectMapper;
     private static final String ACCESS_LOG_INDEX = "access-log";
+    private final ObjectMapper objectMapper;
+    private final UserService userService;
+    private final static int TRANSFER_BODY_SIZE = 5000;
+
+    private static boolean isVisible(MediaType mediaType) {
+        final List<MediaType> VISIBLE_TYPES = Arrays.asList(
+                MediaType.valueOf("text/*"),
+                MediaType.APPLICATION_FORM_URLENCODED,
+                MediaType.APPLICATION_JSON,
+                MediaType.APPLICATION_XML,
+                MediaType.valueOf("application/*+json"),
+                MediaType.valueOf("application/*+xml"),
+                MediaType.MULTIPART_FORM_DATA
+        );
+
+        return VISIBLE_TYPES.stream()
+                .anyMatch(visibleType -> visibleType.includes(mediaType));
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -51,61 +74,32 @@ public class LoggingFilter extends OncePerRequestFilter {
                 String name = keys.next();
                 headerMap.put(name, request.getHeader(name));
             }
-            requestLogDTO = new LogDTO.RequestLogDTO(headerMap, request.getRequestURI() + request.getQueryString(), request.getMethod(), request.getContentType(), request.getRemoteAddr(), request.getCookies());
+            String uri = request.getQueryString() != null ? request.getRequestURI() + "?" + request.getQueryString() : request.getRequestURI();
             startTime = LocalDateTime.now();
-            //logRequest(request, startTime);
+            byte[] body = StreamUtils.copyToByteArray(request.getInputStream());
+            requestLogDTO = new LogDTO.RequestLogDTO(startTime, headerMap, uri, request.getMethod(), request.getContentType(), body, request.getRemoteAddr(), request.getCookies());
             filterChain.doFilter(request, response);
         } finally {
-            logResponse(requestLogDTO, response, startTime);
+            final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
+            if (user != null) {
+                LogDTO.UserDTO userDTO = new LogDTO.UserDTO(user.getEmail(), user.getName());
+                logPayload(requestLogDTO, userDTO, response.getContentType(), response.getContentInputStream(), startTime);
+            }
             response.copyBodyToResponse();
         }
     }
 
-    /*
-    private void logRequest(HttpServletRequestWrapper request, LocalDateTime startTime) throws IOException {
-        String queryString = request.getQueryString();
-        log.info("Request : {} uri=[{}] content-type=[{}]",
-                request.getMethod(),
-                queryString == null ? request.getRequestURI() : request.getRequestURI() + queryString,
-                request.getContentType()
-        );
-
-        logPayload("Request", request.getContentType(), request.getInputStream(), startTime);
-    }
-     */
-
-    private void logResponse(LogDTO.RequestLogDTO requestLogDTO, ContentCachingResponseWrapper response, LocalDateTime startTime) throws IOException {
-        logPayload(requestLogDTO, response.getContentType(), response.getContentInputStream(), startTime);
-    }
-
-    private void logPayload(LogDTO.RequestLogDTO requestLogDTO, String contentType, InputStream inputStream, LocalDateTime startTime) throws IOException {
+    private void logPayload(LogDTO.RequestLogDTO requestLogDTO, LogDTO.UserDTO userDTO, String contentType, InputStream inputStream, LocalDateTime startTime) throws IOException {
         boolean visible = isVisible(MediaType.valueOf(contentType == null ? "application/json" : contentType));
+        String content = null;
         if (visible) {
-            byte[] content = StreamUtils.copyToByteArray(inputStream);
-            if (content.length > 0) {
-                Long timeLap = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) - startTime.toEpochSecond(ZoneOffset.UTC);
-                LogDTO.ResponseLogDTO responseLogDTO = new LogDTO.ResponseLogDTO(new String(content, StandardCharsets.UTF_8), timeLap);
-                String contentString = objectMapper.writeValueAsString(new LogDTO(requestLogDTO, responseLogDTO));
-                log.info("{}: {}", ACCESS_LOG_INDEX, contentString);
-            }
-        } else {
-            log.info("{}: Binary Content", ACCESS_LOG_INDEX);
+            content =  new String(StreamUtils.copyToByteArray(inputStream), StandardCharsets.UTF_8);
+            if (content.length() > TRANSFER_BODY_SIZE) content = content.substring(0, TRANSFER_BODY_SIZE) + "...";
         }
+        Long timeLap = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) - startTime.toEpochSecond(ZoneOffset.UTC);
+        LogDTO.ResponseLogDTO responseLogDTO = new LogDTO.ResponseLogDTO(content , timeLap);
 
-    }
-
-    private static boolean isVisible(MediaType mediaType) {
-        final List<MediaType> VISIBLE_TYPES = Arrays.asList(
-                MediaType.valueOf("text/*"),
-                MediaType.APPLICATION_FORM_URLENCODED,
-                MediaType.APPLICATION_JSON,
-                MediaType.APPLICATION_XML,
-                MediaType.valueOf("application/*+json"),
-                MediaType.valueOf("application/*+xml"),
-                MediaType.MULTIPART_FORM_DATA
-        );
-
-        return VISIBLE_TYPES.stream()
-                .anyMatch(visibleType -> visibleType.includes(mediaType));
+        String contentString = objectMapper.writeValueAsString(new LogDTO(requestLogDTO, responseLogDTO, userDTO));
+        log.info("{}: {}", ACCESS_LOG_INDEX, contentString);
     }
 }
