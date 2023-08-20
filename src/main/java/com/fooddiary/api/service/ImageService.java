@@ -4,6 +4,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.DayImageRepository;
@@ -15,15 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
@@ -39,7 +36,6 @@ public class ImageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    @Transactional
     public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user) throws IOException {
 
         final List<Image> images = new ArrayList<>();
