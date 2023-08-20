@@ -87,29 +87,6 @@ public class ImageUtils {
         return storeFilename;
     }
 
-    public void tmpCreateThumbnail(final MultipartFile file) throws IOException {
-
-        final String originalFilename = file.getOriginalFilename();
-        final String storeFilename = "t_"+ UUID.randomUUID().toString() + "_" + originalFilename;
-        final String fileContentType = getFileContentType(file.getContentType());
-
-        final BufferedImage originalImage;
-
-        try {
-            originalImage = ImageIO.read(file.getInputStream());
-        } catch (IOException e) {
-            log.error("IOException ", e);
-            throw new RuntimeException(e.getMessage());
-        }
-
-        BufferedImage bufferedImage = Thumbnails.of(originalImage)
-                .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
-                .asBufferedImage();
-
-        ImageIO.write(bufferedImage, fileContentType, new File("C:\\Users\\qortm\\OneDrive\\사진\\Saved Pictures\\images\\" + storeFilename));
-
-    }
-
     private static String getFileContentType(String contentType) {
         if (contentType.equals( "image/jpeg")) {
             return "jpg";
