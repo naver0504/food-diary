@@ -3,7 +3,6 @@ package com.fooddiary.api;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.fooddiary.api.service.ImageUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

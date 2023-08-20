@@ -3,6 +3,7 @@ package com.fooddiary.api.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
+import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.response.DayImageDto;
 import com.fooddiary.api.dto.response.DayImagesDto;
 import com.fooddiary.api.dto.response.SaveImageResponseDto;
