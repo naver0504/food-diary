@@ -1,4 +1,4 @@
-package com.fooddiary.api.service;
+package com.fooddiary.api.common.utils;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
@@ -46,23 +46,13 @@ public class ImageUtils {
         final String originalFilename = file.getOriginalFilename();
         final String storeFilename = "t_"+ UUID.randomUUID().toString() + "_" + originalFilename;
         final String fileContentType = getFileContentType(file.getContentType());
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         final BufferedImage originalImage;
 
         try {
             originalImage = ImageIO.read(file.getInputStream());
 
-
-        } catch (IOException e) {
-            log.error("IOException ", e);
-            throw new RuntimeException(e.getMessage());
-        }
-
-
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-
-        try {
 
             Thumbnails.of(originalImage)
                     .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
@@ -73,7 +63,7 @@ public class ImageUtils {
 
 
         } catch (IOException e) {
-            log.error("IOException ", e);
+            log.error("IOException Caused By : {}", e.getCause());
             throw new RuntimeException(e.getMessage());
         }
 
