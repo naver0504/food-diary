@@ -63,7 +63,7 @@ public class ImageUtils {
 
 
         } catch (IOException e) {
-            log.error("IOException Caused By : {}", e.getCause());
+            log.error("IOException {}", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
 
