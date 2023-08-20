@@ -1,4 +1,5 @@
 <configuration>
+  <!-- 에러 로깅 -->
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <!-- Support multiple-JVM writing to the same log file -->
     <prudent>true</prudent>
@@ -13,6 +14,26 @@
     </encoder>
   </appender>
 
+  <!-- API 로깅 -->
+  <property name="LOG_FILE_NAME" value="api"/>
+  <appender name="ApiLogFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>INFO</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <file>${LOG_FILE_NAME}.log</file>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}- %msg%n</pattern>
+    </encoder>
+    <!-- 하루에 한번 압축 후 보관, 최대 30일, 1GB까지 보관 -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_FILE_NAME}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -23,10 +44,16 @@
     <root level="DEBUG">
       <appender-ref ref="STDOUT" />
     </root>
+    <root level="INFO">
+      <appender-ref ref="ApiLogFile" />
+    </root>
   </springProfile>
   <springProfile name="production">
     <root level="ERROR">
       <appender-ref ref="FILE" />
+    </root>
+    <root level="INFO">
+      <appender-ref ref="ApiLogFile" />
     </root>
   </springProfile>
 

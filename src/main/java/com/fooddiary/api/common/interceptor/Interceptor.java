@@ -1,5 +1,6 @@
 package com.fooddiary.api.common.interceptor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
@@ -40,6 +41,7 @@ public class Interceptor implements HandlerInterceptor {
             add("/user/is-login");
         }
     };
+    private final ObjectMapper objectMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
