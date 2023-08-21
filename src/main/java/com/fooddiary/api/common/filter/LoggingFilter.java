@@ -29,6 +29,8 @@ import java.util.List;
 import static com.fooddiary.api.common.constants.UserConstants.MAIL_NAME;
 import static com.fooddiary.api.common.constants.UserConstants.TOKEN_NAME;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -36,7 +38,7 @@ public class LoggingFilter extends OncePerRequestFilter {
     private static final String ACCESS_LOG_INDEX = "access-log";
     private final ObjectMapper objectMapper;
     private final UserService userService;
-    private final static int TRANSFER_BODY_SIZE = 5000;
+    private static final int TRANSFER_BODY_SIZE = 1000;
 
     private static boolean isVisible(MediaType mediaType) {
         final List<MediaType> VISIBLE_TYPES = Arrays.asList(
@@ -65,41 +67,42 @@ public class LoggingFilter extends OncePerRequestFilter {
     }
 
     protected void doFilterWrapped(HttpServletRequestWrapper request, ContentCachingResponseWrapper response, FilterChain filterChain) throws ServletException, IOException {
-        LocalDateTime startTime = null;
+        final LocalDateTime startTime = LocalDateTime.now();
         LogDTO.RequestLogDTO requestLogDTO = null;
         try {
-            HashMap<String, String> headerMap = new HashMap<>();
-            Iterator<String> keys = request.getHeaderNames().asIterator();
+            final HashMap<String, String> headerMap = new HashMap<>();
+            final Iterator<String> keys = request.getHeaderNames().asIterator();
             while (keys.hasNext()) {
-                String name = keys.next();
+                final String name = keys.next();
                 headerMap.put(name, request.getHeader(name));
             }
-            String uri = request.getQueryString() != null ? request.getRequestURI() + "?" + request.getQueryString() : request.getRequestURI();
-            startTime = LocalDateTime.now();
-            byte[] body = StreamUtils.copyToByteArray(request.getInputStream());
+            final String uri = request.getQueryString() != null ? request.getRequestURI() + '?' + request.getQueryString() : request.getRequestURI();
+            final byte[] body = StreamUtils.copyToByteArray(request.getInputStream());
             requestLogDTO = new LogDTO.RequestLogDTO(startTime, headerMap, uri, request.getMethod(), request.getContentType(), body, request.getRemoteAddr(), request.getCookies());
             filterChain.doFilter(request, response);
         } finally {
             final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
             if (user != null) {
-                LogDTO.UserDTO userDTO = new LogDTO.UserDTO(user.getEmail(), user.getName());
+                final LogDTO.UserDTO userDTO = new LogDTO.UserDTO(user.getEmail(), user.getName());
                 logPayload(requestLogDTO, userDTO, response.getContentType(), response.getContentInputStream(), startTime);
             }
             response.copyBodyToResponse();
         }
     }
 
-    private void logPayload(LogDTO.RequestLogDTO requestLogDTO, LogDTO.UserDTO userDTO, String contentType, InputStream inputStream, LocalDateTime startTime) throws IOException {
-        boolean visible = isVisible(MediaType.valueOf(contentType == null ? "application/json" : contentType));
+    private void logPayload(@Nullable LogDTO.RequestLogDTO requestLogDTO, LogDTO.UserDTO userDTO, String contentType, InputStream inputStream, LocalDateTime startTime) throws IOException {
+        final boolean visible = isVisible(MediaType.valueOf(contentType == null ? "application/json" : contentType));
         String content = null;
         if (visible) {
             content =  new String(StreamUtils.copyToByteArray(inputStream), StandardCharsets.UTF_8);
-            if (content.length() > TRANSFER_BODY_SIZE) content = content.substring(0, TRANSFER_BODY_SIZE) + "...";
+            if (content.length() > TRANSFER_BODY_SIZE) {
+                content = content.substring(0, TRANSFER_BODY_SIZE) + "...";
+            }
         }
-        Long timeLap = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) - startTime.toEpochSecond(ZoneOffset.UTC);
-        LogDTO.ResponseLogDTO responseLogDTO = new LogDTO.ResponseLogDTO(content , timeLap);
+        final Long timeLap = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) - startTime.toEpochSecond(ZoneOffset.UTC);
+        final LogDTO.ResponseLogDTO responseLogDTO = new LogDTO.ResponseLogDTO(content , timeLap);
 
-        String contentString = objectMapper.writeValueAsString(new LogDTO(requestLogDTO, responseLogDTO, userDTO));
+        final String contentString = objectMapper.writeValueAsString(new LogDTO(requestLogDTO, responseLogDTO, userDTO));
         log.info("{}: {}", ACCESS_LOG_INDEX, contentString);
     }
 }

@@ -1,7 +1,5 @@
 package com.fooddiary.api.common.interceptor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +25,6 @@ import static com.fooddiary.api.common.constants.UserConstants.TOKEN_NAME;
 @RequiredArgsConstructor
 public class Interceptor implements HandlerInterceptor {
 
-    private final FileStorageService fileStorageService;
     private final UserService userService;
     private final Set<String> bypassUri = new HashSet<>() {
         @Serial
@@ -42,7 +39,6 @@ public class Interceptor implements HandlerInterceptor {
             add("/user/is-login");
         }
     };
-    private final ObjectMapper objectMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -52,7 +48,7 @@ public class Interceptor implements HandlerInterceptor {
 
         final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
 
-        if (user == null) {throw new RuntimeException("ddd");}
+        if (user == null) {throw new RuntimeException("invalid user");}
         final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
         simpleGrantedAuthority.add(new SimpleGrantedAuthority("all"));
         final RememberMeAuthenticationToken userDataAuthenticationTokenByEmail =
