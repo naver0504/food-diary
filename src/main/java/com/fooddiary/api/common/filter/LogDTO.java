@@ -31,6 +31,7 @@ public class LogDTO {
     @AllArgsConstructor
     public static class ResponseLogDTO {
         private int statusCode;
+        private String contentType;
         private String response;
         private Long elapsedSeconds;
     }

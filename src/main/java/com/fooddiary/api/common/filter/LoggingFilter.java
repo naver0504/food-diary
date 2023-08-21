@@ -123,7 +123,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         }
         final Long timeLap = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) - startTime.toEpochSecond(
                 ZoneOffset.UTC);
-        final LogDTO.ResponseLogDTO responseLogDTO = new LogDTO.ResponseLogDTO(statusCode, content, timeLap);
+        final LogDTO.ResponseLogDTO responseLogDTO = new LogDTO.ResponseLogDTO(statusCode, contentType, content, timeLap);
 
         final String contentString = objectMapper.writeValueAsString(
                 new LogDTO(requestLogDTO, responseLogDTO, userDTO));
