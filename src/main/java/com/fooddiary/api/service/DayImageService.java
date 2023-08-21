@@ -28,7 +28,6 @@ import static com.fooddiary.api.dto.response.SaveImageResponseDto.*;
 
 @RequiredArgsConstructor
 @Service
-@Transactional(readOnly = true)
 @Slf4j
 public class DayImageService {
 
@@ -95,7 +94,7 @@ public class DayImageService {
      * 하루 사진 받기
      *
      */
-
+    @Transactional(readOnly = true)
     public List<DayImageDto> getDayImage(int year, int month, int day, User user) {
 
         final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
@@ -123,6 +122,7 @@ public class DayImageService {
         return dayImageDto;
     }
 
+    @Transactional(readOnly = true)
     public List<DayImagesDto> getDayImages(final int year, final int month, final User user)  {
         final List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
         final List<DayImagesDto> dayImagesDtos = new ArrayList<>();
