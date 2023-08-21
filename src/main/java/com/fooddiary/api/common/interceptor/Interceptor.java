@@ -49,7 +49,7 @@ public class Interceptor implements HandlerInterceptor {
         final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
 
         if (user == null) {
-            response.setStatus(400);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return false;
         }
         final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
