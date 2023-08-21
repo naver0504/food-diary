@@ -1,6 +1,5 @@
 package com.fooddiary.api.common.interceptor;
 
-import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,13 +18,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.fooddiary.api.common.constants.UserConstants.MAIL_NAME;
+import static com.fooddiary.api.common.constants.UserConstants.TOKEN_NAME;
+
 @Component
 @RequiredArgsConstructor
 public class Interceptor implements HandlerInterceptor {
 
-    private static final String MAIL_NAME = "email";
-    private static final String TOKEN_NAME = "token";
-    private final FileStorageService fileStorageService;
     private final UserService userService;
     private final Set<String> bypassUri = new HashSet<>() {
         @Serial
@@ -49,7 +48,10 @@ public class Interceptor implements HandlerInterceptor {
 
         final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
 
-        if (user == null) {return false;}
+        if (user == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return false;
+        }
         final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
         simpleGrantedAuthority.add(new SimpleGrantedAuthority("all"));
         final RememberMeAuthenticationToken userDataAuthenticationTokenByEmail =
