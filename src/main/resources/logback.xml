@@ -49,9 +49,6 @@
     <root level="DEBUG">
       <appender-ref ref="STDOUT" />
     </root>
-    <logger name="com.fooddiary.api.common.filter.LoggingFilter" level="INFO">
-      <appender-ref ref="ApiLogFile" />
-    </logger>
   </springProfile>
   <springProfile name="production">
     <root level="ERROR">

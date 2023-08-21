@@ -48,7 +48,10 @@ public class Interceptor implements HandlerInterceptor {
 
         final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
 
-        if (user == null) {throw new RuntimeException("invalid user");}
+        if (user == null) {
+            response.setStatus(400);
+            return false;
+        }
         final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
         simpleGrantedAuthority.add(new SimpleGrantedAuthority("all"));
         final RememberMeAuthenticationToken userDataAuthenticationTokenByEmail =

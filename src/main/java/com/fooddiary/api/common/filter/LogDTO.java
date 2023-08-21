@@ -30,6 +30,7 @@ public class LogDTO {
     @Getter
     @AllArgsConstructor
     public static class ResponseLogDTO {
+        private int statusCode;
         private String response;
         private Long elapsedSeconds;
     }

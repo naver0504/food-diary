@@ -61,7 +61,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         if (isAsyncDispatch(request)) {
             filterChain.doFilter(request, response);
         } else {
-            doFilterWrapped(new HttpServletRequestWrapper(request), new ContentCachingResponseWrapper(response), filterChain);
+            doFilterWrapped(new RequestWrapper(request), new ContentCachingResponseWrapper(response), filterChain);
         }
         //MDC.clear();
     }
@@ -82,15 +82,21 @@ public class LoggingFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
+            LogDTO.UserDTO userDTO = null;
             if (user != null) {
-                final LogDTO.UserDTO userDTO = new LogDTO.UserDTO(user.getEmail(), user.getName());
-                logPayload(requestLogDTO, userDTO, response.getContentType(), response.getContentInputStream(), startTime);
+                userDTO = new LogDTO.UserDTO(user.getEmail(), user.getName());
+                logPayload(requestLogDTO, userDTO, response, startTime);
+            }else {
+                logPayload(requestLogDTO, userDTO, response, startTime);
             }
             response.copyBodyToResponse();
         }
     }
 
-    private void logPayload(@Nullable LogDTO.RequestLogDTO requestLogDTO, LogDTO.UserDTO userDTO, String contentType, InputStream inputStream, LocalDateTime startTime) throws IOException {
+    private void logPayload(@Nullable LogDTO.RequestLogDTO requestLogDTO, @Nullable LogDTO.UserDTO userDTO, ContentCachingResponseWrapper response, LocalDateTime startTime) throws IOException {
+        final String contentType = response.getContentType();
+        final InputStream inputStream = response.getContentInputStream();
+        final int statusCode = response.getStatus();
         final boolean visible = isVisible(MediaType.valueOf(contentType == null ? "application/json" : contentType));
         String content = null;
         if (visible) {
@@ -100,7 +106,7 @@ public class LoggingFilter extends OncePerRequestFilter {
             }
         }
         final Long timeLap = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) - startTime.toEpochSecond(ZoneOffset.UTC);
-        final LogDTO.ResponseLogDTO responseLogDTO = new LogDTO.ResponseLogDTO(content , timeLap);
+        final LogDTO.ResponseLogDTO responseLogDTO = new LogDTO.ResponseLogDTO(statusCode, content , timeLap);
 
         final String contentString = objectMapper.writeValueAsString(new LogDTO(requestLogDTO, responseLogDTO, userDTO));
         log.info("{}: {}", ACCESS_LOG_INDEX, contentString);
