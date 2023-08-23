@@ -37,9 +37,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
-    @Value("food-diary.pw-try-limit")
+    @Value("${food-diary.pw-try-limit}")
     private Integer pwTryLimit;
-    @Value("food-diary.pw-reset-size")
+    @Value("${food-diary.pw-reset-size}")
     private Integer pwResetSize;
 
 
@@ -129,7 +129,7 @@ public class UserService {
 
     public UserResponseDto resetPw() {
         UserResponseDto userResponseDto = new UserResponseDto();
-        User user = (User) SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         user = getValidUser(user.getEmail());
 
         if (user == null) {
@@ -169,6 +169,8 @@ public class UserService {
 
                 Transport.send(message);
 
+                user.setPw(passwordEncoder.encode(tempPw));
+                userRepository.save(user);
                 userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
             } catch (Exception e) {
                 log.error("임시 비번발급 에러 "  + e.getMessage());
@@ -191,8 +193,8 @@ public class UserService {
         }
         if (!isAlphabet || !isDigit || !isSymbol) throw new BizException("invalid pw");
 
-        User user = (User) SecurityContextHolder.getContext().getAuthentication();
-        user.setPw(newPw);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        user.setPw(passwordEncoder.encode(newPw));
         userRepository.save(user);
     }
 }
