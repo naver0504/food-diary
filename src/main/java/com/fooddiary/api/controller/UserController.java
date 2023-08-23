@@ -42,4 +42,15 @@ public class UserController {
                                                      UserLoginRequestDto userDto) {
         return ResponseEntity.ok(userService.loginUser(userDto));
     }
+
+    @PutMapping("/pw/reset")
+    public ResponseEntity<UserResponseDto> resetPw() {
+        return ResponseEntity.ok(userService.resetPw());
+    }
+
+    @PutMapping("/pw/{new-pw}")
+    public ResponseEntity updatePw(@PathVariable(name = "new-pw") String newPw) {
+        userService.updatePw(newPw);
+        return ResponseEntity.ok().build();
+    }
 }

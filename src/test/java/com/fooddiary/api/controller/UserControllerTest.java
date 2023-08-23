@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.verification.VerificationMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -35,11 +36,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
-@ActiveProfiles(Profiles.TEST)
+@ActiveProfiles(Profiles.LOCAL)
 public class UserControllerTest {
 
     @MockBean
@@ -165,6 +165,43 @@ public class UserControllerTest {
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
                 objectMapper.writeValueAsString(errorResponseDto));
+    }
+
+    @Test
+    void reset_pw() throws Exception {
+        UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+        given(userService.resetPw()).willReturn(userResponseDto);
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("token", "asdf");
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(put("/user/pw/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .headers(httpHeaders))
+                .andExpectAll(status().isOk(),
+                        content().json(objectMapper.writeValueAsString(userResponseDto)))
+                .andDo(document("reset password"));
+    }
+
+    @Test
+    void update_pw() throws Exception {
+        final String newPw = "myFood1234@!";
+        UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+        doNothing().when(userService).updatePw(newPw);
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("token", "asdf");
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(put("/user/pw/{new-pw}", newPw)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .headers(httpHeaders))
+                .andExpect(status().isOk())
+                .andDo(document("update password"));
+        verify(userService, times(1)).updatePw(newPw);
     }
 
 }
