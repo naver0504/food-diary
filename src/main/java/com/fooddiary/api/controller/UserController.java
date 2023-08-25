@@ -3,6 +3,7 @@ package com.fooddiary.api.controller;
 import com.fooddiary.api.dto.request.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.UserNewPwRequestDTO;
 import com.fooddiary.api.dto.request.UserNewRequestDTO;
+import com.fooddiary.api.dto.response.NewPwResponseDTO;
 import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
@@ -50,8 +51,8 @@ public class UserController {
     }
 
     @PostMapping("/new-pw")
-    public ResponseEntity<Void> updatePw(@RequestBody UserNewPwRequestDTO userNewPwRequestDTO) {
-        userService.updatePw(userNewPwRequestDTO.getPw());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<NewPwResponseDTO> updatePw(@RequestBody UserNewPwRequestDTO userNewPwRequestDTO) {
+        ;
+        return ResponseEntity.ok(userService.updatePw(userNewPwRequestDTO.getPw()));
     }
 }

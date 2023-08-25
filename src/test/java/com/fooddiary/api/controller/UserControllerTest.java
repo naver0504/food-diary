@@ -1,14 +1,22 @@
 package com.fooddiary.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.UserLoginRequestDTO;
-import com.fooddiary.api.dto.request.UserNewPwRequestDTO;
-import com.fooddiary.api.dto.response.ErrorResponseDTO;
-import com.fooddiary.api.dto.response.UserResponseDTO;
-import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.service.UserService;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,18 +38,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fooddiary.api.common.constants.Profiles;
+import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewPwRequestDTO;
+import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.NewPwResponseDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
+import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.service.UserService;
 
 /**
  * 컨트롤러 계층에 대한 테스트 입니다. API 문서생성도 같이하고 있습니다.
@@ -153,18 +159,18 @@ public class UserControllerTest {
         final ObjectMapper objectMapper = new ObjectMapper();
 
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/login")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content(
-                                objectMapper.writeValueAsString(
-                                        userNewRequestDto)))
-                .andDo(document("error response"))
-                .andReturn()
-                .getResponse();
+                                                                                        .contentType(
+                                                                                                MediaType.APPLICATION_JSON)
+                                                                                        .content(
+                                                                                                objectMapper.writeValueAsString(
+                                                                                                        userNewRequestDto)))
+                                                                       .andDo(document("error response"))
+                                                                       .andReturn()
+                                                                       .getResponse();
 
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
-                objectMapper.writeValueAsString(errorResponseDto));
+                                objectMapper.writeValueAsString(errorResponseDto));
     }
 
     @Test
@@ -178,19 +184,19 @@ public class UserControllerTest {
         final ObjectMapper objectMapper = new ObjectMapper();
 
         mockMvc.perform(post("/user/reset-pw")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .headers(httpHeaders))
-                .andExpectAll(status().isOk(),
-                        content().json(objectMapper.writeValueAsString(userResponseDto)))
-                .andDo(document("reset password"));
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .headers(httpHeaders))
+               .andExpectAll(status().isOk(),
+                             content().json(objectMapper.writeValueAsString(userResponseDto)))
+               .andDo(document("reset password"));
     }
 
     @Test
     void new_pw() throws Exception {
         final String newPw = "myFood1234@!";
-        final UserResponseDTO userResponseDto = new UserResponseDTO();
-        userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
-        doNothing().when(userService).updatePw(newPw);
+        final NewPwResponseDTO newPwResponseDTO = new NewPwResponseDTO();
+        newPwResponseDTO.setStatus(NewPwResponseDTO.Status.SUCCESS);
+        when(userService.updatePw(newPw)).thenReturn(newPwResponseDTO);
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
@@ -198,12 +204,21 @@ public class UserControllerTest {
         final UserNewPwRequestDTO userNewPwRequestDTO = new UserNewPwRequestDTO();
         userNewPwRequestDTO.setPw(newPw);
 
-        mockMvc.perform(post("/user/new-pw").content(objectMapper.writeValueAsString(userNewPwRequestDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .headers(httpHeaders))
-                .andExpect(status().isOk())
-                .andDo(document("new password"));
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/new-pw").content(
+                                                                                                            objectMapper.writeValueAsString(userNewPwRequestDTO))
+                                                                                                    .contentType(
+                                                                                                            MediaType.APPLICATION_JSON)
+                                                                                                    .headers(
+                                                                                                            httpHeaders))
+                                                                       .andExpect(status().isOk())
+                                                                       .andDo(document("new password"))
+                                                                       .andReturn().getResponse();
+
         verify(userService, times(1)).updatePw(newPw);
+
+        Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.OK.value());
+        Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
+                                objectMapper.writeValueAsString(newPwResponseDTO));
     }
 
 }

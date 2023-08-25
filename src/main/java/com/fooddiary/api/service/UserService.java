@@ -1,9 +1,9 @@
 package com.fooddiary.api.service;
 
-import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.UserNewRequestDTO;
+import com.fooddiary.api.dto.response.NewPwResponseDTO;
 import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.session.Session;
 import com.fooddiary.api.entity.user.Status;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private static final Pattern COMPILE = Pattern.compile("[^a-zA-Z0-9\\s]");
+    private static final Pattern SYMBOL_COMPILE = Pattern.compile("[!@#$%^&*(),.?\\\":{}|<>]");
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
@@ -189,34 +189,51 @@ public class UserService {
         return userResponseDto;
     }
 
-    public void updatePw(String newPw) {
+    public NewPwResponseDTO updatePw(String newPw) {
+        NewPwResponseDTO newPwResponseDTO = new NewPwResponseDTO();
         if (!StringUtils.hasText(newPw)) {
-            throw new BizException("pw is empty");
+            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.EMPTY_PASSWORD);
+            return newPwResponseDTO;
         }
         newPw = newPw.trim();
         if (newPw.length() < pwResetSize) {
-            throw new BizException("pw length is short");
+            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.SHORT_PASSWORD);
+            return newPwResponseDTO;
         }
-        boolean isSymbol = false;
-        boolean isAlphabet = false;
-        boolean isDigit = false;
+        int symbolCount = 0;
+        int alphabetCount = 0;
+        int digitCount = 0;
         for (int i = 0; i < newPw.length(); i++) {
-            if (!isAlphabet && Character.isAlphabetic(newPw.charAt(i))) {
-                isAlphabet = true;
+            char character = newPw.charAt(i);
+            if (character >= 65 && character <= 122) {
+                alphabetCount++;
             }
-            if (!isDigit && Character.isDigit(newPw.charAt(i))) {
-                isDigit = true;
+            if (Character.isDigit(newPw.charAt(i))) {
+                digitCount++;
             }
-            if (!isSymbol && COMPILE.matcher(String.valueOf(newPw.charAt(i))).matches()) {
-                isSymbol = true;
+            if (SYMBOL_COMPILE.matcher(String.valueOf(newPw.charAt(i))).matches()) {
+                symbolCount++;
             }
         }
-        if (!isAlphabet || !isDigit || !isSymbol) {
-            throw new BizException("invalid pw");
+
+        if (digitCount == 0) {
+            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.INCLUDE_DIGIT_CHARACTER);
+            return newPwResponseDTO;
+        }
+        if (symbolCount == 0) {
+            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.INCLUDE_SYMBOLIC_CHARACTER);
+            return newPwResponseDTO;
+        }
+        if (alphabetCount + symbolCount + digitCount < newPw.length()) {
+            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.NOT_ALPHABETIC_PASSWORD);
+            return newPwResponseDTO;
         }
 
         final User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         user.setPw(passwordEncoder.encode(newPw));
         userRepository.save(user);
+
+        newPwResponseDTO.setStatus(NewPwResponseDTO.Status.SUCCESS);
+        return newPwResponseDTO;
     }
 }
