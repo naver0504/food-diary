@@ -2,14 +2,17 @@ package com.fooddiary.api.service;
 
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.util.Random;
-import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.request.UserNewRequestDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewRequestDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.session.Session;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.UserRepository;
+
+import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
+import jakarta.mail.Message.RecipientType;
 import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
@@ -28,12 +31,14 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    private static final Pattern COMPILE = Pattern.compile("[^a-zA-Z0-9\\s]");
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
@@ -41,46 +46,49 @@ public class UserService {
     private Integer pwTryLimit;
     @Value("${food-diary.pw-reset-size}")
     private Integer pwResetSize;
+    private static final int PW_EXPIRED_DAY_LIMIT = 90;
 
 
-    public String createUser(UserNewRequestDto userDto) {
-        LocalDateTime now = LocalDateTime.now();
+    public String createUser(UserNewRequestDTO userDto) {
+        final LocalDateTime now = LocalDateTime.now();
         final User user = new User();
         user.setEmail(userDto.getEmail());
         user.setName(userDto.getName());
         user.setPw(passwordEncoder.encode(userDto.getPassword()));
         user.setPwUpdateAt(now);
-        user.setPwUpdateDelayAt(now);
+        user.setPwUpdateDelayAt(now.plusDays(PW_EXPIRED_DAY_LIMIT));
         userRepository.save(user);
 
         final Session session = sessionService.createSession(user);
         return session.getToken();
     }
 
-    public UserResponseDto loginUser(UserLoginRequestDto userDto) {
-        UserResponseDto userResponseDto = new UserResponseDto();
-        User user = userRepository.findByEmailAndStatus(userDto.getEmail(), Status.ACTIVE);
+    public UserResponseDTO loginUser(UserLoginRequestDTO userDto) {
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
+        final User user = userRepository.findByEmailAndStatus(userDto.getEmail(), Status.ACTIVE);
 
         if (user == null){
-            userResponseDto.setStatus(UserResponseDto.Status.INVALID_USER);
+            userResponseDto.setStatus(UserResponseDTO.Status.INVALID_USER);
             return userResponseDto;
-        } else if (user.getPwTry() >= pwTryLimit) {
-            userResponseDto.setStatus(UserResponseDto.Status.PASSWORD_LIMIT_OVER);
+        }
+        if (user.getPwTry() >= pwTryLimit) {
+            userResponseDto.setStatus(UserResponseDTO.Status.PASSWORD_LIMIT_OVER);
             return userResponseDto;
-        } else if (!passwordEncoder.matches(userDto.getPassword(), user.getPw())) {
-            userResponseDto.setStatus(UserResponseDto.Status.INVALID_PASSWORD);
+        }
+        if (!passwordEncoder.matches(userDto.getPassword(), user.getPw())) {
+            userResponseDto.setStatus(UserResponseDTO.Status.INVALID_PASSWORD);
             user.setPwTry(user.getPwTry() + 1);
             userRepository.save(user);
             return userResponseDto;
         }
-        List<Session> sessionList = user.getSession();
+        final List<Session> sessionList = user.getSession();
 
         if (sessionList.size() > 10) {
             sessionList.stream().sorted(Comparator.comparing(Session::getTerminateAt).reversed()).skip(10).forEach(sessionService::deleteSession);
         }
 
-        Session session = sessionService.createSession(user);
-        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+        final Session session = sessionService.createSession(user);
+        userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
         userResponseDto.setToken(session.getToken());
         userResponseDto.setPwExpired(user.getPwUpdateDelayAt().isBefore(LocalDateTime.now()));
 
@@ -127,21 +135,21 @@ public class UserService {
         return userList.get(0);
     }
 
-    public UserResponseDto resetPw() {
-        UserResponseDto userResponseDto = new UserResponseDto();
+    public UserResponseDTO resetPw() {
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         user = getValidUser(user.getEmail());
 
         if (user == null) {
-            userResponseDto.setStatus(UserResponseDto.Status.INVALID_USER);
+            userResponseDto.setStatus(UserResponseDTO.Status.INVALID_USER);
         } else {
             // pw reset
-            String tempPw = Random.RandomString(pwResetSize);
+            final String tempPw = Random.RandomString(pwResetSize);
 
             final String username = "jasuil1212@gmail.com";
             final String password = "vyyqzspyrhfmzivy";
 
-            Properties prop = new Properties();
+            final Properties prop = new Properties();
             prop.put("mail.smtp.host", "smtp.gmail.com");
             prop.put("mail.smtp.port", 465);
             prop.put("mail.smtp.auth", "true");
@@ -149,29 +157,30 @@ public class UserService {
             prop.put("mail.smtp.ssl.trust", "smtp.gmail.com");
             prop.put("mail.smtp.ssl.protocols", "TLSv1.2");
 
-            jakarta.mail.Session session = jakarta.mail.Session.getInstance(prop,
-                    new jakarta.mail.Authenticator() {
-                        protected PasswordAuthentication getPasswordAuthentication() {
+            final jakarta.mail.Session session = jakarta.mail.Session.getInstance(prop,
+                    new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
                             return new PasswordAuthentication(username, password);
                         }
                     });
 
             try {
-                Message message = new MimeMessage(session);
+                final Message message = new MimeMessage(session);
                 message.setFrom(new InternetAddress("jasuil1212@gmail.com"));
                 message.setRecipients(
-                        Message.RecipientType.TO,
+                        RecipientType.TO,
                         InternetAddress.parse(user.getEmail())
                 );
                 message.setSubject("식사일기 임시 비밀번호입니다.");
-                String origin = "임시비밀번호: " + tempPw;
+                final String origin = "임시비밀번호: " + tempPw;
                 message.setText(origin);
 
                 Transport.send(message);
 
                 user.setPw(passwordEncoder.encode(tempPw));
                 userRepository.save(user);
-                userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+                userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
             } catch (Exception e) {
                 log.error("임시 비번발급 에러 "  + e.getMessage());
                 throw new RuntimeException(e);
@@ -180,20 +189,33 @@ public class UserService {
         return userResponseDto;
     }
 
-    public void updatePw(String newPw) throws BizException {
+    public void updatePw(String newPw) {
+        if (!StringUtils.hasText(newPw)) {
+            throw new BizException("pw is empty");
+        }
         newPw = newPw.trim();
-        if (newPw.length() < 8) throw new BizException("pw length is short");
+        if (newPw.length() < pwResetSize) {
+            throw new BizException("pw length is short");
+        }
         boolean isSymbol = false;
         boolean isAlphabet = false;
         boolean isDigit = false;
         for (int i = 0; i < newPw.length(); i++) {
-            if (!isAlphabet && Character.isAlphabetic(newPw.charAt(i))) isAlphabet = true;
-            if (!isDigit && Character.isDigit(newPw.charAt(i))) isDigit = true;
-            if (!isSymbol && String.valueOf(newPw.charAt(i)).matches("[^a-zA-Z0-9\\s]")) isSymbol = true;
+            if (!isAlphabet && Character.isAlphabetic(newPw.charAt(i))) {
+                isAlphabet = true;
+            }
+            if (!isDigit && Character.isDigit(newPw.charAt(i))) {
+                isDigit = true;
+            }
+            if (!isSymbol && COMPILE.matcher(String.valueOf(newPw.charAt(i))).matches()) {
+                isSymbol = true;
+            }
         }
-        if (!isAlphabet || !isDigit || !isSymbol) throw new BizException("invalid pw");
+        if (!isAlphabet || !isDigit || !isSymbol) {
+            throw new BizException("invalid pw");
+        }
 
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        final User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         user.setPw(passwordEncoder.encode(newPw));
         userRepository.save(user);
     }
