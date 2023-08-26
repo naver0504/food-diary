@@ -8,11 +8,11 @@
     </filter>
     <file>error.log</file>
     <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-4relative [%thread] %-5level %logger{35} -%kvp -%msg%n</pattern>
+      <pattern>./log/%d{yyyy-MM-dd HH:mm:ss.SSS} %-4relative [%thread] %-5level %logger{35} -%kvp -%msg%n</pattern>
     </encoder>
     <!-- 하루에 한번 압축 후 보관, 최대 30일, 1GB까지 보관 -->
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>errorLogFile.%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <fileNamePattern>./log/errorLogFile.%d{yyyy-MM-dd}.gz</fileNamePattern>
       <maxHistory>30</maxHistory>
       <totalSizeCap>1GB</totalSizeCap>
     </rollingPolicy>
@@ -26,13 +26,13 @@
       <onMatch>ACCEPT</onMatch>
       <onMismatch>DENY</onMismatch>
     </filter>
-    <file>${LOG_FILE_NAME}.log</file>
+    <file>./log/${LOG_FILE_NAME}.log</file>
     <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
         <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}- %msg%n</pattern>
     </encoder>
     <!-- 하루에 한번 압축 후 보관, 최대 30일, 1GB까지 보관 -->
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_FILE_NAME}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <fileNamePattern>./log/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.gz</fileNamePattern>
       <maxHistory>30</maxHistory>
       <totalSizeCap>1GB</totalSizeCap>
     </rollingPolicy>
