@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import com.fooddiary.api.entity.session.Session;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,6 +21,8 @@ public class User {
     private String pw;
     private LocalDateTime pwUpdateAt;
     private LocalDateTime pwUpdateDelayAt;
+    @Column(nullable = false)
+    @ColumnDefault("0")
     private Integer pwTry;
     @Column(nullable = false)
     private String name;

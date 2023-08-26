@@ -1,12 +1,22 @@
 package com.fooddiary.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.response.ErrorResponseDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
-import com.fooddiary.api.entity.user.User;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
+
 import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.verification.VerificationMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -30,25 +39,22 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fooddiary.api.common.constants.Profiles;
+import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
+import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
+import com.fooddiary.api.entity.user.User;
 
 /**
  * 컨트롤러 계층에 대한 테스트 입니다. API 문서생성도 같이하고 있습니다.
  */
 @SpringBootTest
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
-@ActiveProfiles(Profiles.LOCAL)
+@ActiveProfiles(Profiles.TEST)
 public class UserControllerTest {
 
     @MockBean
@@ -59,7 +65,7 @@ public class UserControllerTest {
     private WebApplicationContext context;
     private MockMvc mockMvc;
     @Captor
-    private ArgumentCaptor<UserLoginRequestDto> loginRequestDto;
+    private ArgumentCaptor<UserLoginRequestDTO> loginRequestDto;
 
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
@@ -84,10 +90,11 @@ public class UserControllerTest {
 
     @Test
     void create_user() throws Exception {
-        given(userService.createUser(any())).willReturn("2$asdf1g1");
-        final String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
-        final UserResponseDto userResponseDto = new UserResponseDto();
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setToken("2$asdf1g1");
+        userResponseDto.setPasswordStatus(UserNewPasswordResponseDTO.Status.SUCCESS);
+        given(userService.createUser(any())).willReturn(userResponseDto);
+        final String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
         final ObjectMapper objectMapper = new ObjectMapper();
 
         mockMvc.perform(post("/user/new")
@@ -103,13 +110,13 @@ public class UserControllerTest {
      */
     @Test
     void login() throws Exception {
-        final UserLoginRequestDto userNewRequestDto = new UserLoginRequestDto();
+        final UserLoginRequestDTO userNewRequestDto = new UserLoginRequestDTO();
         userNewRequestDto.setEmail("jasuil@daum.net");
         userNewRequestDto.setPassword("1212");
         final String token = "2$asdf1g1";
-        final UserResponseDto userResponseDto = new UserResponseDto();
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setToken(token);
-        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+        userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
 
         given(userService.loginUser(any())).willReturn(userResponseDto);
 
@@ -131,7 +138,7 @@ public class UserControllerTest {
 
         then(userService).should(timeout(1)).loginUser(loginRequestDto.capture());
 
-        final List<UserLoginRequestDto> servletLoginRequest = loginRequestDto.getAllValues();
+        final List<UserLoginRequestDTO> servletLoginRequest = loginRequestDto.getAllValues();
 
         Assertions.assertEquals(servletLoginRequest.size(), 1);
         Assertions.assertEquals(servletLoginRequest.get(0).getEmail(), userNewRequestDto.getEmail());
@@ -143,65 +150,76 @@ public class UserControllerTest {
      */
     @Test
     void login_error() throws Exception {
-        final UserLoginRequestDto userNewRequestDto = new UserLoginRequestDto();
+        final UserLoginRequestDTO userNewRequestDto = new UserLoginRequestDTO();
         userNewRequestDto.setEmail("jasuil@daum.net");
         userNewRequestDto.setPassword("1212");
-        final ErrorResponseDto errorResponseDto = new ErrorResponseDto("system error");
+        final ErrorResponseDTO errorResponseDto = new ErrorResponseDTO("system error");
 
         given(userService.loginUser(any())).willThrow(new RuntimeException("test"));
 
         final ObjectMapper objectMapper = new ObjectMapper();
 
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/login")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content(
-                                objectMapper.writeValueAsString(
-                                        userNewRequestDto)))
-                .andDo(document("error response"))
-                .andReturn()
-                .getResponse();
+                                                                                        .contentType(
+                                                                                                MediaType.APPLICATION_JSON)
+                                                                                        .content(
+                                                                                                objectMapper.writeValueAsString(
+                                                                                                        userNewRequestDto)))
+                                                                       .andDo(document("error response"))
+                                                                       .andReturn()
+                                                                       .getResponse();
 
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
-                objectMapper.writeValueAsString(errorResponseDto));
+                                objectMapper.writeValueAsString(errorResponseDto));
     }
 
     @Test
-    void reset_pw() throws Exception {
-        UserResponseDto userResponseDto = new UserResponseDto();
-        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+    void reset_password() throws Exception {
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
+        userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
         given(userService.resetPw()).willReturn(userResponseDto);
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
         final ObjectMapper objectMapper = new ObjectMapper();
 
-        mockMvc.perform(put("/user/pw/reset")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .headers(httpHeaders))
-                .andExpectAll(status().isOk(),
-                        content().json(objectMapper.writeValueAsString(userResponseDto)))
-                .andDo(document("reset password"));
+        mockMvc.perform(post("/user/reset-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .headers(httpHeaders))
+               .andExpectAll(status().isOk(),
+                             content().json(objectMapper.writeValueAsString(userResponseDto)))
+               .andDo(document("reset password"));
     }
 
     @Test
-    void update_pw() throws Exception {
-        final String newPw = "myFood1234@!";
-        UserResponseDto userResponseDto = new UserResponseDto();
-        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
-        doNothing().when(userService).updatePw(newPw);
+    void new_password() throws Exception {
+        final String newPassword = "myFood1234@!";
+        final UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
+        userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.SUCCESS);
+        when(userService.updatePassword(newPassword)).thenReturn(userNewPasswordResponseDTO);
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
         final ObjectMapper objectMapper = new ObjectMapper();
+        final UserNewPasswordRequestDTO userNewPasswordRequestDTO = new UserNewPasswordRequestDTO();
+        userNewPasswordRequestDTO.setPassword(newPassword);
 
-        mockMvc.perform(put("/user/pw/{new-pw}", newPw)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .headers(httpHeaders))
-                .andExpect(status().isOk())
-                .andDo(document("update password"));
-        verify(userService, times(1)).updatePw(newPw);
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/new-password").content(
+                                                                                                            objectMapper.writeValueAsString(userNewPasswordRequestDTO))
+                                                                                                    .contentType(
+                                                                                                            MediaType.APPLICATION_JSON)
+                                                                                                    .headers(
+                                                                                                            httpHeaders))
+                                                                       .andExpect(status().isOk())
+                                                                       .andDo(document("new password"))
+                                                                       .andReturn().getResponse();
+
+        verify(userService, times(1)).updatePassword(newPassword);
+
+        Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.OK.value());
+        Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
+                                objectMapper.writeValueAsString(userNewPasswordResponseDTO));
     }
 
 }

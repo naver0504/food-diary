@@ -1,8 +1,10 @@
 package com.fooddiary.api.controller;
 
-import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.request.UserNewRequestDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
+import com.fooddiary.api.dto.request.UserNewRequestDTO;
+import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,33 +26,29 @@ public class UserController {
 
     @GetMapping("/is-login")
     public ResponseEntity<HttpStatus> isLogin(HttpServletRequest request) {
-        User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
+        final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
         return user == null ? ResponseEntity.badRequest().build() : ResponseEntity.ok().build();
     }
 
     @PostMapping("/new")
-    public ResponseEntity<UserResponseDto> createUser(@RequestBody
-                                                      UserNewRequestDto userDto) {
-        final String token = userService.createUser(userDto);
-        final UserResponseDto userResponseDto = new UserResponseDto();
-        userResponseDto.setToken(token);
-        return ResponseEntity.ok(userResponseDto);
+    public ResponseEntity<UserResponseDTO> createUser(@RequestBody
+                                                      UserNewRequestDTO userDto) {
+        return ResponseEntity.ok(userService.createUser(userDto));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDto> loginUser(@RequestBody
-                                                     UserLoginRequestDto userDto) {
+    public ResponseEntity<UserResponseDTO> loginUser(@RequestBody
+                                                     UserLoginRequestDTO userDto) {
         return ResponseEntity.ok(userService.loginUser(userDto));
     }
 
-    @PutMapping("/pw/reset")
-    public ResponseEntity<UserResponseDto> resetPw() {
+    @PostMapping("/reset-password")
+    public ResponseEntity<UserResponseDTO> resetPw() {
         return ResponseEntity.ok(userService.resetPw());
     }
 
-    @PutMapping("/pw/{new-pw}")
-    public ResponseEntity updatePw(@PathVariable(name = "new-pw") String newPw) {
-        userService.updatePw(newPw);
-        return ResponseEntity.ok().build();
+    @PostMapping("/new-password")
+    public ResponseEntity<UserNewPasswordResponseDTO> updatePw(@RequestBody UserNewPasswordRequestDTO userNewPasswordRequestDTO) {
+        return ResponseEntity.ok(userService.updatePassword(userNewPasswordRequestDTO.getPassword()));
     }
 }
