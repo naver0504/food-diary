@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,12 +43,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.UserLoginRequestDTO;
-import com.fooddiary.api.dto.request.UserNewPwRequestDTO;
+import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.response.ErrorResponseDTO;
-import com.fooddiary.api.dto.response.NewPwResponseDTO;
+import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.service.UserService;
 
 /**
  * 컨트롤러 계층에 대한 테스트 입니다. API 문서생성도 같이하고 있습니다.
@@ -90,10 +90,11 @@ public class UserControllerTest {
 
     @Test
     void create_user() throws Exception {
-        given(userService.createUser(any())).willReturn("2$asdf1g1");
-        final String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
         final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setToken("2$asdf1g1");
+        userResponseDto.setPasswordStatus(UserNewPasswordResponseDTO.Status.SUCCESS);
+        given(userService.createUser(any())).willReturn(userResponseDto);
+        final String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
         final ObjectMapper objectMapper = new ObjectMapper();
 
         mockMvc.perform(post("/user/new")
@@ -174,7 +175,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void reset_pw() throws Exception {
+    void reset_password() throws Exception {
         final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
         given(userService.resetPw()).willReturn(userResponseDto);
@@ -183,7 +184,7 @@ public class UserControllerTest {
         httpHeaders.add("token", "asdf");
         final ObjectMapper objectMapper = new ObjectMapper();
 
-        mockMvc.perform(post("/user/reset-pw")
+        mockMvc.perform(post("/user/reset-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .headers(httpHeaders))
                .andExpectAll(status().isOk(),
@@ -192,20 +193,20 @@ public class UserControllerTest {
     }
 
     @Test
-    void new_pw() throws Exception {
-        final String newPw = "myFood1234@!";
-        final NewPwResponseDTO newPwResponseDTO = new NewPwResponseDTO();
-        newPwResponseDTO.setStatus(NewPwResponseDTO.Status.SUCCESS);
-        when(userService.updatePw(newPw)).thenReturn(newPwResponseDTO);
+    void new_password() throws Exception {
+        final String newPassword = "myFood1234@!";
+        final UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
+        userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.SUCCESS);
+        when(userService.updatePassword(newPassword)).thenReturn(userNewPasswordResponseDTO);
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
         final ObjectMapper objectMapper = new ObjectMapper();
-        final UserNewPwRequestDTO userNewPwRequestDTO = new UserNewPwRequestDTO();
-        userNewPwRequestDTO.setPw(newPw);
+        final UserNewPasswordRequestDTO userNewPasswordRequestDTO = new UserNewPasswordRequestDTO();
+        userNewPasswordRequestDTO.setPassword(newPassword);
 
-        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/new-pw").content(
-                                                                                                            objectMapper.writeValueAsString(userNewPwRequestDTO))
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/new-password").content(
+                                                                                                            objectMapper.writeValueAsString(userNewPasswordRequestDTO))
                                                                                                     .contentType(
                                                                                                             MediaType.APPLICATION_JSON)
                                                                                                     .headers(
@@ -214,11 +215,11 @@ public class UserControllerTest {
                                                                        .andDo(document("new password"))
                                                                        .andReturn().getResponse();
 
-        verify(userService, times(1)).updatePw(newPw);
+        verify(userService, times(1)).updatePassword(newPassword);
 
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.OK.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
-                                objectMapper.writeValueAsString(newPwResponseDTO));
+                                objectMapper.writeValueAsString(userNewPasswordResponseDTO));
     }
 
 }

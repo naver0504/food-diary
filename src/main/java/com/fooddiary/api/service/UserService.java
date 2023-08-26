@@ -3,7 +3,7 @@ package com.fooddiary.api.service;
 import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.UserNewRequestDTO;
-import com.fooddiary.api.dto.response.NewPwResponseDTO;
+import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.session.Session;
 import com.fooddiary.api.entity.user.Status;
@@ -31,14 +31,13 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private static final Pattern SYMBOL_COMPILE = Pattern.compile("[!@#$%^&*(),.?\\\":{}|<>]");
+    private static final int PW_EXPIRED_DAY_LIMIT = 90;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
@@ -46,21 +45,28 @@ public class UserService {
     private Integer pwTryLimit;
     @Value("${food-diary.pw-reset-size}")
     private Integer pwResetSize;
-    private static final int PW_EXPIRED_DAY_LIMIT = 90;
 
+    public UserResponseDTO createUser(UserNewRequestDTO userDto) {
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
+        UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(userDto.getPassword());
+        if (userNewPasswordResponseDTO.getStatus() == UserNewPasswordResponseDTO.Status.SUCCESS) {
+            if (getValidUser(userDto.getEmail()) != null) {
+                userResponseDto.setStatus(UserResponseDTO.Status.DUPLICATED_USER);
+                return userResponseDto;
+            }
+            final LocalDateTime now = LocalDateTime.now();
+            final User user = new User();
+            user.setEmail(userDto.getEmail());
+            user.setName(userDto.getName());
+            user.setPw(passwordEncoder.encode(userDto.getPassword()));
+            user.setPwUpdateAt(now);
+            user.setPwUpdateDelayAt(now.plusDays(PW_EXPIRED_DAY_LIMIT));
+            userRepository.save(user);
 
-    public String createUser(UserNewRequestDTO userDto) {
-        final LocalDateTime now = LocalDateTime.now();
-        final User user = new User();
-        user.setEmail(userDto.getEmail());
-        user.setName(userDto.getName());
-        user.setPw(passwordEncoder.encode(userDto.getPassword()));
-        user.setPwUpdateAt(now);
-        user.setPwUpdateDelayAt(now.plusDays(PW_EXPIRED_DAY_LIMIT));
-        userRepository.save(user);
-
-        final Session session = sessionService.createSession(user);
-        return session.getToken();
+            userResponseDto.setToken(sessionService.createSession(user).getToken());
+        }
+        userResponseDto.setPasswordStatus(userNewPasswordResponseDTO.getStatus());
+        return userResponseDto;
     }
 
     public UserResponseDTO loginUser(UserLoginRequestDTO userDto) {
@@ -189,51 +195,58 @@ public class UserService {
         return userResponseDto;
     }
 
-    public NewPwResponseDTO updatePw(String newPw) {
-        NewPwResponseDTO newPwResponseDTO = new NewPwResponseDTO();
-        if (!StringUtils.hasText(newPw)) {
-            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.EMPTY_PASSWORD);
-            return newPwResponseDTO;
+    public UserNewPasswordResponseDTO updatePassword(String newPassword) {
+        UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(newPassword);
+        if (userNewPasswordResponseDTO.getStatus() == UserNewPasswordResponseDTO.Status.SUCCESS) {
+            final User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            user.setPw(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
         }
-        newPw = newPw.trim();
-        if (newPw.length() < pwResetSize) {
-            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.SHORT_PASSWORD);
-            return newPwResponseDTO;
+        return userNewPasswordResponseDTO;
+    }
+
+    private UserNewPasswordResponseDTO validatePassword(String password) {
+        UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
+        if (!StringUtils.hasText(password)) {
+            userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.EMPTY_PASSWORD);
+            return userNewPasswordResponseDTO;
+        }
+        password = password.trim();
+        if (password.length() < pwResetSize) {
+            userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.SHORT_PASSWORD);
+            return userNewPasswordResponseDTO;
         }
         int symbolCount = 0;
         int alphabetCount = 0;
         int digitCount = 0;
-        for (int i = 0; i < newPw.length(); i++) {
-            char character = newPw.charAt(i);
-            if (character >= 65 && character <= 122) {
+        for (int i = 0; i < password.length(); i++) {
+            char character = password.charAt(i);
+            if (character >= 65 && character <= 90 || character >= 97 && character <= 122 ) {
                 alphabetCount++;
             }
-            if (Character.isDigit(newPw.charAt(i))) {
+            if (Character.isDigit(character)) {
                 digitCount++;
             }
-            if (SYMBOL_COMPILE.matcher(String.valueOf(newPw.charAt(i))).matches()) {
+            if ((character >= 33 && character <= 47) || (character >= 58 && character <= 64) ||
+                    (character >= 91 && character <= 96) || (character >= 123 && character <= 126)) {
                 symbolCount++;
             }
         }
 
         if (digitCount == 0) {
-            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.INCLUDE_DIGIT_CHARACTER);
-            return newPwResponseDTO;
+            userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.INCLUDE_DIGIT_CHARACTER);
+            return userNewPasswordResponseDTO;
         }
         if (symbolCount == 0) {
-            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.INCLUDE_SYMBOLIC_CHARACTER);
-            return newPwResponseDTO;
+            userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.INCLUDE_SYMBOLIC_CHARACTER);
+            return userNewPasswordResponseDTO;
         }
-        if (alphabetCount + symbolCount + digitCount < newPw.length()) {
-            newPwResponseDTO.setStatus(NewPwResponseDTO.Status.NOT_ALPHABETIC_PASSWORD);
-            return newPwResponseDTO;
+        if (alphabetCount + symbolCount + digitCount < password.length()) {
+            userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.NOT_ALPHABETIC_PASSWORD);
+            return userNewPasswordResponseDTO;
         }
 
-        final User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        user.setPw(passwordEncoder.encode(newPw));
-        userRepository.save(user);
-
-        newPwResponseDTO.setStatus(NewPwResponseDTO.Status.SUCCESS);
-        return newPwResponseDTO;
+        userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.SUCCESS);
+        return userNewPasswordResponseDTO;
     }
 }

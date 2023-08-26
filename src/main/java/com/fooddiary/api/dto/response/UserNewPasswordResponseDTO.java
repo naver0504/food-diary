@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class NewPwResponseDTO {
+public class UserNewPasswordResponseDTO {
 
     private Status status;
     public enum Status {

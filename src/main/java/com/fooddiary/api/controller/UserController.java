@@ -1,9 +1,9 @@
 package com.fooddiary.api.controller;
 
 import com.fooddiary.api.dto.request.UserLoginRequestDTO;
-import com.fooddiary.api.dto.request.UserNewPwRequestDTO;
+import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.UserNewRequestDTO;
-import com.fooddiary.api.dto.response.NewPwResponseDTO;
+import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
@@ -33,10 +33,7 @@ public class UserController {
     @PostMapping("/new")
     public ResponseEntity<UserResponseDTO> createUser(@RequestBody
                                                       UserNewRequestDTO userDto) {
-        final String token = userService.createUser(userDto);
-        final UserResponseDTO userResponseDto = new UserResponseDTO();
-        userResponseDto.setToken(token);
-        return ResponseEntity.ok(userResponseDto);
+        return ResponseEntity.ok(userService.createUser(userDto));
     }
 
     @PostMapping("/login")
@@ -45,14 +42,13 @@ public class UserController {
         return ResponseEntity.ok(userService.loginUser(userDto));
     }
 
-    @PostMapping("/reset-pw")
+    @PostMapping("/reset-password")
     public ResponseEntity<UserResponseDTO> resetPw() {
         return ResponseEntity.ok(userService.resetPw());
     }
 
-    @PostMapping("/new-pw")
-    public ResponseEntity<NewPwResponseDTO> updatePw(@RequestBody UserNewPwRequestDTO userNewPwRequestDTO) {
-        ;
-        return ResponseEntity.ok(userService.updatePw(userNewPwRequestDTO.getPw()));
+    @PostMapping("/new-password")
+    public ResponseEntity<UserNewPasswordResponseDTO> updatePw(@RequestBody UserNewPasswordRequestDTO userNewPasswordRequestDTO) {
+        return ResponseEntity.ok(userService.updatePassword(userNewPasswordRequestDTO.getPassword()));
     }
 }
