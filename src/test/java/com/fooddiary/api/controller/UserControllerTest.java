@@ -54,7 +54,7 @@ import com.fooddiary.api.entity.user.User;
  */
 @SpringBootTest
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
-@ActiveProfiles(Profiles.LOCAL)
+@ActiveProfiles(Profiles.TEST)
 public class UserControllerTest {
 
     @MockBean
