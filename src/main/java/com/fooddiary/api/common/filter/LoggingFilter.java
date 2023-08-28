@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -39,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LoggingFilter extends OncePerRequestFilter {
     private static final String ACCESS_LOG_INDEX = "access-log";
     private static final int TRANSFER_BODY_SIZE = 1000;
+    private static final Set<String> EXCLUDED_LOG_URL = Set.of("/favicon.ico", "assets/");
     private static final String ELB_HEALTH_CHECKER_HEADER_NAME_KEYWORD = "HealthChecker";
     private final ObjectMapper objectMapper;
     private final UserService userService;
@@ -64,6 +66,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         //MDC.put("traceId", UUID.randomUUID().toString());
         if ((request.getHeader("user-agent") != null &&
              request.getHeader("user-agent").contains(ELB_HEALTH_CHECKER_HEADER_NAME_KEYWORD))
+            || EXCLUDED_LOG_URL.stream().anyMatch(uriKeyword -> request.getRequestURI().contains(uriKeyword))
             || isAsyncDispatch(request)) {
             filterChain.doFilter(request, response);
         } else {
