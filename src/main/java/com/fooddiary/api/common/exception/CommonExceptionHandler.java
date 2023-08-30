@@ -15,8 +15,15 @@ import org.springframework.web.servlet.ModelAndView;
 public class CommonExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     protected ResponseEntity<ErrorResponseDTO> RuntimeExceptionHandler(RuntimeException e) {
-        log.error("handleMethodArgumentNotValidException", e);
+        log.error("RuntimeException", e);
         final ErrorResponseDTO response = new ErrorResponseDTO("system error");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(BizException.class)
+    protected ResponseEntity<ErrorResponseDTO> RuntimeExceptionHandler(BizException e) {
+        log.error("BizException", e);
+        final ErrorResponseDTO response = new ErrorResponseDTO(e.getMessage());
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
