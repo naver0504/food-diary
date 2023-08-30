@@ -1,23 +1,15 @@
 package com.fooddiary.api.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fooddiary.api.common.constants.Profiles;
+import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
+import com.fooddiary.api.dto.request.UserResetPasswordRequestDTO;
+import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
+import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,15 +38,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.UserLoginRequestDTO;
-import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
-import com.fooddiary.api.dto.response.ErrorResponseDTO;
-import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
-import com.fooddiary.api.dto.response.UserResponseDTO;
-import com.fooddiary.api.entity.user.User;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.*;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * 컨트롤러 계층에 대한 테스트 입니다. API 문서생성도 같이하고 있습니다.
@@ -65,6 +62,8 @@ import com.fooddiary.api.entity.user.User;
 public class UserControllerTest {
 
     @MockBean
+    PasswordEncoder passwordEncoder;
+    @MockBean
     private Interceptor interceptor;
     @MockBean
     private UserService userService;
@@ -73,8 +72,6 @@ public class UserControllerTest {
     private MockMvc mockMvc;
     @Captor
     private ArgumentCaptor<UserLoginRequestDTO> loginRequestDto;
-    @MockBean
-    PasswordEncoder passwordEncoder;
 
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
@@ -185,12 +182,17 @@ public class UserControllerTest {
 
     @Test
     void reset_password() throws Exception {
+        final String email = "jasuil@daum.net";
         final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
-        given(userService.resetPw("jasuil@daum.net")).willReturn(userResponseDto);
+        given(userService.resetPw(email)).willReturn(userResponseDto);
         final ObjectMapper objectMapper = new ObjectMapper();
 
+        UserResetPasswordRequestDTO userResetPasswordRequestDTO = new UserResetPasswordRequestDTO();
+        userResetPasswordRequestDTO.setEmail(email);
+
         mockMvc.perform(post("/user/reset-password")
+                        .content(objectMapper.writeValueAsString(userResetPasswordRequestDTO))
                                 .contentType(MediaType.APPLICATION_JSON))
                .andExpectAll(status().isOk(),
                              content().json(objectMapper.writeValueAsString(userResponseDto)))
@@ -219,7 +221,7 @@ public class UserControllerTest {
 
         final UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
         userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.SUCCESS);
-        when(userService.updatePassword(userNewPasswordRequestDTO)).thenReturn(userNewPasswordResponseDTO);
+        when(userService.updatePassword(any(UserNewPasswordRequestDTO.class))).thenReturn(userNewPasswordResponseDTO);
         when(passwordEncoder.encode(password)).thenReturn(password);
         when(passwordEncoder.encode(newPassword)).thenReturn(newPassword);
         final HttpHeaders httpHeaders = new HttpHeaders();
@@ -237,7 +239,7 @@ public class UserControllerTest {
                                                                        .andDo(document("new password"))
                                                                        .andReturn().getResponse();
 
-        verify(userService, times(1)).updatePassword(userNewPasswordRequestDTO);
+        verify(userService, times(1)).updatePassword(any(UserNewPasswordRequestDTO.class));
 
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.OK.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
