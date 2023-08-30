@@ -26,7 +26,6 @@ public class User {
     @Column(nullable = false)
     @ColumnDefault("0")
     private Integer pwTry;
-    @Column(nullable = false)
     private String name;
     @Convert(converter = StatusConverter.class)
     private Status status;
