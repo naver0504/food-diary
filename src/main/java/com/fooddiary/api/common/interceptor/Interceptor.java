@@ -37,6 +37,7 @@ public class Interceptor implements HandlerInterceptor {
             add("/user/login");
             add("/user/info");
             add("/user/is-login");
+            add("/user/reset-password");
         }
     };
 

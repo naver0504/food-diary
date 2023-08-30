@@ -14,9 +14,29 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `session` (
-    `token` varchar(500) NOT NULL,
-    `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `terminate_at` datetime NOT NULL,
-    `user_id` int DEFAULT NULL,
-    PRIMARY KEY (`token`)
+
+  `token` varchar(500) NOT NULL,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `terminate_at` datetime NOT NULL,
+  `user_id` int DEFAULT NULL,
+  PRIMARY KEY (`token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+create table image (
+    id integer not null auto_increment,
+    stored_file_name varchar(255) not null,
+    time_status varchar(255),
+    day_image_id integer,
+    primary key (id)
+) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+create table day_image (
+    day_image_id integer not null auto_increment,
+    day integer not null,
+    month integer not null,
+    year integer not null,
+    thumb_nail_image_path varchar(255),
+    user_id integer,
+    primary key (day_image_id)
+) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
