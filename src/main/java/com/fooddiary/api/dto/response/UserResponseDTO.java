@@ -7,7 +7,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class UserResponseDto {
+public class UserResponseDTO {
     private String token;
     private Status status;
 

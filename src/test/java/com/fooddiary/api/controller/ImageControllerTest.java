@@ -2,28 +2,22 @@ package com.fooddiary.api.controller;
 
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.response.DayImageDto;
-import com.fooddiary.api.dto.response.DayImagesDto;
-import com.fooddiary.api.dto.response.SaveImageResponseDto;
-import com.fooddiary.api.entity.image.DayImage;
+import com.fooddiary.api.dto.response.DayImageDTO;
+import com.fooddiary.api.dto.response.DayImagesDTO;
+import com.fooddiary.api.dto.response.SaveImageResponseDTO;
 import com.fooddiary.api.entity.image.Time;
 import com.fooddiary.api.entity.image.TimeStatus;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.repository.UserRepository;
 import com.fooddiary.api.service.DayImageService;
 import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockPart;
 import org.springframework.restdocs.RestDocumentationContextProvider;
@@ -35,7 +29,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
@@ -110,8 +103,8 @@ public class ImageControllerTest {
                 new FileInputStream("src/test/resources/image/apple.png")
         );
 
-        final SaveImageResponseDto saveImageResponseDto = SaveImageResponseDto.builder()
-                .status(SaveImageResponseDto.Status.SUCCESS).build();
+        final SaveImageResponseDTO saveImageResponseDto = SaveImageResponseDTO.builder()
+                .status(SaveImageResponseDTO.Status.SUCCESS).build();
 
         when(userService.getValidUser(any(), any())).thenReturn(principal);
         given(dayImageService.saveImage(any(), any(), any())).willReturn(saveImageResponseDto);
@@ -135,23 +128,23 @@ public class ImageControllerTest {
         httpHeaders.add("email", "qortmdwls1234@naver.com");
         httpHeaders.add("token", token);
 
-        final List<DayImageDto> dayImageDtos = new ArrayList<>();
+        final List<DayImageDTO> dayImageDTOS = new ArrayList<>();
         final FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
         final byte[] bytes = fileInputStream.readAllBytes();
 
-        final DayImageDto dayImageDto = DayImageDto.builder()
+        final DayImageDTO dayImageDto = DayImageDTO.builder()
                 .bytes(bytes)
                 .id(1)
                 .timeStatus(TimeStatus.BREAKFAST.getCode())
                 .build();
 
-        dayImageDtos.add(dayImageDto);
-        final DayImageDto dayImageDto2 = DayImageDto.builder()
+        dayImageDTOS.add(dayImageDto);
+        final DayImageDTO dayImageDTO2 = DayImageDTO.builder()
                 .bytes(bytes)
                 .id(2)
                 .timeStatus(TimeStatus.DINNER.getCode())
                 .build();
-        dayImageDtos.add(dayImageDto2);
+        dayImageDTOS.add(dayImageDTO2);
 
         final int year = LocalDateTime.now().getYear();
         final int month = LocalDateTime.now().getMonth().getValue();
@@ -159,7 +152,7 @@ public class ImageControllerTest {
 
 
         when(userService.getValidUser(any(), any())).thenReturn(principal);
-        when(dayImageService.getDayImage(year, month, day, principal)).thenReturn(dayImageDtos);
+        when(dayImageService.getDayImage(year, month, day, principal)).thenReturn(dayImageDTOS);
 
 
         final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
@@ -183,11 +176,11 @@ public class ImageControllerTest {
         httpHeaders.add("email", "qortmdwls1234@naver.com");
         httpHeaders.add("token", token);
 
-        final List<DayImagesDto> dayImagesDtos = new ArrayList<>();
+        final List<DayImagesDTO> dayImagesDtos = new ArrayList<>();
         final FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
         final Time time1 = new Time(LocalDateTime.now().minusDays(1));
         final byte[] bytes = fileInputStream.readAllBytes();
-        final DayImagesDto dayImagesDto = DayImagesDto.builder()
+        final DayImagesDTO dayImagesDto = DayImagesDTO.builder()
                 .id(1)
                 .bytes(bytes)
                 .time(time1)
@@ -195,7 +188,7 @@ public class ImageControllerTest {
         dayImagesDtos.add(dayImagesDto);
         final Time time2 = new Time(LocalDateTime.now());
 
-        final DayImagesDto dayImagesDto2 = DayImagesDto.builder()
+        final DayImagesDTO dayImagesDto2 = DayImagesDTO.builder()
                 .id(2)
                 .bytes(bytes)
                 .time(time2)

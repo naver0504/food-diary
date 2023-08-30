@@ -3,9 +3,9 @@ package com.fooddiary.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.response.ErrorResponseDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.Assertions;
@@ -59,7 +59,7 @@ public class UserControllerTest {
     private WebApplicationContext context;
     private MockMvc mockMvc;
     @Captor
-    private ArgumentCaptor<UserLoginRequestDto> loginRequestDto;
+    private ArgumentCaptor<UserLoginRequestDTO> loginRequestDto;
 
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
@@ -86,7 +86,7 @@ public class UserControllerTest {
     void create_user() throws Exception {
         given(userService.createUser(any())).willReturn("2$asdf1g1");
         final String body = "{\"email\":\"jasuil@daum.net\",\"name\":\"성일짱\",\"password\":\"1212\"}";
-        final UserResponseDto userResponseDto = new UserResponseDto();
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setToken("2$asdf1g1");
         final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -103,13 +103,13 @@ public class UserControllerTest {
      */
     @Test
     void login() throws Exception {
-        final UserLoginRequestDto userNewRequestDto = new UserLoginRequestDto();
+        final UserLoginRequestDTO userNewRequestDto = new UserLoginRequestDTO();
         userNewRequestDto.setEmail("jasuil@daum.net");
         userNewRequestDto.setPassword("1212");
         final String token = "2$asdf1g1";
-        final UserResponseDto userResponseDto = new UserResponseDto();
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setToken(token);
-        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+        userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
 
         given(userService.loginUser(any())).willReturn(userResponseDto);
 
@@ -131,7 +131,7 @@ public class UserControllerTest {
 
         then(userService).should(timeout(1)).loginUser(loginRequestDto.capture());
 
-        final List<UserLoginRequestDto> servletLoginRequest = loginRequestDto.getAllValues();
+        final List<UserLoginRequestDTO> servletLoginRequest = loginRequestDto.getAllValues();
 
         Assertions.assertEquals(servletLoginRequest.size(), 1);
         Assertions.assertEquals(servletLoginRequest.get(0).getEmail(), userNewRequestDto.getEmail());
@@ -143,10 +143,10 @@ public class UserControllerTest {
      */
     @Test
     void login_error() throws Exception {
-        final UserLoginRequestDto userNewRequestDto = new UserLoginRequestDto();
+        final UserLoginRequestDTO userNewRequestDto = new UserLoginRequestDTO();
         userNewRequestDto.setEmail("jasuil@daum.net");
         userNewRequestDto.setPassword("1212");
-        final ErrorResponseDto errorResponseDto = new ErrorResponseDto("system error");
+        final ErrorResponseDTO errorResponseDto = new ErrorResponseDTO("system error");
 
         given(userService.loginUser(any())).willThrow(new RuntimeException("test"));
 

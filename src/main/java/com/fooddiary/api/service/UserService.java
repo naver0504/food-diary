@@ -1,8 +1,8 @@
 package com.fooddiary.api.service;
 
-import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.request.UserNewRequestDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewRequestDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.session.Session;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
@@ -25,7 +25,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
 
-    public String createUser(UserNewRequestDto userDto) {
+    public String createUser(UserNewRequestDTO userDto) {
         final User user = new User();
         user.setEmail(userDto.getEmail());
         user.setName(userDto.getName());
@@ -36,15 +36,15 @@ public class UserService {
         return session.getToken();
     }
 
-    public UserResponseDto loginUser(UserLoginRequestDto userDto) {
-        UserResponseDto userResponseDto = new UserResponseDto();
+    public UserResponseDTO loginUser(UserLoginRequestDTO userDto) {
+        UserResponseDTO userResponseDto = new UserResponseDTO();
         User user = userRepository.findByEmailAndStatus(userDto.getEmail(), Status.ACTIVE);
 
         if (user == null){
-            userResponseDto.setStatus(UserResponseDto.Status.INVALID_USER);
+            userResponseDto.setStatus(UserResponseDTO.Status.INVALID_USER);
             return userResponseDto;
         } else if (!passwordEncoder.matches(userDto.getPassword(), user.getPw())) {
-            userResponseDto.setStatus(UserResponseDto.Status.INVALID_PASSWORD);
+            userResponseDto.setStatus(UserResponseDTO.Status.INVALID_PASSWORD);
             return userResponseDto;
         }
         List<Session> sessionList = user.getSession();
@@ -54,7 +54,7 @@ public class UserService {
         }
 
         Session session = sessionService.createSession(user);
-        userResponseDto.setStatus(UserResponseDto.Status.SUCCESS);
+        userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
         userResponseDto.setToken(session.getToken());
 
         return userResponseDto;

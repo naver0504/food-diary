@@ -1,7 +1,7 @@
 package com.fooddiary.api.controller;
-import com.fooddiary.api.dto.response.DayImageDto;
-import com.fooddiary.api.dto.response.DayImagesDto;
-import com.fooddiary.api.dto.response.SaveImageResponseDto;
+import com.fooddiary.api.dto.response.DayImageDTO;
+import com.fooddiary.api.dto.response.DayImagesDTO;
+import com.fooddiary.api.dto.response.SaveImageResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DayImageService;
 import com.fooddiary.api.service.UserService;
@@ -31,7 +31,7 @@ public class ImageController {
 
 
     @PostMapping("/saveImage")
-    public ResponseEntity<SaveImageResponseDto> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
+    public ResponseEntity<SaveImageResponseDTO> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
                                                           final @RequestParam("localDateTime") LocalDateTime localDateTime,
                                                           HttpServletRequest request){
         final User user = getUser(request);
@@ -46,7 +46,7 @@ public class ImageController {
      * 하루 사진 받기
      */
     @GetMapping("/image")
-    public ResponseEntity<List<DayImageDto>> showImage(final @RequestParam int year, final @RequestParam int month,
+    public ResponseEntity<List<DayImageDTO>> showImage(final @RequestParam int year, final @RequestParam int month,
                                                        final @RequestParam int day) {
 
         final User user = getUser();
@@ -59,7 +59,7 @@ public class ImageController {
      * 한 달의 사진 받기
      */
     @GetMapping("/images")
-    public ResponseEntity<List<DayImagesDto>> showImages(final @RequestParam int year, final @RequestParam int month) {
+    public ResponseEntity<List<DayImagesDTO>> showImages(final @RequestParam int year, final @RequestParam int month) {
 
         final User user = getUser();
 

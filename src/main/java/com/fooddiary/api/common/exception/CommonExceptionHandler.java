@@ -1,6 +1,6 @@
 package com.fooddiary.api.common.exception;
 
-import com.fooddiary.api.dto.response.ErrorResponseDto;
+import com.fooddiary.api.dto.response.ErrorResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +14,9 @@ import org.springframework.web.servlet.ModelAndView;
 @ControllerAdvice
 public class CommonExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
-    protected ResponseEntity<ErrorResponseDto> RuntimeExceptionHandler(RuntimeException e) {
+    protected ResponseEntity<ErrorResponseDTO> RuntimeExceptionHandler(RuntimeException e) {
         log.error("handleMethodArgumentNotValidException", e);
-        final ErrorResponseDto response = new ErrorResponseDto("system error");
+        final ErrorResponseDTO response = new ErrorResponseDTO("system error");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

@@ -1,17 +1,14 @@
 package com.fooddiary.api.dto.response;
 
 
-import com.fooddiary.api.entity.image.TimeStatus;
 import lombok.*;
-
-import java.net.URL;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DayImageDto {
+public class DayImageDTO {
 
     int id;
     byte[] bytes;

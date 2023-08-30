@@ -1,13 +1,12 @@
 package com.fooddiary.api.controller;
 
-import com.fooddiary.api.dto.request.UserLoginRequestDto;
-import com.fooddiary.api.dto.request.UserNewRequestDto;
-import com.fooddiary.api.dto.response.UserResponseDto;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewRequestDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,17 +28,17 @@ public class UserController {
     }
 
     @PostMapping("/new")
-    public ResponseEntity<UserResponseDto> createUser(@RequestBody
-                                                      UserNewRequestDto userDto) {
+    public ResponseEntity<UserResponseDTO> createUser(@RequestBody
+                                                      UserNewRequestDTO userDto) {
         final String token = userService.createUser(userDto);
-        final UserResponseDto userResponseDto = new UserResponseDto();
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setToken(token);
         return ResponseEntity.ok(userResponseDto);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDto> loginUser(@RequestBody
-                                                     UserLoginRequestDto userDto) {
+    public ResponseEntity<UserResponseDTO> loginUser(@RequestBody
+                                                     UserLoginRequestDTO userDto) {
         return ResponseEntity.ok(userService.loginUser(userDto));
     }
 }

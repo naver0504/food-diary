@@ -4,9 +4,9 @@ package com.fooddiary.api.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
-import com.fooddiary.api.dto.response.DayImageDto;
-import com.fooddiary.api.dto.response.DayImagesDto;
-import com.fooddiary.api.dto.response.SaveImageResponseDto;
+import com.fooddiary.api.dto.response.DayImageDTO;
+import com.fooddiary.api.dto.response.DayImagesDTO;
+import com.fooddiary.api.dto.response.SaveImageResponseDTO;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.image.Time;
@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.fooddiary.api.dto.response.SaveImageResponseDto.*;
+import static com.fooddiary.api.dto.response.SaveImageResponseDTO.*;
 
 @RequiredArgsConstructor
 @Service
@@ -42,7 +42,7 @@ public class DayImageService {
 
 
     @Transactional
-    public SaveImageResponseDto saveImage(final List<MultipartFile> files, final LocalDateTime dateTime,final User user) {
+    public SaveImageResponseDTO saveImage(final List<MultipartFile> files, final LocalDateTime dateTime, final User user) {
 
 
 
@@ -83,7 +83,7 @@ public class DayImageService {
         }
 
 
-        return SaveImageResponseDto.builder()
+        return SaveImageResponseDTO.builder()
                 .status(Status.SUCCESS)
                 .build();
 
@@ -95,11 +95,11 @@ public class DayImageService {
      *
      */
     @Transactional(readOnly = true)
-    public List<DayImageDto> getDayImage(int year, int month, int day, User user) {
+    public List<DayImageDTO> getDayImage(int year, int month, int day, User user) {
 
         final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         final List<Image> images = dayImage.getImages();
-        final List<DayImageDto> dayImageDto = new ArrayList<>();
+        final List<DayImageDTO> dayImageDto = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(user);
 
         for (Image storedImage : images) {
@@ -112,7 +112,7 @@ public class DayImageService {
             }
             final String timeStatus = storedImage.getTimeStatus().getCode();
             dayImageDto.add(
-                    DayImageDto.builder()
+                    DayImageDTO.builder()
                     .bytes(bytes)
                     .timeStatus(timeStatus)
                     .id(storedImage.getId())
@@ -123,9 +123,9 @@ public class DayImageService {
     }
 
     @Transactional(readOnly = true)
-    public List<DayImagesDto> getDayImages(final int year, final int month, final User user)  {
+    public List<DayImagesDTO> getDayImages(final int year, final int month, final User user)  {
         final List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
-        final List<DayImagesDto> dayImagesDtos = new ArrayList<>();
+        final List<DayImagesDTO> dayImagesDtos = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(user);
         for (DayImage dayImage : dayImages) {
             byte[] bytes;
@@ -137,7 +137,7 @@ public class DayImageService {
             }
             final Time time = dayImage.getTime();
             dayImagesDtos.add(
-                    DayImagesDto.builder()
+                    DayImagesDTO.builder()
                             .id(dayImage.getId())
                             .time(time)
                             .bytes(bytes)
