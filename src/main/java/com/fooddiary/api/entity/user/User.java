@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fooddiary.api.entity.image.DayImage;
+
 import org.hibernate.annotations.ColumnDefault;
 
 import com.fooddiary.api.entity.session.Session;
@@ -36,8 +38,15 @@ public class User {
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
 
+
+
     @OneToMany(mappedBy = "user")
     private List<Session> session = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+    private List<DayImage> dayImages = new ArrayList<>();
+
+
 
     @PrePersist
     public void prePersist() {

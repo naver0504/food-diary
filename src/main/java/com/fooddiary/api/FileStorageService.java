@@ -38,4 +38,20 @@ public class FileStorageService {
         IOUtils.readFully(inputStream, buffer, 0, length);
         return buffer;
     }
+
+    /***
+     *
+     * 파일 삭제
+     *
+     */
+    public void deleteImage(final String key) {
+
+        boolean isObjectExist = amazonS3.doesObjectExist(bucket, key);
+        if (isObjectExist) {
+            amazonS3.deleteObject(bucket, key);
+        }
+
+
+
+    }
 }
