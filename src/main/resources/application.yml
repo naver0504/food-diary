@@ -37,3 +37,6 @@ cloud:
     stack:
       auto: false
 
+food-diary:
+  pw-try-limit: 5
+  pw-reset-size: 8

@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fooddiary.api.entity.image.DayImage;
-import com.fooddiary.api.entity.image.Image;
+
+import org.hibernate.annotations.ColumnDefault;
+
 import com.fooddiary.api.entity.session.Session;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,6 +21,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String pw;
+    private LocalDateTime pwUpdateAt;
+    private LocalDateTime pwUpdateDelayAt;
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private Integer pwTry;
     @Column(nullable = false)
     private String name;
     @Convert(converter = StatusConverter.class)
@@ -46,5 +53,6 @@ public class User {
         createAt = createAt == null ? LocalDateTime.now() : createAt;
         status = status == null ? Status.ACTIVE : status;
         createPath = createPath == null ? CreatePath.NONE : createPath;
+        pwTry = pwTry == null ? 0 : pwTry;
     }
 }
