@@ -2,6 +2,7 @@ package com.fooddiary.api.service;
 
 import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.UserNewRequestDTO;
 import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.UserResponseDTO;
@@ -141,10 +142,9 @@ public class UserService {
         return userList.get(0);
     }
 
-    public UserResponseDTO resetPw() {
+    public UserResponseDTO resetPw(String email) {
         final UserResponseDTO userResponseDto = new UserResponseDTO();
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        user = getValidUser(user.getEmail());
+        final User user = getValidUser(email);
 
         if (user == null) {
             userResponseDto.setStatus(UserResponseDTO.Status.INVALID_USER);
@@ -195,11 +195,16 @@ public class UserService {
         return userResponseDto;
     }
 
-    public UserNewPasswordResponseDTO updatePassword(String newPassword) {
-        UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(newPassword);
+    public UserNewPasswordResponseDTO updatePassword(UserNewPasswordRequestDTO userNewPasswordRequestDTO) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!passwordEncoder.matches(userNewPasswordRequestDTO.getPassword(), user.getPw())) {
+            UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
+            userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.INVALID_PASSWORD);
+            return userNewPasswordResponseDTO;
+        }
+        UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(userNewPasswordRequestDTO.getNewPassword());
         if (userNewPasswordResponseDTO.getStatus() == UserNewPasswordResponseDTO.Status.SUCCESS) {
-            final User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            user.setPw(passwordEncoder.encode(newPassword));
+            user.setPw(passwordEncoder.encode(userNewPasswordRequestDTO.getNewPassword()));
             userRepository.save(user);
         }
         return userNewPasswordResponseDTO;
