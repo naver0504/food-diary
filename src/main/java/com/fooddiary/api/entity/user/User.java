@@ -21,6 +21,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String pw;
+    @Convert(converter = RoleConverter.class)
+    private Role role;
     private LocalDateTime pwUpdateAt;
     private LocalDateTime pwUpdateDelayAt;
     @Column(nullable = false)

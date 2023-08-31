@@ -7,6 +7,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class BoardRequestDTO {
+public class NoticeGetListRequestDTO {
     private Pageable page;
 }

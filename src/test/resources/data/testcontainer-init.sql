@@ -40,3 +40,13 @@ create table day_image (
     primary key (day_image_id)
 ) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+
+ CREATE TABLE `notice` (
+   `id` int NOT NULL AUTO_INCREMENT,
+   `title` varchar(100) NOT NULL,
+   `content` varchar(500) NOT NULL,
+   `available` bit(1) NOT NULL DEFAULT b'0',
+   `create_at` date NOT NULL DEFAULT (curdate()),
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+

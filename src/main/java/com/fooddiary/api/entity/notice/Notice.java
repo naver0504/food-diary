@@ -1,4 +1,4 @@
-package com.fooddiary.api.entity.board;
+package com.fooddiary.api.entity.notice;
 
 import java.time.LocalDate;
 
@@ -14,7 +14,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class Board {
+public class Notice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -22,7 +22,7 @@ public class Board {
     private String content;
     @Column(nullable = false, updatable = false)
     private LocalDate createAt;
-    private boolean show;
+    private boolean available;
 
     @PrePersist
     public void prePersist() {
