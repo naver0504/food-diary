@@ -24,19 +24,21 @@ import lombok.RequiredArgsConstructor;
 public class NoticeController {
     private final NoticeService noticeService;
 
-    @GetMapping("/get")
+    @GetMapping("/list")
     public ResponseEntity<List<NoticeResponseDTO>> getNotice(Pageable pageable) {
         return ResponseEntity.ok(noticeService.getNoticeList(pageable));
     }
 
     @PostMapping("/new")
-    public void newNotice(@RequestBody NoticeNewRequestDTO noticeNewRequestDTO) {
+    public ResponseEntity<Void> newNotice(@RequestBody NoticeNewRequestDTO noticeNewRequestDTO) {
         noticeService.newNotice(noticeNewRequestDTO);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/modify")
-    public void newNotice(@RequestBody NoticeModifyRequestDTO noticeModifyRequestDTO) {
-        noticeService.newNotice(noticeModifyRequestDTO);
+    public ResponseEntity<Void> modifyNotice(@RequestBody NoticeModifyRequestDTO noticeModifyRequestDTO) {
+        noticeService.modifyNotice(noticeModifyRequestDTO);
+        return ResponseEntity.ok().build();
     }
 }
 

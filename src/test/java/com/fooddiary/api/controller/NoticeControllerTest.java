@@ -1,27 +1,24 @@
 package com.fooddiary.api.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.when;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fooddiary.api.common.constants.Profiles;
+import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
+import com.fooddiary.api.dto.request.NoticeNewRequestDTO;
+import com.fooddiary.api.dto.response.NoticeResponseDTO;
+import com.fooddiary.api.service.NoticeService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.restdocs.RestDocumentationContextProvider;
@@ -32,12 +29,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.response.NoticeResponseDTO;
-import com.fooddiary.api.service.NoticeService;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles(Profiles.TEST)
@@ -59,7 +62,7 @@ class NoticeControllerTest {
     }
 
     @Test
-    void getNotice() throws Exception {
+    void getNoticeList() throws Exception {
         final Pageable pageRequest = PageRequest.of(0, 10);
         final List<NoticeResponseDTO> noticeList = new ArrayList<>();
         NoticeResponseDTO notice = new NoticeResponseDTO();
@@ -77,7 +80,7 @@ class NoticeControllerTest {
         noticeList.add(notice);
 
         when(noticeService.getNoticeList(any(Pageable.class))).thenReturn(noticeList);
-        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/get")
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/list")
                                                                                   .contentType(
                                                                                           MediaType.APPLICATION_JSON))
                                                                  .andExpect(status().isOk())
@@ -88,5 +91,63 @@ class NoticeControllerTest {
         Assertions.assertEquals(
                 mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
                 objectMapper.writeValueAsString(noticeList));
+    }
+
+    @Test
+    void newNotice() throws Exception {
+        final NoticeNewRequestDTO noticeNewRequestDTO = new NoticeNewRequestDTO();
+        noticeNewRequestDTO.setTitle("[공지]신규 기능 베타버전 출시");
+        noticeNewRequestDTO.setContent("친구 추가하고 친구가 공유한 일기에 좋아요 및 댓글 기능이 추가되었습니다. 해당 기능은 실험실 메뉴에서 이용가능합니다.");
+        noticeNewRequestDTO.setAvailable(true);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("token", "asdf");
+
+        mockMvc.perform(post("/notice/new")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(noticeNewRequestDTO))
+                        .headers(httpHeaders))
+                .andExpect(status().isOk())
+                .andDo(document("new notice"));
+
+        final ArgumentCaptor<NoticeNewRequestDTO> noticeNewRequestDTOArgumentCaptor = ArgumentCaptor.forClass(NoticeNewRequestDTO.class);
+
+        verify(noticeService, times(1)).newNotice(noticeNewRequestDTOArgumentCaptor.capture());
+        NoticeNewRequestDTO requestDTOArgumentCaptorValue = noticeNewRequestDTOArgumentCaptor.getValue();
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.getTitle(), noticeNewRequestDTO.getTitle());
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.getContent(), noticeNewRequestDTO.getContent());
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.isAvailable(), noticeNewRequestDTO.isAvailable());
+    }
+
+    @Test
+    void modifyNotice() throws Exception {
+        final NoticeModifyRequestDTO noticeModifyRequestDTO = new NoticeModifyRequestDTO();
+        noticeModifyRequestDTO.setId(1);
+        noticeModifyRequestDTO.setTitle("[공지]신규 기능 베타버전 출시");
+        noticeModifyRequestDTO.setContent("친구 추가하고 친구가 공유한 일기에 좋아요 및 댓글 기능이 추가되었습니다. 해당 기능은 실험실 메뉴에서 이용가능합니다.");
+        noticeModifyRequestDTO.setAvailable(true);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("token", "asdf");
+
+        mockMvc.perform(put("/notice/modify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(noticeModifyRequestDTO))
+                        .headers(httpHeaders))
+                .andExpect(status().isOk())
+                .andDo(document("modify notice"));
+
+        final ArgumentCaptor<NoticeModifyRequestDTO> noticeNewRequestDTOArgumentCaptor = ArgumentCaptor.forClass(NoticeModifyRequestDTO.class);
+
+        verify(noticeService, times(1)).modifyNotice(noticeNewRequestDTOArgumentCaptor.capture());
+        NoticeModifyRequestDTO requestDTOArgumentCaptorValue = noticeNewRequestDTOArgumentCaptor.getValue();
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.getId(), noticeModifyRequestDTO.getId());
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.getTitle(), noticeModifyRequestDTO.getTitle());
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.getContent(), noticeModifyRequestDTO.getContent());
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.isAvailable(), noticeModifyRequestDTO.isAvailable());
     }
 }
