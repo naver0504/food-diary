@@ -27,10 +27,9 @@ public class UserRepositoryTest {
     @Test
     @Transactional
     void query_test() {
-        LocalDateTime now = LocalDateTime.now();
+        final LocalDateTime now = LocalDateTime.now();
         final User user = new User();
         user.setEmail("jasuil@daum.net");
-        user.setName("성일짱");
         user.setPwUpdateAt(now);
         user.setPwUpdateDelayAt(now);
 

@@ -100,7 +100,7 @@ public class LoggingFilter extends OncePerRequestFilter {
                                                        request.getHeader(TOKEN_NAME));
             LogDTO.UserDTO userDTO = null;
             if (user != null) {
-                userDTO = new LogDTO.UserDTO(user.getEmail(), user.getName());
+                userDTO = new LogDTO.UserDTO(user.getEmail());
                 logPayload(requestLogDTO, userDTO, response, startTime);
             } else {
                 logPayload(requestLogDTO, userDTO, response, startTime);

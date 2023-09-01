@@ -1,7 +1,7 @@
 CREATE TABLE `user` (
     `id` int NOT NULL AUTO_INCREMENT,
     `pw` varchar(1000) DEFAULT NULL,
-    `name` varchar(200) NOT NULL,
+    `role` ENUM('ADMIN', 'CLIENT') NULL DEFAULT 'CLIENT',
     `status` enum('active','delete','suspended') DEFAULT 'active',
     `email` varchar(1000) NOT NULL,
     `create_path` enum('google','kakao','none') NOT NULL DEFAULT 'none',
