@@ -7,6 +7,7 @@ import com.fooddiary.api.dto.request.UserNewRequestDTO;
 import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.UserRepository;
@@ -49,7 +50,7 @@ public class UserService {
 
     public UserResponseDTO createUser(UserNewRequestDTO userDto) {
         final UserResponseDTO userResponseDto = new UserResponseDTO();
-        UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(userDto.getPassword());
+        final UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(userDto.getPassword());
         if (userNewPasswordResponseDTO.getStatus() == UserNewPasswordResponseDTO.Status.SUCCESS) {
             if (getValidUser(userDto.getEmail()) != null) {
                 userResponseDto.setStatus(UserResponseDTO.Status.DUPLICATED_USER);
@@ -58,7 +59,7 @@ public class UserService {
             final LocalDateTime now = LocalDateTime.now();
             final User user = new User();
             user.setEmail(userDto.getEmail());
-            user.setName(userDto.getName());
+            user.setRole(Role.CLIENT);
             user.setPw(passwordEncoder.encode(userDto.getPassword()));
             user.setPwUpdateAt(now);
             user.setPwUpdateDelayAt(now.plusDays(PW_EXPIRED_DAY_LIMIT));
@@ -197,12 +198,13 @@ public class UserService {
 
     public UserNewPasswordResponseDTO updatePassword(UserNewPasswordRequestDTO userNewPasswordRequestDTO) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        user = userRepository.getReferenceById(user.getId()); // 저장 전에 한번 더 확인한다.
         if (!passwordEncoder.matches(userNewPasswordRequestDTO.getPassword(), user.getPw())) {
-            UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
+            final UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
             userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.INVALID_PASSWORD);
             return userNewPasswordResponseDTO;
         }
-        UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(userNewPasswordRequestDTO.getNewPassword());
+        final UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(userNewPasswordRequestDTO.getNewPassword());
         if (userNewPasswordResponseDTO.getStatus() == UserNewPasswordResponseDTO.Status.SUCCESS) {
             user.setPw(passwordEncoder.encode(userNewPasswordRequestDTO.getNewPassword()));
             userRepository.save(user);
@@ -211,7 +213,7 @@ public class UserService {
     }
 
     private UserNewPasswordResponseDTO validatePassword(String password) {
-        UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
+        final UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
         if (!StringUtils.hasText(password)) {
             userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.EMPTY_PASSWORD);
             return userNewPasswordResponseDTO;
@@ -225,7 +227,7 @@ public class UserService {
         int alphabetCount = 0;
         int digitCount = 0;
         for (int i = 0; i < password.length(); i++) {
-            char character = password.charAt(i);
+            final char character = password.charAt(i);
             if (character >= 65 && character <= 90 || character >= 97 && character <= 122 ) {
                 alphabetCount++;
             }

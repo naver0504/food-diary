@@ -70,8 +70,6 @@ public class UserControllerTest {
     @Autowired
     private WebApplicationContext context;
     private MockMvc mockMvc;
-    @Captor
-    private ArgumentCaptor<UserLoginRequestDTO> loginRequestDto;
 
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
@@ -141,6 +139,10 @@ public class UserControllerTest {
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.OK.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
                                 objectMapper.writeValueAsString(userResponseDto));
+
+
+
+        ArgumentCaptor<UserLoginRequestDTO> loginRequestDto = ArgumentCaptor.forClass(UserLoginRequestDTO.class);
 
         then(userService).should(timeout(1)).loginUser(loginRequestDto.capture());
 
