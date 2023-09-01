@@ -1,7 +1,7 @@
 package com.fooddiary.api.entity.user;
 
 public enum Role {
-    CLIENT("CLIENT"), ADMIN("ADMIN");
+    CLIENT("client"), ADMIN("admin");
     private final String value;
 
     Role(String value) {this.value = value;}

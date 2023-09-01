@@ -79,7 +79,7 @@ public class LoggingFilter extends OncePerRequestFilter {
     protected void doFilterWrapped(HttpServletRequestWrapper request, ContentCachingResponseWrapper response,
                                    FilterChain filterChain) throws ServletException, IOException {
         final LocalDateTime startTime = LocalDateTime.now();
-        LogDTO.RequestLogDTO requestLogDTO = null;
+        final LogDTO.RequestLogDTO requestLogDTO;
         try {
             final HashMap<String, String> headerMap = new HashMap<>();
             final Iterator<String> keys = request.getHeaderNames().asIterator();
@@ -95,7 +95,7 @@ public class LoggingFilter extends OncePerRequestFilter {
                                                      request.getContentType(), body, request.getRemoteAddr(),
                                                      request.getCookies());
             filterChain.doFilter(request, response);
-        } finally {
+
             final User user = userService.getValidUser(request.getHeader(MAIL_NAME),
                                                        request.getHeader(TOKEN_NAME));
             LogDTO.UserDTO userDTO = null;
@@ -106,6 +106,8 @@ public class LoggingFilter extends OncePerRequestFilter {
                 logPayload(requestLogDTO, userDTO, response, startTime);
             }
             response.copyBodyToResponse();
+        } catch (Exception e){
+           log.error("logging error", e);
         }
     }
 
