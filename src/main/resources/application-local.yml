@@ -18,3 +18,8 @@ spring:
         format_sql: true
     hibernate:
       ddl-auto: none # 필요하면 update로 바꿔서 하세요. production환경은 자동적용하면 안되므로 뭐가 필요한지 알기위해 이렇게 합니다.
+
+cloud:
+  aws:
+    s3:
+      dir: local
