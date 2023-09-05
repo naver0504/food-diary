@@ -29,10 +29,10 @@ public class ImageUtils {
     public static final int THUMBNAIL_HEIGHT = 44;
 
     @NotNull
-    public static String getDirPath(final String activeProfile, final User user) {
+    public static String getDirPath(final String activeProfiles, final User user) {
 
 
-        final String dirPath = activeProfile + "/" + user.getId() + "/";
+        final String dirPath = activeProfiles + "/" + user.getId() + "/";
         return dirPath;
 
     }
