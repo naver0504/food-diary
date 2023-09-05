@@ -2,6 +2,7 @@ package com.fooddiary.api.controller;
 
 import java.util.List;
 
+import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,8 +26,8 @@ public class NoticeController {
     private final NoticeService noticeService;
 
     @GetMapping("/list")
-    public ResponseEntity<List<NoticeResponseDTO>> getNotice(Pageable pageable) {
-        return ResponseEntity.ok(noticeService.getNoticeList(pageable));
+    public ResponseEntity<List<NoticeResponseDTO>> getNotice(NoticeGetListRequestDTO noticeGetListRequestDTO) {
+        return ResponseEntity.ok(noticeService.getNoticeList(noticeGetListRequestDTO));
     }
 
     @PostMapping("/new")

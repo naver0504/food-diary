@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
 import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
 import com.fooddiary.api.dto.request.NoticeNewRequestDTO;
 import com.fooddiary.api.dto.response.NoticeResponseDTO;
@@ -69,18 +70,19 @@ class NoticeControllerTest {
         notice.setId(1);
         notice.setTitle("[공지]신규 서비스 오픈 안내");
         notice.setContent("2024년 1월 2일 신규 서비스 오픈 되었습니다. 앞으로 새로운 기능도 추가될 예정이니 기대해주세요");
-        notice.setCreateAt(LocalDate.of(2024, 1, 2));
+        notice.setNoticeAt(LocalDate.of(2024, 1, 2));
         noticeList.add(notice);
 
         notice = new NoticeResponseDTO();
         notice.setId(2);
         notice.setTitle("[공지]신규 서비스 관련 이벤트 당첨 안내");
         notice.setContent("이벤트 응모관련 당첨자는 이메일 확인 부탁드립니다.");
-        notice.setCreateAt(LocalDate.now().minusDays(2));
+        notice.setNoticeAt(LocalDate.now().minusDays(2));
         noticeList.add(notice);
 
-        when(noticeService.getNoticeList(any(Pageable.class))).thenReturn(noticeList);
-        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/list")
+        when(noticeService.getNoticeList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeList);
+        final String param = "?startId=0&size=10";
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/list" + param)
                                                                                   .contentType(
                                                                                           MediaType.APPLICATION_JSON))
                                                                  .andExpect(status().isOk())
@@ -99,8 +101,9 @@ class NoticeControllerTest {
         noticeNewRequestDTO.setTitle("[공지]신규 기능 베타버전 출시");
         noticeNewRequestDTO.setContent("친구 추가하고 친구가 공유한 일기에 좋아요 및 댓글 기능이 추가되었습니다. 해당 기능은 실험실 메뉴에서 이용가능합니다.");
         noticeNewRequestDTO.setAvailable(true);
+        noticeNewRequestDTO.setNoticeAt(LocalDate.now());
 
-        final ObjectMapper objectMapper = new ObjectMapper();
+        final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
@@ -128,8 +131,9 @@ class NoticeControllerTest {
         noticeModifyRequestDTO.setTitle("[공지]신규 기능 베타버전 출시");
         noticeModifyRequestDTO.setContent("친구 추가하고 친구가 공유한 일기에 좋아요 및 댓글 기능이 추가되었습니다. 해당 기능은 실험실 메뉴에서 이용가능합니다.");
         noticeModifyRequestDTO.setAvailable(true);
+        noticeModifyRequestDTO.setNoticeAt(LocalDate.now());
 
-        final ObjectMapper objectMapper = new ObjectMapper();
+        final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");

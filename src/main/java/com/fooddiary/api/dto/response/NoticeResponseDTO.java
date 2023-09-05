@@ -15,5 +15,5 @@ public class NoticeResponseDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     //@JsonDeserialize(using = LocalDateTimeDeserializer.class)
     //@JsonSerialize(using = LocalDateTimeSerializer.class)
-    private LocalDate createAt;
+    private LocalDate noticeAt;
 }

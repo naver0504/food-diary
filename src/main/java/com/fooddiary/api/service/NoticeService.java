@@ -1,8 +1,10 @@
 package com.fooddiary.api.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,15 +26,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NoticeService {
     private final NoticeRepository noticeRepository;
-    public List<NoticeResponseDTO> getNoticeList(Pageable pageable) {
-        final int startId = (int) pageable.getOffset();
-        pageable = PageRequest.of(0, pageable.getPageSize());
-        final List<Notice> boardList = noticeRepository.selectgetNoticeListByIdPaging(startId, true, pageable);
+    public List<NoticeResponseDTO> getNoticeList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
+        Pageable pageable = PageRequest.of(0, noticeGetListRequestDTO.getSize());
+        final List<Notice> boardList = noticeRepository.selectgetNoticeListByIdPaging(noticeGetListRequestDTO.getStartId(), true, pageable);
 
         final List<NoticeResponseDTO> noticeResponseDTOList = new ArrayList<>();
         boardList.forEach(element -> {
             final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
-            BeanUtils.copyProperties(noticeResponseDTO, element);
+            BeanUtils.copyProperties(element, noticeResponseDTO);
             noticeResponseDTOList.add(noticeResponseDTO);
         });
         return noticeResponseDTOList;
@@ -45,6 +46,7 @@ public class NoticeService {
         }
         final Notice notice = new Notice();
         BeanUtils.copyProperties(noticeNewRequestDTO, notice);
+        notice.setCreateUserId(user.getId());
         noticeRepository.save(notice);
     }
 
@@ -58,6 +60,8 @@ public class NoticeService {
         }
         final Notice notice = new Notice();
         BeanUtils.copyProperties(noticeModifyRequestDTO, notice);
+        notice.setUpdateAt(LocalDateTime.now());
+        notice.setUpdateUserId(user.getId());
         noticeRepository.save(notice);
     }
 }

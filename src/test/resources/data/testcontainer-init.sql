@@ -1,24 +1,24 @@
-CREATE TABLE `user` (
-    `id` int NOT NULL AUTO_INCREMENT,
-    `pw` varchar(1000) DEFAULT NULL,
-    `role` ENUM('admin', 'client') NULL DEFAULT 'client',
-    `status` enum('active','delete','suspended') DEFAULT 'active',
-    `email` varchar(1000) NOT NULL,
-    `create_path` enum('google','kakao','none') NOT NULL DEFAULT 'none',
-    `create_at` datetime DEFAULT CURRENT_TIMESTAMP,
-    `update_at` datetime DEFAULT NULL,
-    `pw_try` int DEFAULT NULL,
-    `pw_update_at` datetime DEFAULT NULL,
-    `pw_update_delay_at` datetime DEFAULT NULL,
-    PRIMARY KEY (`id`)
+CREATE TABLE user (
+    id int NOT NULL AUTO_INCREMENT,
+    pw varchar(1000) DEFAULT NULL,
+    role ENUM('admin', 'client') NULL DEFAULT 'client',
+    status enum('active','delete','suspended') DEFAULT 'active',
+    email varchar(1000) NOT NULL,
+    create_path enum('google','kakao','none') NOT NULL DEFAULT 'none',
+    create_at datetime DEFAULT CURRENT_TIMESTAMP,
+    update_at datetime DEFAULT NULL,
+    pw_try int DEFAULT NULL,
+    pw_update_at datetime DEFAULT NULL,
+    pw_update_delay_at datetime DEFAULT NULL,
+    PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `session` (
-  `token` varchar(500) NOT NULL,
-  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `terminate_at` datetime NOT NULL,
-  `user_id` int DEFAULT NULL,
-  PRIMARY KEY (`token`)
+CREATE TABLE session (
+  token varchar(500) NOT NULL,
+  create_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  terminate_at datetime NOT NULL,
+  user_id int DEFAULT NULL,
+  PRIMARY KEY (token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 create table image (
@@ -40,12 +40,16 @@ create table day_image (
 ) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
- CREATE TABLE `notice` (
-   `id` int NOT NULL AUTO_INCREMENT,
-   `title` varchar(100) NOT NULL,
-   `content` varchar(500) NOT NULL,
-   `available` bit(1) NOT NULL DEFAULT b'0',
-   `create_at` date NOT NULL DEFAULT (curdate()),
-   PRIMARY KEY (`id`)
+ CREATE TABLE notice (
+   id int NOT NULL AUTO_INCREMENT,
+   title varchar(100) NOT NULL,
+   content varchar(500) NOT NULL,
+   available bit(1) NOT NULL DEFAULT b'0',
+   notice_at date NOT NULL,
+   create_at datetime NOT NULL DEFAULT (curdate()),
+   create_user_id int NOT NULL,
+   update_at datetime,
+   update_user_id int,
+   PRIMARY KEY (id)
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

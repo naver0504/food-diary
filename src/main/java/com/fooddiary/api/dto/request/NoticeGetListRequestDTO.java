@@ -8,5 +8,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class NoticeGetListRequestDTO {
-    private Pageable page;
+    private int startId;
+    private int size;
 }
