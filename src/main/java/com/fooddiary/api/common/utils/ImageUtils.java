@@ -29,10 +29,10 @@ public class ImageUtils {
     public static final int THUMBNAIL_HEIGHT = 44;
 
     @NotNull
-    public static String getDirPath(final String activeProfile, final User user) {
+    public static String getDirPath(final String basePath, final User user) {
 
 
-        final String dirPath = activeProfile + "/" + user.getId() + "/";
+        final String dirPath = basePath + "/" + user.getId() + "/";
         return dirPath;
 
     }
@@ -44,7 +44,7 @@ public class ImageUtils {
         return storeFilename;
     }
 
-    public static String createThumbnailName(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String activeProfile) {
+    public static String createThumbnailName(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) {
         final String originalFilename = file.getOriginalFilename();
         final String storeFilename = "t_"+ UUID.randomUUID().toString() + "_" + originalFilename;
         final String fileContentType = getFileContentType(file.getContentType());
@@ -75,7 +75,7 @@ public class ImageUtils {
         try {
             ObjectMetadata metadata = new ObjectMetadata();
 
-            final String dirPath = ImageUtils.getDirPath(activeProfile, user);
+            final String dirPath = ImageUtils.getDirPath(basePath, user);
             amazonS3.putObject(bucket, dirPath+storeFilename, inputStream, metadata);
         } catch (AmazonServiceException e) {
             log.error("AmazonServiceException ", e);
