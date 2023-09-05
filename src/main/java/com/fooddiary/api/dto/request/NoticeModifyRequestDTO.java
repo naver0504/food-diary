@@ -5,7 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserNewPasswordRequestDTO {
-    private String password;
-    private String newPassword;
+public class NoticeModifyRequestDTO extends NoticeNewRequestDTO {
+    private Integer id;
 }

@@ -6,7 +6,7 @@
       <onMatch>ACCEPT</onMatch>
       <onMismatch>DENY</onMismatch>
     </filter>
-    <file>error.log</file>
+    <file>./log/error.log</file>
     <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
       <pattern>./log/%d{yyyy-MM-dd HH:mm:ss.SSS} %-4relative [%thread] %-5level %logger{35} -%kvp -%msg%n</pattern>
     </encoder>
