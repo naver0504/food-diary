@@ -21,13 +21,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String pw;
+    @Convert(converter = RoleConverter.class)
+    private Role role;
     private LocalDateTime pwUpdateAt;
     private LocalDateTime pwUpdateDelayAt;
     @Column(nullable = false)
     @ColumnDefault("0")
     private Integer pwTry;
-    @Column(nullable = false)
-    private String name;
     @Convert(converter = StatusConverter.class)
     private Status status;
     @Column(nullable = false)

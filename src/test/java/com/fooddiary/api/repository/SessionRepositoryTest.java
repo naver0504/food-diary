@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.User;
 
 import jakarta.persistence.EntityManager;
@@ -37,7 +38,8 @@ public class SessionRepositoryTest {
     void get_session() {
         User user = new User();
         user.setEmail("jasuil@naver.com");
-        user.setName("성일짱");
+        user.setPwTry(0);
+        user.setRole(Role.CLIENT);
 
         userRepository.save(user);
 

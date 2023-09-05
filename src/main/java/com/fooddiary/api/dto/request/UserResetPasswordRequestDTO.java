@@ -2,10 +2,11 @@ package com.fooddiary.api.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
-public class UserNewPasswordRequestDTO {
-    private String password;
-    private String newPassword;
+@ToString
+public class UserResetPasswordRequestDTO {
+    private String email;
 }

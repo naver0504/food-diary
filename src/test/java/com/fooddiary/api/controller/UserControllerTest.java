@@ -1,22 +1,15 @@
 package com.fooddiary.api.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fooddiary.api.common.constants.Profiles;
+import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.UserLoginRequestDTO;
+import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
+import com.fooddiary.api.dto.request.UserResetPasswordRequestDTO;
+import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
+import com.fooddiary.api.dto.response.UserResponseDTO;
+import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -33,21 +27,31 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.security.authentication.RememberMeAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.UserLoginRequestDTO;
-import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
-import com.fooddiary.api.dto.response.ErrorResponseDTO;
-import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
-import com.fooddiary.api.dto.response.UserResponseDTO;
-import com.fooddiary.api.entity.user.User;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.*;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * 컨트롤러 계층에 대한 테스트 입니다. API 문서생성도 같이하고 있습니다.
@@ -58,14 +62,14 @@ import com.fooddiary.api.entity.user.User;
 public class UserControllerTest {
 
     @MockBean
+    PasswordEncoder passwordEncoder;
+    @MockBean
     private Interceptor interceptor;
     @MockBean
     private UserService userService;
     @Autowired
     private WebApplicationContext context;
     private MockMvc mockMvc;
-    @Captor
-    private ArgumentCaptor<UserLoginRequestDTO> loginRequestDto;
 
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
@@ -136,6 +140,10 @@ public class UserControllerTest {
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
                                 objectMapper.writeValueAsString(userResponseDto));
 
+
+
+        ArgumentCaptor<UserLoginRequestDTO> loginRequestDto = ArgumentCaptor.forClass(UserLoginRequestDTO.class);
+
         then(userService).should(timeout(1)).loginUser(loginRequestDto.capture());
 
         final List<UserLoginRequestDTO> servletLoginRequest = loginRequestDto.getAllValues();
@@ -176,17 +184,18 @@ public class UserControllerTest {
 
     @Test
     void reset_password() throws Exception {
+        final String email = "jasuil@daum.net";
         final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
-        given(userService.resetPw()).willReturn(userResponseDto);
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "jasuil@daum.net");
-        httpHeaders.add("token", "asdf");
+        given(userService.resetPw(email)).willReturn(userResponseDto);
         final ObjectMapper objectMapper = new ObjectMapper();
 
+        UserResetPasswordRequestDTO userResetPasswordRequestDTO = new UserResetPasswordRequestDTO();
+        userResetPasswordRequestDTO.setEmail(email);
+
         mockMvc.perform(post("/user/reset-password")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .headers(httpHeaders))
+                        .content(objectMapper.writeValueAsString(userResetPasswordRequestDTO))
+                                .contentType(MediaType.APPLICATION_JSON))
                .andExpectAll(status().isOk(),
                              content().json(objectMapper.writeValueAsString(userResponseDto)))
                .andDo(document("reset password"));
@@ -194,16 +203,33 @@ public class UserControllerTest {
 
     @Test
     void new_password() throws Exception {
+        final String password = "Food1234@!";
         final String newPassword = "myFood1234@!";
+
+        final UserNewPasswordRequestDTO userNewPasswordRequestDTO = new UserNewPasswordRequestDTO();
+        userNewPasswordRequestDTO.setPassword(password);
+        userNewPasswordRequestDTO.setNewPassword(newPassword);
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        User user = new User();
+        user.setPw(password);
+        final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
+        simpleGrantedAuthority.add(new SimpleGrantedAuthority("all"));
+        final RememberMeAuthenticationToken userDataAuthenticationTokenByEmail =
+                new RememberMeAuthenticationToken(
+                        "jasuil@daum.net", user, simpleGrantedAuthority);
+
+        when(securityContext.getAuthentication()).thenReturn(userDataAuthenticationTokenByEmail);
+        SecurityContextHolder.setContext(securityContext);
+
         final UserNewPasswordResponseDTO userNewPasswordResponseDTO = new UserNewPasswordResponseDTO();
         userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.SUCCESS);
-        when(userService.updatePassword(newPassword)).thenReturn(userNewPasswordResponseDTO);
+        when(userService.updatePassword(any(UserNewPasswordRequestDTO.class))).thenReturn(userNewPasswordResponseDTO);
+        when(passwordEncoder.encode(password)).thenReturn(password);
+        when(passwordEncoder.encode(newPassword)).thenReturn(newPassword);
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
         final ObjectMapper objectMapper = new ObjectMapper();
-        final UserNewPasswordRequestDTO userNewPasswordRequestDTO = new UserNewPasswordRequestDTO();
-        userNewPasswordRequestDTO.setPassword(newPassword);
 
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/new-password").content(
                                                                                                             objectMapper.writeValueAsString(userNewPasswordRequestDTO))
@@ -215,7 +241,7 @@ public class UserControllerTest {
                                                                        .andDo(document("new password"))
                                                                        .andReturn().getResponse();
 
-        verify(userService, times(1)).updatePassword(newPassword);
+        verify(userService, times(1)).updatePassword(any(UserNewPasswordRequestDTO.class));
 
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.OK.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),

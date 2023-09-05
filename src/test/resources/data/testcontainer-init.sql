@@ -1,7 +1,7 @@
 CREATE TABLE `user` (
     `id` int NOT NULL AUTO_INCREMENT,
     `pw` varchar(1000) DEFAULT NULL,
-    `name` varchar(200) NOT NULL,
+    `role` ENUM('admin', 'client') NULL DEFAULT 'client',
     `status` enum('active','delete','suspended') DEFAULT 'active',
     `email` varchar(1000) NOT NULL,
     `create_path` enum('google','kakao','none') NOT NULL DEFAULT 'none',
@@ -14,7 +14,6 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `session` (
-
   `token` varchar(500) NOT NULL,
   `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `terminate_at` datetime NOT NULL,
@@ -39,4 +38,14 @@ create table day_image (
     user_id integer,
     primary key (day_image_id)
 ) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+ CREATE TABLE `notice` (
+   `id` int NOT NULL AUTO_INCREMENT,
+   `title` varchar(100) NOT NULL,
+   `content` varchar(500) NOT NULL,
+   `available` bit(1) NOT NULL DEFAULT b'0',
+   `create_at` date NOT NULL DEFAULT (curdate()),
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
