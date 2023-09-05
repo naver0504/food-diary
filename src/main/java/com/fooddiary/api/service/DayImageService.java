@@ -37,7 +37,7 @@ public class DayImageService {
     private final ImageUtils imageUtils;
     private final AmazonS3 amazonS3;
 
-    @Value("${spring.profiles.active}")
+    @Value("${cloud.aws.s3.dir}")
     private String activeProfile;
 
     @Value("${cloud.aws.s3.bucket}")
