@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
@@ -35,7 +34,7 @@ public class ImageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user) throws IOException {
+    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user, final String activeProfile) throws IOException {
 
         final List<Image> images = new ArrayList<>();
 
@@ -52,7 +51,7 @@ public class ImageService {
             try {
                 ObjectMetadata metadata = new ObjectMetadata();
 
-                final String dirPath = ImageUtils.getDirPath(user);
+                final String dirPath = ImageUtils.getDirPath(activeProfile, user);
                 int count = dayImageRepository.getDayImageCount(userId);
                 if(count == 0) {
                     amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());

@@ -16,7 +16,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -25,16 +24,19 @@ import java.util.UUID;
 @Slf4j
 public class ImageUtils {
 
+
     public static final int THUMBNAIL_WIDTH = 44;
     public static final int THUMBNAIL_HEIGHT = 44;
 
-
     @NotNull
-    public static String getDirPath(final User user) {
-        final String dirPath = user.getId() + "/";
+    public static String getDirPath(final String basePath, final User user) {
+
+
+        final String dirPath = basePath + "/" + user.getId() + "/";
         return dirPath;
 
     }
+
 
     @NotNull
     public static String createImageName(final String originalFilename) {
@@ -42,7 +44,7 @@ public class ImageUtils {
         return storeFilename;
     }
 
-    public static String createThumbnailName(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket) {
+    public static String createThumbnailName(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) {
         final String originalFilename = file.getOriginalFilename();
         final String storeFilename = "t_"+ UUID.randomUUID().toString() + "_" + originalFilename;
         final String fileContentType = getFileContentType(file.getContentType());
@@ -73,7 +75,7 @@ public class ImageUtils {
         try {
             ObjectMetadata metadata = new ObjectMetadata();
 
-            final String dirPath = ImageUtils.getDirPath(user);
+            final String dirPath = ImageUtils.getDirPath(basePath, user);
             amazonS3.putObject(bucket, dirPath+storeFilename, inputStream, metadata);
         } catch (AmazonServiceException e) {
             log.error("AmazonServiceException ", e);

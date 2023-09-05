@@ -37,6 +37,9 @@ public class DayImageService {
     private final ImageUtils imageUtils;
     private final AmazonS3 amazonS3;
 
+    @Value("${cloud.aws.s3.dir}")
+    private String basePath;
+
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
@@ -53,7 +56,7 @@ public class DayImageService {
         final List<Image> images;
 
         try {
-            images = imageService.storeImage(files, dateTime, user);
+            images = imageService.storeImage(files, dateTime, user, basePath);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -66,7 +69,7 @@ public class DayImageService {
         if (dayImage == null) {
             final DayImage newDayImage = DayImage.createDayImage(images, dateTime, user);
             dayImageRepository.save(newDayImage);
-            newDayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user, amazonS3, bucket));
+            newDayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user, amazonS3, bucket, basePath));
 
 
         } else {
@@ -75,10 +78,10 @@ public class DayImageService {
              */
             dayImage.setImages(images);
             final String originalThumbnailPath = dayImage.getThumbNailImagePath();
-            final String dirPath = ImageUtils.getDirPath(user);
+            final String dirPath = ImageUtils.getDirPath(basePath, user);
 
             fileStorageService.deleteImage(dirPath + originalThumbnailPath);
-            dayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user, amazonS3, bucket));
+            dayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user, amazonS3, bucket, basePath));
 
         }
 
@@ -100,7 +103,7 @@ public class DayImageService {
         final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         final List<Image> images = dayImage.getImages();
         final List<DayImageDTO> dayImageDto = new ArrayList<>();
-        final String dirPath = ImageUtils.getDirPath(user);
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
 
         for (Image storedImage : images) {
             byte[] bytes;
@@ -126,7 +129,7 @@ public class DayImageService {
     public List<DayImagesDTO> getDayImages(final int year, final int month, final User user)  {
         final List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
         final List<DayImagesDTO> dayImagesDtos = new ArrayList<>();
-        final String dirPath = ImageUtils.getDirPath(user);
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
         for (DayImage dayImage : dayImages) {
             byte[] bytes;
             try {
@@ -148,9 +151,6 @@ public class DayImageService {
         return dayImagesDtos;
 
     }
-
-
-
 
 
 
