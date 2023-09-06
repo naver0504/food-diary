@@ -39,8 +39,6 @@ public class ImageController {
                                                           HttpServletRequest request){
         final User user = getUser(request);
 
-
-        System.out.println("saveImageRequestDTO = " + saveImageRequestDTO);
         return ResponseEntity.ok(dayImageService.saveImage(multipartFiles, saveImageRequestDTO, user));
     }
 
