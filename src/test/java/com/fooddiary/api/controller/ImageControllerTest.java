@@ -2,6 +2,7 @@ package com.fooddiary.api.controller;
 
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.DayImageDTO;
 import com.fooddiary.api.dto.response.DayImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
@@ -34,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
@@ -109,10 +111,22 @@ public class ImageControllerTest {
         when(userService.getValidUser(any(), any())).thenReturn(principal);
         given(dayImageService.saveImage(any(), any(), any())).willReturn(saveImageResponseDto);
 
+        final SaveImageRequestDTO saveImageRequestDTO = SaveImageRequestDTO.builder()
+                .localDateTime(LocalDateTime.now())
+                .longitude(1.0)
+                .latitude(2.0)
+                .build();
+
+        final ObjectMapper objectMapper = new ObjectMapper();
         mockMvc.perform(
                         multipart("/image/saveImage")
-                                .file(image1).part(new MockPart("localDateTime", "2021-11-08T11:58:20.551705".getBytes(StandardCharsets.UTF_8)))
+                                .file(image1)
+                                .part(new MockPart(
+                                        "imageDetails", objectMapper.writeValueAsString(saveImageRequestDTO).getBytes(StandardCharsets.UTF_8))
+                                )
+                                .contentType(MediaType.MULTIPART_FORM_DATA)
                                 .headers(httpHeaders)
+
                 )
                 .andDo(document("save image"));
     }
