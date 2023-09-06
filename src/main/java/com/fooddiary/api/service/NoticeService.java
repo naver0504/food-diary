@@ -26,9 +26,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NoticeService {
     private final NoticeRepository noticeRepository;
-    public List<NoticeResponseDTO> getNoticeList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
+    public List<NoticeResponseDTO> getMoreList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
         Pageable pageable = PageRequest.of(0, noticeGetListRequestDTO.getSize());
-        final List<Notice> boardList = noticeRepository.selectgetNoticeListByIdPaging(noticeGetListRequestDTO.getStartId(), true, pageable);
+        final List<Notice> boardList = noticeRepository.selectMoreNoticeListById(noticeGetListRequestDTO.getStartId(), true, pageable);
+
+        final List<NoticeResponseDTO> noticeResponseDTOList = new ArrayList<>();
+        boardList.forEach(element -> {
+            final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
+            BeanUtils.copyProperties(element, noticeResponseDTO);
+            noticeResponseDTOList.add(noticeResponseDTO);
+        });
+        return noticeResponseDTOList;
+    }
+
+    public List<NoticeResponseDTO> getPagingNoticeList(Pageable pageable) {
+        final List<Notice> boardList = noticeRepository.selectPagingNoticeListById(true, pageable);
 
         final List<NoticeResponseDTO> noticeResponseDTOList = new ArrayList<>();
         boardList.forEach(element -> {

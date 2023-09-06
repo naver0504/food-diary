@@ -63,7 +63,7 @@ class NoticeControllerTest {
     }
 
     @Test
-    void getNoticeList() throws Exception {
+    void getMoreNoticeList() throws Exception {
         final Pageable pageRequest = PageRequest.of(0, 10);
         final List<NoticeResponseDTO> noticeList = new ArrayList<>();
         NoticeResponseDTO notice = new NoticeResponseDTO();
@@ -80,9 +80,9 @@ class NoticeControllerTest {
         notice.setNoticeAt(LocalDate.now().minusDays(2));
         noticeList.add(notice);
 
-        when(noticeService.getNoticeList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeList);
+        when(noticeService.getMoreList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeList);
         final String param = "?startId=0&size=10";
-        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/list" + param)
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/more" + param)
                                                                                   .contentType(
                                                                                           MediaType.APPLICATION_JSON))
                                                                  .andExpect(status().isOk())

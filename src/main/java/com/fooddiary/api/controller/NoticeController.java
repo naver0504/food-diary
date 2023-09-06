@@ -25,9 +25,14 @@ import lombok.RequiredArgsConstructor;
 public class NoticeController {
     private final NoticeService noticeService;
 
-    @GetMapping("/list")
-    public ResponseEntity<List<NoticeResponseDTO>> getNotice(NoticeGetListRequestDTO noticeGetListRequestDTO) {
-        return ResponseEntity.ok(noticeService.getNoticeList(noticeGetListRequestDTO));
+    @GetMapping("/more")
+    public ResponseEntity<List<NoticeResponseDTO>> getMoreList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
+        return ResponseEntity.ok(noticeService.getMoreList(noticeGetListRequestDTO));
+    }
+
+    @GetMapping("/paging")
+    public ResponseEntity<List<NoticeResponseDTO>> getPagingNoticeList(Pageable pageable) {
+        return ResponseEntity.ok(noticeService.getPagingNoticeList(pageable));
     }
 
     @PostMapping("/new")
