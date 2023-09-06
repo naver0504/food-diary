@@ -1,4 +1,5 @@
 package com.fooddiary.api.controller;
+import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.DayImageDTO;
 import com.fooddiary.api.dto.response.DayImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
@@ -13,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -30,13 +30,13 @@ public class ImageController {
     private final UserService userService;
 
 
-    @PostMapping("/saveImage")
+    @PostMapping(value = "/saveImage")
     public ResponseEntity<SaveImageResponseDTO> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
-                                                          final @RequestParam("localDateTime") LocalDateTime localDateTime,
+                                                          final @ModelAttribute("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
                                                           HttpServletRequest request){
         final User user = getUser(request);
 
-        return ResponseEntity.ok(dayImageService.saveImage(multipartFiles, localDateTime, user));
+        return ResponseEntity.ok(dayImageService.saveImage(multipartFiles, saveImageRequestDTO, user));
     }
 
 
