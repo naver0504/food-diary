@@ -4,6 +4,7 @@ package com.fooddiary.api.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
+import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.DayImageDTO;
 import com.fooddiary.api.dto.response.DayImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
@@ -45,18 +46,22 @@ public class DayImageService {
 
 
     @Transactional
-    public SaveImageResponseDTO saveImage(final List<MultipartFile> files, final LocalDateTime dateTime, final User user) {
+    public SaveImageResponseDTO saveImage(final List<MultipartFile> files, final SaveImageRequestDTO saveImageRequestDTO, final User user) {
 
+        final LocalDateTime dateTime = saveImageRequestDTO.getLocalDateTime();
 
 
         final int year = dateTime.getYear();
         final int month = dateTime.getMonthValue();
         final int day = dateTime.getDayOfMonth();
+        final double longitude = saveImageRequestDTO.getLongitude();
+        final double latitude = saveImageRequestDTO.getLatitude();
+
         final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         final List<Image> images;
 
         try {
-            images = imageService.storeImage(files, dateTime, user, basePath);
+            images = imageService.storeImage(files, dateTime, user, longitude, latitude, basePath);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -107,6 +112,7 @@ public class DayImageService {
 
         for (Image storedImage : images) {
             byte[] bytes;
+
             try {
                 bytes = fileStorageService.getObject(dirPath + storedImage.getStoredFileName());
             } catch (IOException e) {
