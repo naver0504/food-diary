@@ -57,6 +57,7 @@ public class DayImageService {
         final double longitude = saveImageRequestDTO.getLongitude();
         final double latitude = saveImageRequestDTO.getLatitude();
 
+
         final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         final List<Image> images;
 

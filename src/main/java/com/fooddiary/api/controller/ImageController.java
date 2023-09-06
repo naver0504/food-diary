@@ -9,6 +9,7 @@ import com.fooddiary.api.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,16 @@ public class ImageController {
     private final UserService userService;
 
 
-    @PostMapping(value = "/saveImage")
+    @PostMapping(value = "/saveImage", consumes = {
+            MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE
+    })
     public ResponseEntity<SaveImageResponseDTO> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
-                                                          final @ModelAttribute("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
+                                                          final @RequestPart("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
                                                           HttpServletRequest request){
         final User user = getUser(request);
 
+
+        System.out.println("saveImageRequestDTO = " + saveImageRequestDTO);
         return ResponseEntity.ok(dayImageService.saveImage(multipartFiles, saveImageRequestDTO, user));
     }
 
