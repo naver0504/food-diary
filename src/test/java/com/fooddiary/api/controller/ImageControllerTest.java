@@ -20,7 +20,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.mock.web.MockPart;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
@@ -40,6 +39,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -63,6 +63,7 @@ public class ImageControllerTest {
     @MockBean
     private DayImageService dayImageService;
 
+
     @Autowired
     private WebApplicationContext context;
     private MockMvc mockMvc;
@@ -82,7 +83,6 @@ public class ImageControllerTest {
         when(authentication.getPrincipal()).thenReturn(principal);
         SecurityContextHolder.setContext(securityContext);
 
-
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(documentationConfiguration(restDocumentation)).build();
 
@@ -97,6 +97,12 @@ public class ImageControllerTest {
         httpHeaders.add("email", "qortmdwls1234@naver.com");
         httpHeaders.add("token", token);
 
+        final SaveImageRequestDTO saveImageRequestDTO = SaveImageRequestDTO.builder()
+                .localDateTime(LocalDateTime.now())
+                .longitude(1.0)
+                .latitude(2.0)
+                .build();
+
         //Mock파일생성
         final MockMultipartFile image1 = new MockMultipartFile(
                 "files",
@@ -105,26 +111,28 @@ public class ImageControllerTest {
                 new FileInputStream("src/test/resources/image/apple.png")
         );
 
+        final String imageDetails = "{\"localDateTime\":\"2023-07-16T18:36:25\",\"longitude\":1.0,\"latitude\":2.0}";
+
+        final MockMultipartFile image2 = new MockMultipartFile(
+                "imageDetails",
+                null,
+                MediaType.APPLICATION_JSON_VALUE,
+                imageDetails.getBytes(StandardCharsets.UTF_8)
+        );
+
+
+
         final SaveImageResponseDTO saveImageResponseDto = SaveImageResponseDTO.builder()
                 .status(SaveImageResponseDTO.Status.SUCCESS).build();
 
         when(userService.getValidUser(any(), any())).thenReturn(principal);
         given(dayImageService.saveImage(any(), any(), any())).willReturn(saveImageResponseDto);
 
-        final SaveImageRequestDTO saveImageRequestDTO = SaveImageRequestDTO.builder()
-                .localDateTime(LocalDateTime.now())
-                .longitude(1.0)
-                .latitude(2.0)
-                .build();
 
-        final ObjectMapper objectMapper = new ObjectMapper();
         mockMvc.perform(
                         multipart("/image/saveImage")
                                 .file(image1)
-                                .part(new MockPart(
-                                        "imageDetails", objectMapper.writeValueAsString(saveImageRequestDTO).getBytes(StandardCharsets.UTF_8))
-                                )
-                                .contentType(MediaType.MULTIPART_FORM_DATA)
+                                .file(image2)
                                 .headers(httpHeaders)
 
                 )
