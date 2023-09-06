@@ -34,16 +34,23 @@ public class ImageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user, final String activeProfile) throws IOException {
+    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user, final double longitude, final double latitude,final String basePath) throws IOException {
 
         final List<Image> images = new ArrayList<>();
+        Image firstImage = null;
 
-        for (MultipartFile file : files) {
+        for (int i = 0; i<files.size(); i++) {
+            final MultipartFile file = files.get(i);
 
             //파일 명 겹치면 안되므로 UUID + '-' + 원래 파일 이름으로 저장
 
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            final Image image = Image.createImage(localDateTime, storeFilename);
+            final Image image = Image.createImage(localDateTime, storeFilename, longitude, latitude);
+            if (i == 0) {
+                firstImage = image;
+            } else {
+                firstImage.addChildImage(image);
+            }
             final int userId = user.getId();
 
 
@@ -51,7 +58,7 @@ public class ImageService {
             try {
                 ObjectMetadata metadata = new ObjectMetadata();
 
-                final String dirPath = ImageUtils.getDirPath(activeProfile, user);
+                final String dirPath = ImageUtils.getDirPath(basePath, user);
                 int count = dayImageRepository.getDayImageCount(userId);
                 if(count == 0) {
                     amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
