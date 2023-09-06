@@ -2,8 +2,13 @@ package com.fooddiary.api.entity.image;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
+
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -25,9 +30,25 @@ public class Image {
     @Enumerated(EnumType.STRING)
     private TimeStatus timeStatus;
 
+    @Column(nullable = true, columnDefinition = "GEOMETRY")
+    private Point geography;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "day_image_id")
     private DayImage dayImage;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_image_id")
+    private Image parentImage;
+
+    @OneToMany(mappedBy = "parentImage", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Image> child = new ArrayList<>();
+
+    public void addChildImage(Image image) {
+        this.child.add(image);
+        image.parentImage = this;
+    }
 
 
     public void setTimeStatus(final LocalDateTime dateTime) {
@@ -38,15 +59,34 @@ public class Image {
         this.dayImage = dayImage;
     }
 
+    public void setGeography(final double longitude, final double latitude) {
+        if(longitude == 0.0 && latitude == 0.0) {
+            return;
+        }
+
+        String pointWKT = String.format("POINT(%s %s)", longitude, latitude);
+        Point point;
+        try {
+            point = (Point) new WKTReader().read(pointWKT);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("point = " + point);
+        this.geography = point;
+    }
+
     public static void setDayImage(List<Image> images, DayImage dayImage) {
         images.forEach(image -> image.setDayImage(dayImage));
     }
 
-    public static Image createImage(final LocalDateTime dateTime, final String fileName) {
+    public static Image createImage(final LocalDateTime dateTime, final String fileName, final double longitude, final double latitude) {
         final Image image = Image.builder()
                 .storedFileName(fileName)
                 .build();
+
         image.setTimeStatus(dateTime);
+        image.setGeography(longitude, latitude);
         return image;
     }
 
