@@ -26,12 +26,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NoticeService {
     private final NoticeRepository noticeRepository;
-    public List<NoticeResponseDTO> getMoreList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
-        Pageable pageable = PageRequest.of(0, noticeGetListRequestDTO.getSize());
-        final List<Notice> boardList = noticeRepository.selectMoreNoticeListById(noticeGetListRequestDTO.getStartId(), true, pageable);
+    public List<NoticeResponseDTO> getMoreNoticeList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
+        final Pageable pageable = PageRequest.of(0, noticeGetListRequestDTO.getSize());
+        final List<Notice> noticeList = noticeRepository.selectMoreNoticeListById(noticeGetListRequestDTO.getStartId(), true, pageable);
 
         final List<NoticeResponseDTO> noticeResponseDTOList = new ArrayList<>();
-        boardList.forEach(element -> {
+        noticeList.forEach(element -> {
             final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
             BeanUtils.copyProperties(element, noticeResponseDTO);
             noticeResponseDTOList.add(noticeResponseDTO);
@@ -40,15 +40,22 @@ public class NoticeService {
     }
 
     public List<NoticeResponseDTO> getPagingNoticeList(Pageable pageable) {
-        final List<Notice> boardList = noticeRepository.selectPagingNoticeListById(true, pageable);
+        final List<Notice> noticeList = noticeRepository.selectPagingNoticeListById(true, pageable);
 
         final List<NoticeResponseDTO> noticeResponseDTOList = new ArrayList<>();
-        boardList.forEach(element -> {
+        noticeList.forEach(element -> {
             final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
             BeanUtils.copyProperties(element, noticeResponseDTO);
             noticeResponseDTOList.add(noticeResponseDTO);
         });
         return noticeResponseDTOList;
+    }
+
+    public NoticeResponseDTO getDetailNotice(int id) {
+        final Notice notice = noticeRepository.findById(id).orElse(new Notice());
+        final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
+        BeanUtils.copyProperties(notice, noticeResponseDTO);
+        return noticeResponseDTO;
     }
 
     public void newNotice(NoticeNewRequestDTO noticeNewRequestDTO) {

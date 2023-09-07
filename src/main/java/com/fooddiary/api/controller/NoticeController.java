@@ -2,16 +2,17 @@ package com.fooddiary.api.controller;
 
 import java.util.List;
 
-import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
 import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
 import com.fooddiary.api.dto.request.NoticeNewRequestDTO;
 import com.fooddiary.api.dto.response.NoticeResponseDTO;
@@ -26,13 +27,20 @@ public class NoticeController {
     private final NoticeService noticeService;
 
     @GetMapping("/more")
-    public ResponseEntity<List<NoticeResponseDTO>> getMoreList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
-        return ResponseEntity.ok(noticeService.getMoreList(noticeGetListRequestDTO));
+    public ResponseEntity<List<NoticeResponseDTO>> getMoreNoticeList(
+            NoticeGetListRequestDTO noticeGetListRequestDTO) {
+        return ResponseEntity.ok(noticeService.getMoreNoticeList(noticeGetListRequestDTO));
     }
 
     @GetMapping("/paging")
-    public ResponseEntity<List<NoticeResponseDTO>> getPagingNoticeList(Pageable pageable) {
-        return ResponseEntity.ok(noticeService.getPagingNoticeList(pageable));
+    public ResponseEntity<List<NoticeResponseDTO>> getPagingNoticeList(@RequestParam("page") int page,
+                                                                       @RequestParam("size") int size) {
+        return ResponseEntity.ok(noticeService.getPagingNoticeList(PageRequest.of(page, size)));
+    }
+
+    @GetMapping("/detail")
+    public ResponseEntity<NoticeResponseDTO> getMoreNotice(@RequestParam("id") int id) {
+        return ResponseEntity.ok(noticeService.getDetailNotice(id));
     }
 
     @PostMapping("/new")

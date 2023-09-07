@@ -12,6 +12,7 @@ public class NoticeResponseDTO {
     private Integer id;
     private String title;
     private String content;
+    private boolean available;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     //@JsonDeserialize(using = LocalDateTimeDeserializer.class)
     //@JsonSerialize(using = LocalDateTimeSerializer.class)
