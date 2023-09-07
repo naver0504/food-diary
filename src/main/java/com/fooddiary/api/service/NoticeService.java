@@ -40,7 +40,7 @@ public class NoticeService {
     }
 
     public List<NoticeResponseDTO> getPagingNoticeList(Pageable pageable) {
-        final List<Notice> noticeList = noticeRepository.selectPagingNoticeListById(true, pageable);
+        final List<Notice> noticeList = noticeRepository.selectPagingNoticeListById(pageable);
 
         final List<NoticeResponseDTO> noticeResponseDTOList = new ArrayList<>();
         noticeList.forEach(element -> {
@@ -74,10 +74,10 @@ public class NoticeService {
         if (user.getRole() != Role.ADMIN) {
             throw new BizException("not admin");
         }
-        if (noticeRepository.getReferenceById(noticeModifyRequestDTO.getId()).getId() == null) {
+        Notice notice = noticeRepository.findById(noticeModifyRequestDTO.getId()).orElse(new Notice());
+        if (notice.getId() == null) {
             throw new BizException("invalid id");
         }
-        final Notice notice = new Notice();
         BeanUtils.copyProperties(noticeModifyRequestDTO, notice);
         notice.setUpdateAt(LocalDateTime.now());
         notice.setUpdateUserId(user.getId());
