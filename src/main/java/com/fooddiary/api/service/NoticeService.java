@@ -1,10 +1,14 @@
 package com.fooddiary.api.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,29 +30,43 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NoticeService {
     private final NoticeRepository noticeRepository;
-    public List<NoticeResponseDTO> getMoreNoticeList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
-        final Pageable pageable = PageRequest.of(0, noticeGetListRequestDTO.getSize());
-        final List<Notice> noticeList = noticeRepository.selectMoreNoticeListById(noticeGetListRequestDTO.getStartId(), true, pageable);
+    private final EntityManager entityManager;
 
-        final List<NoticeResponseDTO> noticeResponseDTOList = new ArrayList<>();
-        noticeList.forEach(element -> {
-            final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
-            BeanUtils.copyProperties(element, noticeResponseDTO);
-            noticeResponseDTOList.add(noticeResponseDTO);
-        });
-        return noticeResponseDTOList;
+    public NoticeResponseDTO getMoreNoticeList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
+        NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
+        noticeResponseDTO.setCount(noticeRepository.count());
+
+        if (noticeResponseDTO.getCount() > 0L) {
+            final Pageable pageable = PageRequest.of(0, noticeGetListRequestDTO.getSize());
+            final List<Notice> noticeList = noticeRepository.selectMoreNoticeListById(noticeGetListRequestDTO.getStartId(), true, pageable);
+
+            final List<NoticeResponseDTO.NoticeDTO> noticeResponseDTOList = new ArrayList<>();
+            noticeList.forEach(element -> {
+                final NoticeResponseDTO.NoticeDTO noticeDTO = new NoticeResponseDTO.NoticeDTO();
+                BeanUtils.copyProperties(element, noticeDTO);
+                noticeResponseDTOList.add(noticeDTO);
+            });
+            noticeResponseDTO.setList(noticeResponseDTOList);
+        }
+        return noticeResponseDTO;
     }
 
-    public List<NoticeResponseDTO> getPagingNoticeList(Pageable pageable) {
-        final List<Notice> noticeList = noticeRepository.selectPagingNoticeListById(pageable);
+    public NoticeResponseDTO getPagingNoticeList(Pageable pageable) {
+        NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
+        noticeResponseDTO.setCount(noticeRepository.count());
 
-        final List<NoticeResponseDTO> noticeResponseDTOList = new ArrayList<>();
-        noticeList.forEach(element -> {
-            final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
-            BeanUtils.copyProperties(element, noticeResponseDTO);
-            noticeResponseDTOList.add(noticeResponseDTO);
-        });
-        return noticeResponseDTOList;
+        if (noticeResponseDTO.getCount() > 0L) {
+            final List<Notice> noticeList = noticeRepository.selectPagingNoticeListById(pageable);
+
+            final List<NoticeResponseDTO.NoticeDTO> noticeResponseDTOList = new ArrayList<>();
+            noticeList.forEach(element -> {
+                final NoticeResponseDTO.NoticeDTO noticeDTO = new NoticeResponseDTO.NoticeDTO();
+                BeanUtils.copyProperties(element, noticeDTO);
+                noticeResponseDTOList.add(noticeDTO);
+            });
+            noticeResponseDTO.setList(noticeResponseDTOList);
+        }
+        return noticeResponseDTO;
     }
 
     public NoticeResponseDTO getDetailNotice(int id) {
@@ -82,5 +100,30 @@ public class NoticeService {
         notice.setUpdateAt(LocalDateTime.now());
         notice.setUpdateUserId(user.getId());
         noticeRepository.save(notice);
+    }
+
+    // todo - jpql 동적쿼리 생성
+    private List<Notice> setCondition(String title, String content, Boolean available, LocalDate noticeAt, Pageable pageable) {
+        String jpql = "select n from Notice n";
+        String order = " order by n.id desc";
+        String where = " where";
+        List<String> whereCondition = new LinkedList<>();
+
+        // string 동적생성
+        if (title != null) {
+            whereCondition.add(" n.title like concat('%',:title,'%')");
+        }
+
+        jpql += String.join(" and ", whereCondition) + order;
+
+        TypedQuery<Notice> jpaQuery = entityManager.createQuery(jpql, Notice.class);
+        // param 동적 생성
+        if (title != null) {
+            jpaQuery.setParameter("title", title);
+        }
+
+        return jpaQuery.setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize() + 1)
+                .getResultList();
     }
 }

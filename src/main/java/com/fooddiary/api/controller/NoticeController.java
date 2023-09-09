@@ -27,13 +27,13 @@ public class NoticeController {
     private final NoticeService noticeService;
 
     @GetMapping("/more")
-    public ResponseEntity<List<NoticeResponseDTO>> getMoreNoticeList(
+    public ResponseEntity<NoticeResponseDTO> getMoreNoticeList(
             NoticeGetListRequestDTO noticeGetListRequestDTO) {
         return ResponseEntity.ok(noticeService.getMoreNoticeList(noticeGetListRequestDTO));
     }
 
     @GetMapping("/paging")
-    public ResponseEntity<List<NoticeResponseDTO>> getPagingNoticeList(@RequestParam("page") int page,
+    public ResponseEntity<NoticeResponseDTO> getPagingNoticeList(@RequestParam("page") int page,
                                                                        @RequestParam("size") int size) {
         return ResponseEntity.ok(noticeService.getPagingNoticeList(PageRequest.of(page, size)));
     }
