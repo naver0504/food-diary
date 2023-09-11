@@ -20,9 +20,9 @@ public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicCondit
     private EntityManager entityManager;
 
     @Override
-    public int selectCount(String title, String content, Boolean available, LocalDate noticeAt) {
-        final TypedQuery<Integer> jpaQuery = entityManager.createQuery(
-                jpqlPrefix(true, title, content, available, noticeAt), Integer.class);
+    public long selectCount(String title, String content, Boolean available, LocalDate noticeAt) {
+        final TypedQuery<Long> jpaQuery = entityManager.createQuery(
+                jpqlPrefix(true, title, content, available, noticeAt), Long.class);
         setParam(jpaQuery, title, content, available, noticeAt);
         return jpaQuery.getSingleResult();
     }
@@ -31,7 +31,7 @@ public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicCondit
     public List<Notice> selectList(String title, String content, Boolean available, LocalDate noticeAt,
                                    Pageable pageable) {
         final TypedQuery<Notice> jpaQuery = entityManager.createQuery(
-                jpqlPrefix(true, title, content, available, noticeAt), Notice.class);
+                jpqlPrefix(false, title, content, available, noticeAt), Notice.class);
         setParam(jpaQuery, title, content, available, noticeAt);
 
         return jpaQuery.setFirstResult((int) pageable.getOffset())
@@ -49,10 +49,10 @@ public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicCondit
 
         // string 동적생성
         if (title != null) {
-            whereCondition.add("n.title like concat('%%',:title,'%%')");
+            whereCondition.add("n.title like :title");
         }
         if (content != null) {
-            whereCondition.add("n.content like concat('%%',:content,'%%')");
+            whereCondition.add("n.content like :content");
         }
         if (available != null) {
             whereCondition.add("n.available = :available");
@@ -73,7 +73,7 @@ public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicCondit
                               LocalDate noticeAt) {
         // param 동적 생성
         if (title != null) {
-            jpaQuery.setParameter("title", title);
+            jpaQuery.setParameter("title", "%" + title + "%");
         }
         if (content != null) {
             jpaQuery.setParameter("content", content);
