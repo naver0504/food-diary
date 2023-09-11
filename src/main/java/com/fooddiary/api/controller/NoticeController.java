@@ -1,6 +1,6 @@
 package com.fooddiary.api.controller;
 
-import java.util.List;
+import java.time.LocalDate;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -33,9 +33,14 @@ public class NoticeController {
     }
 
     @GetMapping("/paging")
-    public ResponseEntity<NoticeResponseDTO> getPagingNoticeList(@RequestParam("page") int page,
-                                                                       @RequestParam("size") int size) {
-        return ResponseEntity.ok(noticeService.getPagingNoticeList(PageRequest.of(page, size)));
+    public ResponseEntity<NoticeResponseDTO> getPagingNoticeList(@RequestParam(value = "title", required = false) String title,
+                                                                 @RequestParam(value = "content", required = false) String content,
+                                                                 @RequestParam(value = "available", required = false) Boolean available,
+                                                                 @RequestParam(value = "noticeAt", required = false) LocalDate noticeAt,
+                                                                 @RequestParam("page") int page,
+                                                                 @RequestParam("size") int size) {
+        return ResponseEntity.ok(noticeService.getPagingNoticeList(title, content, available, noticeAt,
+                                                                   PageRequest.of(page, size)));
     }
 
     @GetMapping("/detail")
