@@ -4,7 +4,7 @@ import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.DayImageDTO;
-import com.fooddiary.api.dto.response.DayImagesDTO;
+import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
 import com.fooddiary.api.entity.image.Time;
 import com.fooddiary.api.entity.image.TimeStatus;
@@ -34,12 +34,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -198,11 +196,11 @@ public class ImageControllerTest {
         httpHeaders.add("email", "qortmdwls1234@naver.com");
         httpHeaders.add("token", token);
 
-        final List<DayImagesDTO> dayImagesDtos = new ArrayList<>();
+        final List<ThumbNailImagesDTO> dayImagesDtos = new ArrayList<>();
         final FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
         final Time time1 = new Time(LocalDateTime.now().minusDays(1));
         final byte[] bytes = fileInputStream.readAllBytes();
-        final DayImagesDTO dayImagesDto = DayImagesDTO.builder()
+        final ThumbNailImagesDTO dayImagesDto = ThumbNailImagesDTO.builder()
                 .id(1)
                 .bytes(bytes)
                 .time(time1)
@@ -210,7 +208,7 @@ public class ImageControllerTest {
         dayImagesDtos.add(dayImagesDto);
         final Time time2 = new Time(LocalDateTime.now());
 
-        final DayImagesDTO dayImagesDto2 = DayImagesDTO.builder()
+        final ThumbNailImagesDTO dayImagesDto2 = ThumbNailImagesDTO.builder()
                 .id(2)
                 .bytes(bytes)
                 .time(time2)
@@ -222,7 +220,7 @@ public class ImageControllerTest {
         final int month = LocalDateTime.now().getMonth().getValue();
 
         when(userService.getValidUser(any(), any())).thenReturn(principal);
-        when(dayImageService.getDayImages(year, month, principal)).thenReturn(dayImagesDtos);
+        when(dayImageService.getThumbNailImages(year, month, principal)).thenReturn(dayImagesDtos);
 
 
         final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
