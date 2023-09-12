@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DayImagesDTO {
+public class ThumbNailImagesDTO {
 
     int id;
     byte[] bytes;
