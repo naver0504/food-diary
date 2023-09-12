@@ -6,8 +6,9 @@ import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.DayImageDTO;
-import com.fooddiary.api.dto.response.DayImagesDTO;
+import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
+import com.fooddiary.api.dto.response.TimeLineResponseDTO;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.image.Time;
@@ -133,9 +134,9 @@ public class DayImageService {
     }
 
     @Transactional(readOnly = true)
-    public List<DayImagesDTO> getDayImages(final int year, final int month, final User user)  {
+    public List<ThumbNailImagesDTO> getThumbNailImages(final int year, final int month, final User user)  {
         final List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
-        final List<DayImagesDTO> dayImagesDtos = new ArrayList<>();
+        final List<ThumbNailImagesDTO> dayImagesDTOS = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(basePath, user);
         for (DayImage dayImage : dayImages) {
             byte[] bytes;
@@ -146,8 +147,8 @@ public class DayImageService {
                 throw new RuntimeException(e);
             }
             final Time time = dayImage.getTime();
-            dayImagesDtos.add(
-                    DayImagesDTO.builder()
+            dayImagesDTOS.add(
+                    ThumbNailImagesDTO.builder()
                             .id(dayImage.getId())
                             .time(time)
                             .bytes(bytes)
@@ -155,8 +156,43 @@ public class DayImageService {
             );
 
         }
-        return dayImagesDtos;
+        return dayImagesDTOS;
 
+    }
+
+    @Transactional(readOnly = true)
+    public List<TimeLineResponseDTO> getTimeLine(final int year, final int month, final User user) {
+        final List<DayImage> dayImages = dayImageRepository.findDayImageByYearAndMonthOrderByDayDesc(year, month, user.getId());
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+        final List<TimeLineResponseDTO> timeLineResponseDTOS = new ArrayList<>();
+
+
+        for (DayImage dayImage : dayImages) {
+            final int day = dayImage.getTime().getDay();
+            final List<TimeLineResponseDTO.TimeLineImageResponseDTO> timeLineImageResponseDTOS = new ArrayList<>();
+            for (Image image : dayImage.getImages()) {
+                final byte[] bytes;
+                try {
+                    bytes = fileStorageService.getObject(dirPath + image.getStoredFileName());
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                final TimeLineResponseDTO.TimeLineImageResponseDTO timeLineImageResponseDTO = TimeLineResponseDTO.TimeLineImageResponseDTO
+                        .TimeLineImageResponse(image.getId(), bytes);
+                timeLineImageResponseDTOS.add(timeLineImageResponseDTO);
+            }
+
+            final int dayOfWeek = LocalDateTime.of(year, month, day, 0, 0)
+                    .getDayOfWeek().getValue();
+
+            timeLineResponseDTOS.add(TimeLineResponseDTO.TimeLineResponse(dayImage, timeLineImageResponseDTOS, dayOfWeek));
+
+
+        }
+
+        return timeLineResponseDTOS;
     }
 
 

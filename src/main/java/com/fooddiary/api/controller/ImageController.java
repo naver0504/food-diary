@@ -1,8 +1,9 @@
 package com.fooddiary.api.controller;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.DayImageDTO;
-import com.fooddiary.api.dto.response.DayImagesDTO;
+import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
+import com.fooddiary.api.dto.response.TimeLineResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DayImageService;
 import com.fooddiary.api.service.UserService;
@@ -62,11 +63,17 @@ public class ImageController {
      * 한 달의 사진 받기
      */
     @GetMapping("/images")
-    public ResponseEntity<List<DayImagesDTO>> showImages(final @RequestParam int year, final @RequestParam int month) {
+    public ResponseEntity<List<ThumbNailImagesDTO>> showThumbNailImages(final @RequestParam int year, final @RequestParam int month) {
 
         final User user = getUser();
 
-        return ResponseEntity.ok(dayImageService.getDayImages(year, month, user));
+        return ResponseEntity.ok(dayImageService.getThumbNailImages(year, month, user));
+    }
+
+    @GetMapping("/timeline")
+    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam int year, final @RequestParam int month) {
+        final User user = getUser();
+        return ResponseEntity.ok(dayImageService.getTimeLine(year, month, user));
     }
 
 
