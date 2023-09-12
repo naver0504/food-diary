@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost/my_food_diarybook
     username: root
-    password: ykbaik100!
+    password: 
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 30
