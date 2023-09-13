@@ -17,7 +17,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -64,35 +63,20 @@ class NoticeControllerTest {
 
     @Test
     void getMoreNoticeList() throws Exception {
-        final Pageable pageRequest = PageRequest.of(0, 10);
-        final List<NoticeResponseDTO> noticeList = new ArrayList<>();
-        NoticeResponseDTO notice = new NoticeResponseDTO();
-        notice.setId(1);
-        notice.setTitle("[공지]신규 서비스 오픈 안내");
-        notice.setContent("2024년 1월 2일 신규 서비스 오픈 되었습니다. 앞으로 새로운 기능도 추가될 예정이니 기대해주세요");
-        notice.setNoticeAt(LocalDate.of(2024, 1, 2));
-        noticeList.add(notice);
-
-        notice = new NoticeResponseDTO();
-        notice.setId(2);
-        notice.setTitle("[공지]신규 서비스 관련 이벤트 당첨 안내");
-        notice.setContent("이벤트 응모관련 당첨자는 이메일 확인 부탁드립니다.");
-        notice.setNoticeAt(LocalDate.now().minusDays(2));
-        noticeList.add(notice);
-
-        when(noticeService.getMoreList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeList);
+        final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
+        when(noticeService.getMoreNoticeList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeResponseDTO);
         final String param = "?startId=0&size=10";
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/more" + param)
                                                                                   .contentType(
                                                                                           MediaType.APPLICATION_JSON))
                                                                  .andExpect(status().isOk())
-                                                                 .andDo(document("get notice")).andReturn()
+                                                                 .andDo(document("get more notice")).andReturn()
                                                                  .getResponse();
 
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         Assertions.assertEquals(
                 mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
-                objectMapper.writeValueAsString(noticeList));
+                objectMapper.writeValueAsString(noticeResponseDTO));
     }
 
     @Test
@@ -153,5 +137,48 @@ class NoticeControllerTest {
         Assertions.assertEquals(requestDTOArgumentCaptorValue.getTitle(), noticeModifyRequestDTO.getTitle());
         Assertions.assertEquals(requestDTOArgumentCaptorValue.getContent(), noticeModifyRequestDTO.getContent());
         Assertions.assertEquals(requestDTOArgumentCaptorValue.isAvailable(), noticeModifyRequestDTO.isAvailable());
+    }
+
+    @Test
+    void getPagingNoticeList() throws Exception {
+        final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
+        final String title = noticeResponseDTO.getList().get(0).getTitle().substring(0, 2);
+        final String param = "?page=0&size=10&title=" + title;
+        when(noticeService.getPagingNoticeList(anyString(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(noticeResponseDTO);
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/paging" + param)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(document("get paging notice")).andReturn()
+                .getResponse();
+
+        final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        Assertions.assertEquals(
+                mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
+                objectMapper.writeValueAsString(noticeResponseDTO));
+
+        final ArgumentCaptor<String> noticeNewRequestDTOArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(noticeService, times(1)).getPagingNoticeList(noticeNewRequestDTOArgumentCaptor.capture(), any(), any(), any(), any(), any(Pageable.class));
+        Assertions.assertEquals(title, noticeNewRequestDTOArgumentCaptor.getValue());
+    }
+
+    private NoticeResponseDTO makeNoticeList() {
+        final List<NoticeResponseDTO.NoticeDTO> noticeList = new ArrayList<>();
+        NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
+        NoticeResponseDTO.NoticeDTO notice = new NoticeResponseDTO.NoticeDTO();
+        notice.setId(1);
+        notice.setTitle("[공지]신규 서비스 오픈 안내");
+        notice.setContent("2024년 1월 2일 신규 서비스 오픈 되었습니다. 앞으로 새로운 기능도 추가될 예정이니 기대해주세요");
+        notice.setNoticeAt(LocalDate.of(2024, 1, 2));
+        noticeList.add(notice);
+
+        notice = new NoticeResponseDTO.NoticeDTO();
+        notice.setId(2);
+        notice.setTitle("[공지]신규 서비스 관련 이벤트 당첨 안내");
+        notice.setContent("이벤트 응모관련 당첨자는 이메일 확인 부탁드립니다.");
+        notice.setNoticeAt(LocalDate.now().minusDays(2));
+        noticeList.add(notice);
+        noticeResponseDTO.setList(noticeList);
+
+        return  noticeResponseDTO;
     }
 }

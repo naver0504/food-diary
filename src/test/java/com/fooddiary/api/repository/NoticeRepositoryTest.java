@@ -69,7 +69,7 @@ class NoticeRepositoryTest {
         saveList.add(notice);
         noticeRepository.saveAll(saveList);
 
-        final List<Notice> noticeList = noticeRepository.selectPagingNoticeListById( true, PageRequest.of(1, 2));
+        final List<Notice> noticeList = noticeRepository.selectPagingNoticeListById(PageRequest.of(1, 2));
 
         Assertions.assertEquals(noticeList.size(), 0);
     }
