@@ -95,7 +95,8 @@ public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicCondit
         query.select(notice)
              .where(condition);
 
-        return entityManager.createQuery(query).getResultList();
+        return entityManager.createQuery(query).setFirstResult((int) pageable.getOffset())
+                            .setMaxResults(pageable.getPageSize()).getResultList();
     }
 
 }
