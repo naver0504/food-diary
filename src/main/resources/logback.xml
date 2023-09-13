@@ -46,7 +46,7 @@
   </appender>
 
   <springProfile name="local">
-    <root level="DEBUG">
+    <root level="TRACE">
       <appender-ref ref="STDOUT" />
     </root>
   </springProfile>

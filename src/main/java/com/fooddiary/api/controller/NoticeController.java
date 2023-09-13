@@ -36,10 +36,11 @@ public class NoticeController {
     public ResponseEntity<NoticeResponseDTO> getPagingNoticeList(@RequestParam(value = "title", required = false) String title,
                                                                  @RequestParam(value = "content", required = false) String content,
                                                                  @RequestParam(value = "available", required = false) Boolean available,
-                                                                 @RequestParam(value = "noticeAt", required = false) LocalDate noticeAt,
+                                                                 @RequestParam(value = "noticeAtStart", required = false) LocalDate noticeAtStart,
+                                                                 @RequestParam(value = "noticeAtEnd", required = false) LocalDate noticeAtEnd,
                                                                  @RequestParam("page") int page,
                                                                  @RequestParam("size") int size) {
-        return ResponseEntity.ok(noticeService.getPagingNoticeList(title, content, available, noticeAt,
+        return ResponseEntity.ok(noticeService.getPagingNoticeList(title, content, available, noticeAtStart, noticeAtEnd,
                                                                    PageRequest.of(page, size)));
     }
 

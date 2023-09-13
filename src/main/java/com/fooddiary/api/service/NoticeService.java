@@ -51,15 +51,15 @@ public class NoticeService {
     }
 
     public NoticeResponseDTO getPagingNoticeList(String title, String content, Boolean available,
-                                                 LocalDate noticeAt, Pageable pageable) {
+                                                 LocalDate noticeAtStart, LocalDate noticeAtEnd, Pageable pageable) {
         final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
         noticeResponseDTO.setCount(
-                noticeDynamicConditionRepository.selectCount(title, content, available, noticeAt));
+                noticeDynamicConditionRepository.selectCount(title, content, available, noticeAtStart, noticeAtEnd));
 
         if (noticeResponseDTO.getCount() > 0L) {
 
             final List<Notice> noticeList = noticeDynamicConditionRepository.selectList(title, content,
-                                                                                        available, noticeAt,
+                                                                                        available, noticeAtStart, noticeAtEnd,
                                                                                         pageable);
 
             final List<NoticeResponseDTO.NoticeDTO> noticeResponseDTOList = new ArrayList<>();
@@ -105,7 +105,5 @@ public class NoticeService {
         notice.setUpdateUserId(user.getId());
         noticeRepository.save(notice);
     }
-
-    // todo - jpql 동적쿼리 생성
 
 }
