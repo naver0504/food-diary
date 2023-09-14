@@ -45,7 +45,7 @@ public class NoticeController {
     }
 
     @GetMapping("/detail")
-    public ResponseEntity<NoticeResponseDTO> getMoreNotice(@RequestParam("id") int id) {
+    public ResponseEntity<NoticeResponseDTO.NoticeDTO> getMoreNotice(@RequestParam("id") int id) {
         return ResponseEntity.ok(noticeService.getDetailNotice(id));
     }
 

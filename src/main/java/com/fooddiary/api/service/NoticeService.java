@@ -73,9 +73,9 @@ public class NoticeService {
         return noticeResponseDTO;
     }
 
-    public NoticeResponseDTO getDetailNotice(int id) {
+    public NoticeResponseDTO.NoticeDTO getDetailNotice(int id) {
         final Notice notice = noticeRepository.findById(id).orElse(new Notice());
-        final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
+        final NoticeResponseDTO.NoticeDTO noticeResponseDTO = new NoticeResponseDTO.NoticeDTO();
         BeanUtils.copyProperties(notice, noticeResponseDTO);
         return noticeResponseDTO;
     }

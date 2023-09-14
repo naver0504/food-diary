@@ -25,7 +25,7 @@ logging:
       hibernate:
         type:
           descriptor:
-            sql: trace
+            sql: trace # log level은 SQL param을 보고싶을때만 trace를 쓰세요. 로그가 너무 많아요
 
 cloud:
   aws:
