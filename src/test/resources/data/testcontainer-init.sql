@@ -46,7 +46,7 @@ create table day_image (
    content varchar(500) NOT NULL,
    available bit(1) NOT NULL DEFAULT b'0',
    notice_at date NOT NULL,
-   create_at datetime NOT NULL DEFAULT (curdate()),
+   create_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
    create_user_id int NOT NULL,
    update_at datetime,
    update_user_id int,
