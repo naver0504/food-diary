@@ -1,13 +1,23 @@
 package com.fooddiary.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
-import com.fooddiary.api.dto.request.NoticeNewRequestDTO;
-import com.fooddiary.api.dto.response.NoticeResponseDTO;
-import com.fooddiary.api.service.NoticeService;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +26,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -29,18 +38,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fooddiary.api.common.constants.Profiles;
+import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
+import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
+import com.fooddiary.api.dto.request.NoticeNewRequestDTO;
+import com.fooddiary.api.dto.response.NoticeResponseDTO;
+import com.fooddiary.api.service.NoticeService;
 
 @SpringBootTest
 @ActiveProfiles(Profiles.TEST)
@@ -62,35 +68,26 @@ class NoticeControllerTest {
     }
 
     @Test
-    void getNoticeList() throws Exception {
-        final Pageable pageRequest = PageRequest.of(0, 10);
-        final List<NoticeResponseDTO> noticeList = new ArrayList<>();
-        NoticeResponseDTO notice = new NoticeResponseDTO();
-        notice.setId(1);
-        notice.setTitle("[공지]신규 서비스 오픈 안내");
-        notice.setContent("2024년 1월 2일 신규 서비스 오픈 되었습니다. 앞으로 새로운 기능도 추가될 예정이니 기대해주세요");
-        notice.setCreateAt(LocalDate.of(2024, 1, 2));
-        noticeList.add(notice);
-
-        notice = new NoticeResponseDTO();
-        notice.setId(2);
-        notice.setTitle("[공지]신규 서비스 관련 이벤트 당첨 안내");
-        notice.setContent("이벤트 응모관련 당첨자는 이메일 확인 부탁드립니다.");
-        notice.setCreateAt(LocalDate.now().minusDays(2));
-        noticeList.add(notice);
-
-        when(noticeService.getNoticeList(any(Pageable.class))).thenReturn(noticeList);
-        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/list")
-                                                                                  .contentType(
-                                                                                          MediaType.APPLICATION_JSON))
-                                                                 .andExpect(status().isOk())
-                                                                 .andDo(document("get notice")).andReturn()
-                                                                 .getResponse();
+    void getMoreNoticeList() throws Exception {
+        final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
+        when(noticeService.getMoreNoticeList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeResponseDTO);
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("token", "asdf");
+        final String param = "?startId=0&size=10";
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/more" + param)
+                                                                                        .contentType(
+                                                                                                MediaType.APPLICATION_JSON)
+                                                                                        .headers(httpHeaders))
+                                                                       .andExpect(status().isOk())
+                                                                       .andDo(document("get more notice"))
+                                                                       .andReturn()
+                                                                       .getResponse();
 
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         Assertions.assertEquals(
                 mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
-                objectMapper.writeValueAsString(noticeList));
+                objectMapper.writeValueAsString(noticeResponseDTO));
     }
 
     @Test
@@ -99,23 +96,25 @@ class NoticeControllerTest {
         noticeNewRequestDTO.setTitle("[공지]신규 기능 베타버전 출시");
         noticeNewRequestDTO.setContent("친구 추가하고 친구가 공유한 일기에 좋아요 및 댓글 기능이 추가되었습니다. 해당 기능은 실험실 메뉴에서 이용가능합니다.");
         noticeNewRequestDTO.setAvailable(true);
+        noticeNewRequestDTO.setNoticeAt(LocalDate.now());
 
-        final ObjectMapper objectMapper = new ObjectMapper();
+        final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
 
         mockMvc.perform(post("/notice/new")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(noticeNewRequestDTO))
-                        .headers(httpHeaders))
-                .andExpect(status().isOk())
-                .andDo(document("new notice"));
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(noticeNewRequestDTO))
+                                .headers(httpHeaders))
+               .andExpect(status().isOk())
+               .andDo(document("new notice"));
 
-        final ArgumentCaptor<NoticeNewRequestDTO> noticeNewRequestDTOArgumentCaptor = ArgumentCaptor.forClass(NoticeNewRequestDTO.class);
+        final ArgumentCaptor<NoticeNewRequestDTO> noticeNewRequestDTOArgumentCaptor = ArgumentCaptor.forClass(
+                NoticeNewRequestDTO.class);
 
         verify(noticeService, times(1)).newNotice(noticeNewRequestDTOArgumentCaptor.capture());
-        NoticeNewRequestDTO requestDTOArgumentCaptorValue = noticeNewRequestDTOArgumentCaptor.getValue();
+        final NoticeNewRequestDTO requestDTOArgumentCaptorValue = noticeNewRequestDTOArgumentCaptor.getValue();
         Assertions.assertEquals(requestDTOArgumentCaptorValue.getTitle(), noticeNewRequestDTO.getTitle());
         Assertions.assertEquals(requestDTOArgumentCaptorValue.getContent(), noticeNewRequestDTO.getContent());
         Assertions.assertEquals(requestDTOArgumentCaptorValue.isAvailable(), noticeNewRequestDTO.isAvailable());
@@ -128,26 +127,81 @@ class NoticeControllerTest {
         noticeModifyRequestDTO.setTitle("[공지]신규 기능 베타버전 출시");
         noticeModifyRequestDTO.setContent("친구 추가하고 친구가 공유한 일기에 좋아요 및 댓글 기능이 추가되었습니다. 해당 기능은 실험실 메뉴에서 이용가능합니다.");
         noticeModifyRequestDTO.setAvailable(true);
+        noticeModifyRequestDTO.setNoticeAt(LocalDate.now());
 
-        final ObjectMapper objectMapper = new ObjectMapper();
+        final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "jasuil@daum.net");
         httpHeaders.add("token", "asdf");
 
         mockMvc.perform(put("/notice/modify")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(noticeModifyRequestDTO))
-                        .headers(httpHeaders))
-                .andExpect(status().isOk())
-                .andDo(document("modify notice"));
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(noticeModifyRequestDTO))
+                                .headers(httpHeaders))
+               .andExpect(status().isOk())
+               .andDo(document("modify notice"));
 
-        final ArgumentCaptor<NoticeModifyRequestDTO> noticeNewRequestDTOArgumentCaptor = ArgumentCaptor.forClass(NoticeModifyRequestDTO.class);
+        final ArgumentCaptor<NoticeModifyRequestDTO> noticeNewRequestDTOArgumentCaptor =
+                ArgumentCaptor.forClass(NoticeModifyRequestDTO.class);
 
         verify(noticeService, times(1)).modifyNotice(noticeNewRequestDTOArgumentCaptor.capture());
-        NoticeModifyRequestDTO requestDTOArgumentCaptorValue = noticeNewRequestDTOArgumentCaptor.getValue();
+        final NoticeModifyRequestDTO requestDTOArgumentCaptorValue = noticeNewRequestDTOArgumentCaptor.getValue();
         Assertions.assertEquals(requestDTOArgumentCaptorValue.getId(), noticeModifyRequestDTO.getId());
         Assertions.assertEquals(requestDTOArgumentCaptorValue.getTitle(), noticeModifyRequestDTO.getTitle());
-        Assertions.assertEquals(requestDTOArgumentCaptorValue.getContent(), noticeModifyRequestDTO.getContent());
-        Assertions.assertEquals(requestDTOArgumentCaptorValue.isAvailable(), noticeModifyRequestDTO.isAvailable());
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.getContent(),
+                                noticeModifyRequestDTO.getContent());
+        Assertions.assertEquals(requestDTOArgumentCaptorValue.isAvailable(),
+                                noticeModifyRequestDTO.isAvailable());
+    }
+
+    @Test
+    void getPagingNoticeList() throws Exception {
+        final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
+        final String title = noticeResponseDTO.getList().get(0).getTitle().substring(0, 2);
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("token", "asdf");
+        final String param = "?page=0&size=10&title=" + title;
+        when(noticeService.getPagingNoticeList(anyString(), any(), any(), any(), any(),
+                                               any(Pageable.class))).thenReturn(noticeResponseDTO);
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/paging" + param)
+                                                                                        .contentType(
+                                                                                                MediaType.APPLICATION_JSON)
+                                                                                        .headers(httpHeaders))
+                                                                       .andExpect(status().isOk())
+                                                                       .andDo(document("get paging notice"))
+                                                                       .andReturn()
+                                                                       .getResponse();
+
+        final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        Assertions.assertEquals(
+                mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
+                objectMapper.writeValueAsString(noticeResponseDTO));
+
+        final ArgumentCaptor<String> noticeNewRequestDTOArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(noticeService, times(1)).getPagingNoticeList(noticeNewRequestDTOArgumentCaptor.capture(), any(),
+                                                            any(), any(), any(), any(Pageable.class));
+        Assertions.assertEquals(title, noticeNewRequestDTOArgumentCaptor.getValue());
+    }
+
+    private static NoticeResponseDTO makeNoticeList() {
+        final List<NoticeResponseDTO.NoticeDTO> noticeList = new ArrayList<>();
+        final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
+        NoticeResponseDTO.NoticeDTO notice = new NoticeResponseDTO.NoticeDTO();
+        notice.setId(1);
+        notice.setTitle("[공지]신규 서비스 오픈 안내");
+        notice.setContent("2024년 1월 2일 신규 서비스 오픈 되었습니다. 앞으로 새로운 기능도 추가될 예정이니 기대해주세요");
+        notice.setNoticeAt(LocalDate.of(2024, 1, 2));
+        noticeList.add(notice);
+
+        notice = new NoticeResponseDTO.NoticeDTO();
+        notice.setId(2);
+        notice.setTitle("[공지]신규 서비스 관련 이벤트 당첨 안내");
+        notice.setContent("이벤트 응모관련 당첨자는 이메일 확인 부탁드립니다.");
+        notice.setNoticeAt(LocalDate.now().minusDays(2));
+        noticeList.add(notice);
+        noticeResponseDTO.setList(noticeList);
+
+        return noticeResponseDTO;
     }
 }

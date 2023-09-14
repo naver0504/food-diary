@@ -185,7 +185,11 @@ public class UserService {
 
                 Transport.send(message);
 
+                final LocalDateTime now = LocalDateTime.now();
                 user.setPw(passwordEncoder.encode(tempPw));
+                user.setPwTry(0);
+                user.setPwUpdateAt(now);
+                user.setPwUpdateDelayAt(now.plusDays(PW_EXPIRED_DAY_LIMIT));
                 userRepository.save(user);
                 userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
             } catch (Exception e) {

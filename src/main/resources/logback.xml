@@ -8,7 +8,7 @@
     </filter>
     <file>./log/error.log</file>
     <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-      <pattern>./log/%d{yyyy-MM-dd HH:mm:ss.SSS} %-4relative [%thread] %-5level %logger{35} -%kvp -%msg%n</pattern>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-4relative [%thread] %-5level %logger{35} -%kvp -%msg%n</pattern>
     </encoder>
     <!-- 하루에 한번 압축 후 보관, 최대 30일, 1GB까지 보관 -->
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">

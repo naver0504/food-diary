@@ -1,6 +1,7 @@
 package com.fooddiary.api.entity.notice;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.stereotype.Component;
 
 @Entity
 @Getter
@@ -20,12 +22,18 @@ public class Notice {
     private Integer id;
     private String title;
     private String content;
+    @Column(nullable = false)
+    private LocalDate noticeAt;
     @Column(nullable = false, updatable = false)
-    private LocalDate createAt;
+    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
     private boolean available;
+    @Column(nullable = false)
+    private Integer createUserId;
+    private Integer updateUserId;
 
     @PrePersist
     public void prePersist() {
-        createAt = createAt == null ? LocalDate.now() : createAt;
+        createAt = createAt == null ? LocalDateTime.now() : createAt;
     }
 }
