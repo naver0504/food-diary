@@ -13,11 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 public class SaveImageRequestDTO {
 
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime localDateTime;
-
-    @Nullable
-    private Double longitude;
-    @Nullable
-    private Double latitude;
+    private Double longitude = -200D;
+    private Double latitude = -200D;
 }

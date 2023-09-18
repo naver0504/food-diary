@@ -42,7 +42,7 @@ public class ImageService {
     @Value("${cloud.aws.s3.dir}")
     private String basePath;
 
-    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user, final double longitude, final double latitude,final String basePath) throws IOException {
+    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user, final Double longitude, final Double latitude,final String basePath) throws IOException {
 
         final List<Image> images = new ArrayList<>();
         Image firstImage = null;

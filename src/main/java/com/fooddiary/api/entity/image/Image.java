@@ -59,8 +59,8 @@ public class Image {
         this.dayImage = dayImage;
     }
 
-    public void setGeography(final double longitude, final double latitude) {
-        if(longitude == 0.0 && latitude == 0.0) {
+    public void setGeography(final Double longitude, final Double latitude) {
+        if(longitude == -200D && latitude == -200D) {
             return;
         }
 
@@ -76,9 +76,6 @@ public class Image {
         this.geography = point;
     }
 
-    public static void setDayImage(List<Image> images, DayImage dayImage) {
-        images.forEach(image -> image.setDayImage(dayImage));
-    }
 
     public static Image createImage(final LocalDateTime dateTime, final String fileName, final double longitude, final double latitude) {
         final Image image = Image.builder()
