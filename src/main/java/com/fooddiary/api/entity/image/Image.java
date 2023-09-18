@@ -33,6 +33,9 @@ public class Image {
     @Column(nullable = true, columnDefinition = "GEOMETRY")
     private Point geography;
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "day_image_id")
     private DayImage dayImage;
