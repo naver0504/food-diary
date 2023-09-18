@@ -3,15 +3,15 @@ package com.fooddiary.api.controller;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
-import com.fooddiary.api.dto.response.DayImageDTO;
+import com.fooddiary.api.dto.response.ImageDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
 import com.fooddiary.api.dto.response.TimeLineResponseDTO;
-import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Time;
 import com.fooddiary.api.entity.image.TimeStatus;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DayImageService;
+import com.fooddiary.api.service.ImageService;
 import com.fooddiary.api.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,8 +38,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -61,6 +59,9 @@ public class ImageControllerTest {
     private Interceptor interceptor;
     @MockBean
     private UserService userService;
+
+    @MockBean
+    private ImageService imageService;
 
     @MockBean
     private DayImageService dayImageService;
@@ -145,28 +146,28 @@ public class ImageControllerTest {
 
     @Test
     @Transactional
-    public void getDayImage() throws Exception {
+    public void getImage() throws Exception {
 
         final String token = "2$asdf1g1";
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("email", "qortmdwls1234@naver.com");
         httpHeaders.add("token", token);
 
-        final List<DayImageDTO> dayImageDTOS = new ArrayList<>();
+        final List<ImageDTO> dayImageDTOS = new ArrayList<>();
         final FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
         final byte[] bytes = fileInputStream.readAllBytes();
 
-        final DayImageDTO dayImageDto = DayImageDTO.builder()
+        final ImageDTO dayImageDto = ImageDTO.builder()
                 .bytes(bytes)
                 .id(1)
-                .timeStatus(TimeStatus.BREAKFAST.getCode())
+                .time(TimeStatus.BREAKFAST.getCode())
                 .build();
 
         dayImageDTOS.add(dayImageDto);
-        final DayImageDTO dayImageDTO2 = DayImageDTO.builder()
+        final ImageDTO dayImageDTO2 = ImageDTO.builder()
                 .bytes(bytes)
                 .id(2)
-                .timeStatus(TimeStatus.DINNER.getCode())
+                .time(TimeStatus.DINNER.getCode())
                 .build();
         dayImageDTOS.add(dayImageDTO2);
 
@@ -176,7 +177,7 @@ public class ImageControllerTest {
 
 
         when(userService.getValidUser(any(), any())).thenReturn(principal);
-        when(dayImageService.getDayImage(year, month, day, principal)).thenReturn(dayImageDTOS);
+        when(imageService.getImages(year, month, day, principal)).thenReturn(dayImageDTOS);
 
 
         final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
