@@ -5,7 +5,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
-import com.fooddiary.api.dto.response.DayImageDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
 import com.fooddiary.api.dto.response.TimeLineResponseDTO;
@@ -97,40 +96,6 @@ public class DayImageService {
                 .status(Status.SUCCESS)
                 .build();
 
-    }
-
-    /***
-     *
-     * 하루 사진 받기
-     *
-     */
-    @Transactional(readOnly = true)
-    public List<DayImageDTO> getDayImage(int year, int month, int day, User user) {
-
-        final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
-        final List<Image> images = dayImage.getImages();
-        final List<DayImageDTO> dayImageDto = new ArrayList<>();
-        final String dirPath = ImageUtils.getDirPath(basePath, user);
-
-        for (Image storedImage : images) {
-            byte[] bytes;
-
-            try {
-                bytes = fileStorageService.getObject(dirPath + storedImage.getStoredFileName());
-            } catch (IOException e) {
-                log.error("IOException ", e);
-                throw new RuntimeException(e);
-            }
-            final String timeStatus = storedImage.getTimeStatus().getCode();
-            dayImageDto.add(
-                    DayImageDTO.builder()
-                    .bytes(bytes)
-                    .timeStatus(timeStatus)
-                    .id(storedImage.getId())
-                    .build()
-            );
-        }
-        return dayImageDto;
     }
 
     @Transactional(readOnly = true)
