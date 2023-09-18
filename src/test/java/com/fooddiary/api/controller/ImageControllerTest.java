@@ -6,6 +6,8 @@ import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.DayImageDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
+import com.fooddiary.api.dto.response.TimeLineResponseDTO;
+import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Time;
 import com.fooddiary.api.entity.image.TimeStatus;
 import com.fooddiary.api.entity.user.User;
@@ -36,6 +38,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -232,8 +236,78 @@ public class ImageControllerTest {
                         .queryParams(queryParams)
                         .headers(httpHeaders))
                 .andDo(document("get images"));
+    }
+
+    @Test
+    public void getTimeLine() throws Exception {
+
+        final String token = "2$asdf1g1";
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("email", "qortmdwls1234@naver.com");
+        httpHeaders.add("token", token);
+
+        final List<TimeLineResponseDTO> timeLineDTOS = new ArrayList<>();
+
+
+        final List<TimeLineResponseDTO.TimeLineImageResponseDTO> timeLineImageDTOS1 = new ArrayList<>();
+        final FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
+        final byte[] bytes = fileInputStream.readAllBytes();
+
+        timeLineImageDTOS1.add(TimeLineResponseDTO.TimeLineImageResponseDTO.builder()
+                .id(1)
+                .bytes(bytes)
+                .build());
+
+        timeLineImageDTOS1.add(TimeLineResponseDTO.TimeLineImageResponseDTO.builder()
+                .id(2)
+                .bytes(bytes)
+                .build());
+
+        timeLineDTOS.add(TimeLineResponseDTO.builder()
+                .month(9)
+                .day(18)
+                .dayOfWeek("월")
+                .images(timeLineImageDTOS1).build());
+
+        final List<TimeLineResponseDTO.TimeLineImageResponseDTO> timeLineImageDTOS2 = new ArrayList<>();
+        timeLineImageDTOS2.add(TimeLineResponseDTO.TimeLineImageResponseDTO.builder()
+                .id(3)
+                .bytes(bytes)
+                .build());
+
+        timeLineImageDTOS2.add(TimeLineResponseDTO.TimeLineImageResponseDTO.builder()
+                .id(4)
+                .bytes(bytes)
+                .build());
+
+        timeLineDTOS.add(TimeLineResponseDTO.builder()
+                .month(9)
+                .day(16)
+                .dayOfWeek("토")
+                .images(timeLineImageDTOS2).build());
+
+
+
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+
+        queryParams.add("year", String.valueOf(2023));
+        queryParams.add("month", String.valueOf(9));
+
+        when(userService.getValidUser(any(), any())).thenReturn(principal);
+        when(dayImageService.getTimeLine(2023, 9, principal)).thenReturn(timeLineDTOS);
+
+        mockMvc.perform(get("/image/timeline")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .queryParams(queryParams)
+                        .headers(httpHeaders))
+                .andDo(document("get timeLine"));
+
+
+
 
     }
+
+
 
 
 
