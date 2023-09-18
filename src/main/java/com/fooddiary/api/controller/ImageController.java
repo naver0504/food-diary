@@ -1,11 +1,12 @@
 package com.fooddiary.api.controller;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
-import com.fooddiary.api.dto.response.DayImageDTO;
+import com.fooddiary.api.dto.response.ImageDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.SaveImageResponseDTO;
 import com.fooddiary.api.dto.response.TimeLineResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DayImageService;
+import com.fooddiary.api.service.ImageService;
 import com.fooddiary.api.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class ImageController {
     private static final String TOKEN_NAME = "token";
 
     private final DayImageService dayImageService;
+    private final ImageService imageService;
     private final UserService userService;
 
 
@@ -50,11 +52,11 @@ public class ImageController {
      * 하루 사진 받기
      */
     @GetMapping("/image")
-    public ResponseEntity<List<DayImageDTO>> showImage(final @RequestParam int year, final @RequestParam int month,
-                                                       final @RequestParam int day) {
+    public ResponseEntity<List<ImageDTO>> showImage(final @RequestParam int year, final @RequestParam int month,
+                                                    final @RequestParam int day) {
 
         final User user = getUser();
-        return ResponseEntity.ok(dayImageService.getDayImage(year, month, day, user));
+        return ResponseEntity.ok(imageService.getImages(year, month, day, user));
     }
 
     /***

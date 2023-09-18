@@ -4,8 +4,11 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
+import com.fooddiary.api.dto.response.ImageDTO;
 import com.fooddiary.api.entity.image.Image;
+import com.fooddiary.api.entity.image.TimeStatus;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.DayImageRepository;
 import com.fooddiary.api.repository.ImageRepository;
@@ -13,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
@@ -30,9 +34,13 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final DayImageRepository dayImageRepository;
     private final AmazonS3 amazonS3;
+    private final FileStorageService fileStorageService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
+
+    @Value("${cloud.aws.s3.dir}")
+    private String basePath;
 
     public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user, final double longitude, final double latitude,final String basePath) throws IOException {
 
@@ -81,6 +89,44 @@ public class ImageService {
             images.add(saveImage);
         }
         return images;
+
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public List<ImageDTO> getImages(int year, int month, int day, final User user) {
+        final List<Image> images = imageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
+
+
+        final List<ImageDTO> ImageDTOS = new ArrayList<>();
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+
+        for (Image storedImage : images) {
+            byte[] bytes;
+
+            try {
+                bytes = fileStorageService.getObject(dirPath + storedImage.getStoredFileName());
+            } catch (IOException e) {
+                log.error("IOException ", e);
+                throw new RuntimeException(e);
+            }
+            final TimeStatus timeStatus = storedImage.getTimeStatus();
+
+            final String time = storedImage.getTimeStatus().getCode();
+            ImageDTOS.add(
+                    ImageDTO.builder()
+                            .bytes(bytes)
+                            .timeStatus(timeStatus)
+                            .time(time)
+                            .id(storedImage.getId())
+                            .build()
+            );
+        }
+
+        ImageDTOS.sort((o1, o2) ->
+                o1.getTimeStatus().compareTo(o2.getTimeStatus()));
+        return ImageDTOS;
 
     }
 
