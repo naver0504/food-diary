@@ -12,13 +12,15 @@ import java.util.List;
 @Repository
 public interface DayImageRepository extends JpaRepository<DayImage, Integer> {
 
-    @Query("select d from DayImage d where d.time.year = :year and d.time.month = :month and d.user.id = :userId")
+    @Query("select d from DayImage d where d.time.year = :year and d.time.month = :month and d.user.id = :userId order by d.time.day asc")
     List<DayImage> findByYearAndMonth(@Param("year") int year, @Param("month") int month, @Param("userId") int userId);
 
     @Query("select d from DayImage d join fetch d.images " +
-            "where d.time.year = :year and d.time.month = :month and d.time.day = :day and d.user.id = :userId")
+            "where d.time.year = :year and d.time.month = :month and d.time.day = :day and d.user.id = :userId ")
     DayImage findByYearAndMonthAndDay(@Param("year") int year,
                                              @Param("month") int month, @Param("day") int day, @Param("userId") int userId);
+
+
 
     @Query("select count(*) from DayImage d where d.user.id = :userId")
     int getDayImageCount(@Param("userId") int userId);
