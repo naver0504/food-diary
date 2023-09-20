@@ -4,6 +4,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fooddiary.api.entity.notice.QNotice;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -17,12 +23,28 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 @Repository
+@RequiredArgsConstructor
 public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicConditionRepository {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final JPAQueryFactory jpaQueryFactory;
 
-    private static <T> List<Predicate> orCondition(CriteriaBuilder cb, Root<T> notice, String title,
+    private static BooleanExpression orCondition(String title, String content) {
+        BooleanExpression booleanExpression = null;
+        if (title != null) {
+            booleanExpression = QNotice.notice.title.like( '%' + title + '%');
+        }
+        if (content != null) {
+            if (booleanExpression != null) {
+                booleanExpression = booleanExpression.or(QNotice.notice.content.like( '%' + title + '%'));
+            } else {
+                booleanExpression = QNotice.notice.content.like( '%' + title + '%');
+            }
+
+        }
+        return booleanExpression;
+    }
+
+    private static <T> List<Predicate> orCondition2(CriteriaBuilder cb, Root<T> notice, String title,
                                                    String content) {
         final List<Predicate> predicateList = new ArrayList<>();
         if (title != null) {
@@ -34,33 +56,44 @@ public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicCondit
         return predicateList;
     }
 
-    private static <T> List<Predicate> andCondition(CriteriaBuilder cb, Root<T> notice, Boolean available,
+    private static BooleanExpression andCondition(Boolean available,
                                                     LocalDate noticeAtStart, LocalDate noticeAtEnd) {
-        final List<Predicate> predicateList = new ArrayList<>();
+        BooleanExpression booleanExpression = null;
         if (available != null) {
-            predicateList.add(cb.equal(notice.get("available"), available));
+            booleanExpression = QNotice.notice.available.eq(available);
         }
         if (noticeAtStart != null && noticeAtEnd != null) {
-            predicateList.add(cb.between(notice.get("noticeAt"), noticeAtStart, noticeAtEnd));
+            if (booleanExpression != null) {
+                booleanExpression = booleanExpression.and(QNotice.notice.noticeAt.between(noticeAtStart, noticeAtEnd));
+            } else {
+                booleanExpression = QNotice.notice.noticeAt.between(noticeAtStart, noticeAtEnd);
+            }
         }
-        return predicateList;
+        return booleanExpression;
     }
 
+    public long selectCount2(String title, String content, Boolean available, LocalDate noticeAtStart,
+                             LocalDate noticeAtEnd) {
+        jpaQueryFactory.select(QNotice.notice).where(orCondition(title, content).and(andCondition(available, noticeAtStart,
+                noticeAtEnd)));
+
+    }
     @Override
     public long selectCount(String title, String content, Boolean available, LocalDate noticeAtStart,
                             LocalDate noticeAtEnd) {
         final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         final CriteriaQuery<Long> query = cb.createQuery(Long.class);
         final Root<Notice> notice = query.from(Notice.class);
-        final List<Predicate> predicateOrList = orCondition(cb, notice, title, content);
-        final List<Predicate> predicateAndList = andCondition(cb, notice, available, noticeAtStart,
-                                                              noticeAtEnd);
+        final BooleanExpression predicateOrList = orCondition(title, content);
+        final BooleanExpression predicateAndList = andCondition(available, noticeAtStart, noticeAtEnd);
+        BooleanExpression b = Expressions.asBoolean(true).isTrue();
+        BooleanExpression unionCondition = new BooleanBuilder().and();
         final List<Predicate> predicateList = new ArrayList<>();
-        if (!predicateOrList.isEmpty()) {
-            predicateList.add(cb.or(predicateOrList.toArray(new Predicate[predicateOrList.size()])));
+        if (predicateOrList != null) {
+            b.and(predicateOrList);
         }
-        if (!predicateAndList.isEmpty()) {
-            predicateList.add(cb.and(predicateAndList.toArray(new Predicate[predicateAndList.size()])));
+        if (predicateAndList != null) {
+            b.and(predicateAndList);
         }
         final Predicate[] condition = new Predicate[predicateList.size()];
         for (int i = 0; i < condition.length; i++) {
