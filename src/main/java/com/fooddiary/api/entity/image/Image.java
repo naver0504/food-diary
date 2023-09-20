@@ -1,5 +1,6 @@
 package com.fooddiary.api.entity.image;
 
+import com.fooddiary.api.entity.tag.Tag;
 import jakarta.persistence.*;
 import lombok.*;
 import org.locationtech.jts.geom.Point;
@@ -14,7 +15,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -44,13 +44,26 @@ public class Image {
     @JoinColumn(name = "parent_image_id")
     private Image parentImage;
 
+    public String memo;
+
     @OneToMany(mappedBy = "parentImage", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Image> child = new ArrayList<>();
 
+    @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Tag> tags = new ArrayList<>();
+
     public void addChildImage(Image image) {
         this.child.add(image);
         image.parentImage = this;
+    }
+
+    public void addTags(List<Tag> tags) {
+        for (Tag tag : tags) {
+            this.tags.add(tag);
+            tag.setImage(this);
+        }
     }
 
 
@@ -74,8 +87,6 @@ public class Image {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-
-        System.out.println("point = " + point);
         this.geography = point;
     }
 
