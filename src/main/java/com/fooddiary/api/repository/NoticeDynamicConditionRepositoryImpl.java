@@ -69,7 +69,10 @@ public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicCondit
         if (predicateAndList != null) {
             condition = condition.and(predicateAndList);
         }
-        return jpaQueryFactory.select(QNotice.notice).from(QNotice.notice).where(condition).stream().count();
+        return jpaQueryFactory.select(QNotice.notice)
+                              .from(QNotice.notice)
+                              .where(condition)
+                              .stream().count();
     }
 
     @Override
@@ -86,7 +89,12 @@ public class NoticeDynamicConditionRepositoryImpl implements NoticeDynamicCondit
             condition = condition.and(predicateAndList);
         }
 
-        return jpaQueryFactory.select(QNotice.notice).from(QNotice.notice).where(condition).stream().toList();
+        return jpaQueryFactory.select(QNotice.notice)
+                              .from(QNotice.notice)
+                              .where(condition)
+                              .limit(pageable.getPageSize())
+                              .offset(pageable.getOffset())
+                              .stream().toList();
     }
 
 }
