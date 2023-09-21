@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
 import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
 import com.fooddiary.api.dto.request.NoticeNewRequestDTO;
@@ -29,19 +30,27 @@ public class NoticeController {
     @GetMapping("/more")
     public ResponseEntity<NoticeResponseDTO> getMoreNoticeList(
             NoticeGetListRequestDTO noticeGetListRequestDTO) {
+        if (noticeGetListRequestDTO.getSize() < 1 || noticeGetListRequestDTO.getSize() > 100) {
+            throw new BizException("fetch size between 1 and 100");
+        }
         return ResponseEntity.ok(noticeService.getMoreNoticeList(noticeGetListRequestDTO));
     }
 
     @GetMapping("/paging")
-    public ResponseEntity<NoticeResponseDTO> getPagingNoticeList(@RequestParam(value = "title", required = false) String title,
-                                                                 @RequestParam(value = "content", required = false) String content,
-                                                                 @RequestParam(value = "available", required = false) Boolean available,
-                                                                 @RequestParam(value = "noticeAtStart", required = false) LocalDate noticeAtStart,
-                                                                 @RequestParam(value = "noticeAtEnd", required = false) LocalDate noticeAtEnd,
-                                                                 @RequestParam("page") int page,
-                                                                 @RequestParam("size") int size) {
-        return ResponseEntity.ok(noticeService.getPagingNoticeList(title, content, available, noticeAtStart, noticeAtEnd,
-                                                                   PageRequest.of(page, size)));
+    public ResponseEntity<NoticeResponseDTO> getPagingNoticeList(
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "content", required = false) String content,
+            @RequestParam(value = "available", required = false) Boolean available,
+            @RequestParam(value = "noticeAtStart", required = false) LocalDate noticeAtStart,
+            @RequestParam(value = "noticeAtEnd", required = false) LocalDate noticeAtEnd,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size) {
+        if (size < 1 || size > 100) {
+            throw new BizException("fetch size between 1 and 100");
+        }
+        return ResponseEntity.ok(
+                noticeService.getPagingNoticeList(title, content, available, noticeAtStart, noticeAtEnd,
+                                                  PageRequest.of(page, size)));
     }
 
     @GetMapping("/detail")
