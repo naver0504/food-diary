@@ -4,10 +4,13 @@
 ## 사용기술
 jdk 17   
 Spring boot   
-JPA   
+JPA, querydsl
 MySQL 8.0   
 AWS EC2, S3   
 testcontainers
+
+## JPA에 Q로 시작되는 querydsl용 엔터티(entity)가 있습니다. 이것을 인식하기 위해서는 project 폴더에서 다음을 입력하면 해당 엔터티가 생성됩니다.
+`gradlew build` 또는 `gradlew complieJava`
 
 ## 실행하려면 project 폴더에서 다음을 입력후
 `gradlew bootJar`
