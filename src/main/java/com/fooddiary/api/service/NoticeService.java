@@ -1,16 +1,5 @@
 package com.fooddiary.api.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.beans.BeanUtils;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
 import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
@@ -19,16 +8,25 @@ import com.fooddiary.api.dto.response.NoticeResponseDTO;
 import com.fooddiary.api.entity.notice.Notice;
 import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.repository.NoticeDynamicConditionRepositoryImpl;
+import com.fooddiary.api.repository.NoticeQuerydslRepository;
 import com.fooddiary.api.repository.NoticeRepository;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class NoticeService {
     private final NoticeRepository noticeRepository;
-    private final NoticeDynamicConditionRepositoryImpl noticeDynamicConditionRepository;
+    private final NoticeQuerydslRepository noticeQuerydslRepository;
 
     public NoticeResponseDTO getMoreNoticeList(NoticeGetListRequestDTO noticeGetListRequestDTO) {
         final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
@@ -54,11 +52,11 @@ public class NoticeService {
                                                  LocalDate noticeAtStart, LocalDate noticeAtEnd, Pageable pageable) {
         final NoticeResponseDTO noticeResponseDTO = new NoticeResponseDTO();
         noticeResponseDTO.setCount(
-                noticeDynamicConditionRepository.selectCount(title, content, available, noticeAtStart, noticeAtEnd));
+                noticeQuerydslRepository.selectCount(title, content, available, noticeAtStart, noticeAtEnd));
 
         if (noticeResponseDTO.getCount() > 0L) {
 
-            final List<Notice> noticeList = noticeDynamicConditionRepository.selectList(title, content,
+            final List<Notice> noticeList = noticeQuerydslRepository.selectList(title, content,
                                                                                         available, noticeAtStart, noticeAtEnd,
                                                                                         pageable);
 

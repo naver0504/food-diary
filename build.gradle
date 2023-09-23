@@ -96,7 +96,6 @@ tasks.named('bootJar') {
 /**
  * compileJava 로 실행하면 자동생성
  * https://velog.io/@juhyeon1114/Spring-QueryDsl-gradle-%EC%84%A4%EC%A0%95-Spring-boot-3.0-%EC%9D%B4%EC%83%81#-%EC%A4%91%EC%9A%94-querydsl-%ED%94%8C%EB%9F%AC%EA%B7%B8%EC%9D%B8-%EA%B4%80%EB%A0%A8-%EC%9D%B4%EC%8A%88
- * === ⭐ QueryDsl 빌드 옵션 (선택) ===
  */
 def querydslDir = "$buildDir/generated/querydsl"
 
@@ -105,7 +104,7 @@ sourceSets {
 }
 
 tasks.withType(JavaCompile) {
-	options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
+	options.generatedSourceOutputDirectory.set(file(querydslDir))
 }
 
 clean.doLast {
