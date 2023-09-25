@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SaveImageResponseDTO {
+public class StatusResponseDTO {
 
     private Status status;
 
