@@ -10,8 +10,8 @@ import lombok.*;
 @Builder
 public class ThumbNailImagesDTO {
 
-    int id;
-    byte[] bytes;
-    Time time;
+    private int id;
+    private byte[] bytes;
+    private Time time;
 
 }
