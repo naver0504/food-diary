@@ -1,9 +1,7 @@
 package com.fooddiary.api.entity.image;
 
 import jakarta.persistence.Embeddable;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -16,11 +14,13 @@ public class Time {
     private int year;
     private int month;
     private int day;
+    private LocalDateTime localDateTime;
 
 
-    public Time(LocalDateTime dateTime) {
+    public Time(final LocalDateTime dateTime) {
         this.year = dateTime.getYear();
         this.month = dateTime.getMonth().getValue();
         this.day = dateTime.getDayOfMonth();
+        this.localDateTime = dateTime;
     }
 }
