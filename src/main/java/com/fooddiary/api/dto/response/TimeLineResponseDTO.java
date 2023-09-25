@@ -1,6 +1,7 @@
 package com.fooddiary.api.dto.response;
 
 import com.fooddiary.api.entity.image.DayImage;
+import com.fooddiary.api.entity.image.Time;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,22 +15,20 @@ import java.util.List;
 @Getter
 public class TimeLineResponseDTO {
 
-    private int month;
-    private int day;
-    private String dayOfWeek;
-    private List<TimeLineImageResponseDTO> images;
+    private TimeDetailDTO timeDetail;
+    private List<ImageResponseDTO> images;
 
 
     @Builder
     @AllArgsConstructor
     @Getter
     @NoArgsConstructor
-    public static class TimeLineImageResponseDTO {
+    public static class ImageResponseDTO {
         private int id;
         private byte[] bytes;
 
-        public static TimeLineImageResponseDTO TimeLineImageResponse(final int imageId, final byte[] bytes) {
-            return TimeLineImageResponseDTO.builder()
+        public static ImageResponseDTO TimeLineImageResponse(final int imageId, final byte[] bytes) {
+            return ImageResponseDTO.builder()
                     .id(imageId)
                     .bytes(bytes)
                     .build();
@@ -37,39 +36,22 @@ public class TimeLineResponseDTO {
 
     }
 
-    public static TimeLineResponseDTO TimeLineResponse(final DayImage dayImage, final List<TimeLineImageResponseDTO> timeLineImageResponseDtoS,
+    public static TimeLineResponseDTO TimeLineResponse(final DayImage dayImage, final List<ImageResponseDTO> imageResponseDTOs,
                                                        final int dayOfWeek) {
 
-        final String dayOfWeekString = getDayOfWeek(dayOfWeek);
-
-        return TimeLineResponseDTO.builder()
+        final TimeDetailDTO timeDetailDTO = TimeDetailDTO.builder()
                 .month(dayImage.getTime().getMonth())
                 .day(dayImage.getTime().getDay())
-                .dayOfWeek(dayOfWeekString)
-                .images(timeLineImageResponseDtoS)
+                .dayOfWeek(Time.getDayOfWeek(dayImage.getTime()))
+                .build();
+
+        return TimeLineResponseDTO.builder()
+                .timeDetail(timeDetailDTO)
+                .images(imageResponseDTOs)
                 .build();
     }
 
-    public static String getDayOfWeek(final int dayOfWeek) {
-        switch (dayOfWeek) {
-            case 1:
-                return "월";
-            case 2:
-                return "화";
-            case 3:
-                return "수";
-            case 4:
-                return "목";
-            case 5:
-                return "금";
-            case 6:
-                return "토";
-            case 7:
-                return "일";
-            default:
-                throw new RuntimeException("요일을 찾을 수 없습니다.");
-        }
-    }
+
 
 
 }
