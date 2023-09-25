@@ -1,6 +1,7 @@
 package com.fooddiary.api.entity.image;
 
 import com.fooddiary.api.entity.tag.Tag;
+import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.locationtech.jts.geom.Point;
@@ -41,6 +42,10 @@ public class Image {
     private DayImage dayImage;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_image_id")
     private Image parentImage;
 
@@ -53,6 +58,11 @@ public class Image {
     @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Tag> tags = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        createAt = createAt == null ? LocalDateTime.now() : createAt;
+    }
 
     public void addChildImage(Image image) {
         this.child.add(image);
@@ -71,6 +81,12 @@ public class Image {
         this.timeStatus = TimeStatus.getTime(dateTime);
     }
 
+    public void setTag(final List<Tag> tags) {
+        for (Tag tag : tags) {
+            this.tags.add(tag);
+            tag.setImage(this);
+        }
+    }
     public void setDayImage(final DayImage dayImage) {
         this.dayImage = dayImage;
     }
@@ -91,14 +107,20 @@ public class Image {
     }
 
 
-    public static Image createImage(final LocalDateTime dateTime, final String fileName, final double longitude, final double latitude) {
+    public static Image createImage(final LocalDateTime dateTime, final String fileName, final double longitude, final double latitude, final User user) {
         final Image image = Image.builder()
                 .storedFileName(fileName)
+                .user(user)
                 .build();
 
         image.setTimeStatus(dateTime);
         image.setGeography(longitude, latitude);
         return image;
+    }
+
+    public void update(final String memo, final TimeStatus timeStatus) {
+        this.memo = memo;
+        this.timeStatus = timeStatus;
     }
 
 
