@@ -1,9 +1,7 @@
 package com.fooddiary.api.controller;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
-import com.fooddiary.api.dto.response.ImageDTO;
-import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
-import com.fooddiary.api.dto.response.SaveImageResponseDTO;
-import com.fooddiary.api.dto.response.TimeLineResponseDTO;
+import com.fooddiary.api.dto.request.UpdateImageDetailDTO;
+import com.fooddiary.api.dto.response.*;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DayImageService;
 import com.fooddiary.api.service.ImageService;
@@ -37,9 +35,9 @@ public class ImageController {
     @PostMapping(value = "/saveImage", consumes = {
             MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE
     })
-    public ResponseEntity<SaveImageResponseDTO> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
-                                                          final @RequestPart("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
-                                                          HttpServletRequest request){
+    public ResponseEntity<StatusResponseDTO> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
+                                                       final @RequestPart("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
+                                                       HttpServletRequest request){
         final User user = getUser(request);
 
         return ResponseEntity.ok(dayImageService.saveImage(multipartFiles, saveImageRequestDTO, user));
@@ -52,8 +50,8 @@ public class ImageController {
      * 하루 사진 받기
      */
     @GetMapping("/image")
-    public ResponseEntity<List<ImageDTO>> showImage(final @RequestParam int year, final @RequestParam int month,
-                                                    final @RequestParam int day) {
+    public ResponseEntity<ShowImageOfDayDTO> showImageOfDay(final @RequestParam int year, final @RequestParam int month,
+                                                                  final @RequestParam int day) {
 
         final User user = getUser();
         return ResponseEntity.ok(imageService.getImages(year, month, day, user));
@@ -78,8 +76,22 @@ public class ImageController {
         return ResponseEntity.ok(dayImageService.getTimeLine(year, month, user));
     }
 
+    @GetMapping("/{imageId}")
+    public ResponseEntity<ImageDetailResponseDTO> showImage(final @PathVariable Integer imageId) {
+        User user = getUser();
+        return ResponseEntity.ok(imageService.getImageDetail(imageId, user));
+    }
 
-    private  User getUser() {
+    @PatchMapping("/{imageId}")
+    public ResponseEntity<StatusResponseDTO> updateImage(final @PathVariable Integer imageId,
+                                                         final @RequestBody UpdateImageDetailDTO updateImageDetailDTO) {
+        final User user = getUser();
+        return ResponseEntity.ok(imageService.updateImageDetail(imageId, user, updateImageDetailDTO));
+    }
+
+
+    private User getUser() {
+
         final User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return user;
     }
