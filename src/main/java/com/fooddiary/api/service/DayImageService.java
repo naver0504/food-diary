@@ -6,7 +6,7 @@ import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
-import com.fooddiary.api.dto.response.SaveImageResponseDTO;
+import com.fooddiary.api.dto.response.StatusResponseDTO;
 import com.fooddiary.api.dto.response.TimeLineResponseDTO;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Image;
@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.fooddiary.api.dto.response.SaveImageResponseDTO.*;
+import static com.fooddiary.api.dto.response.StatusResponseDTO.*;
 
 @RequiredArgsConstructor
 @Service
@@ -46,7 +46,7 @@ public class DayImageService {
 
 
     @Transactional
-    public SaveImageResponseDTO saveImage(final List<MultipartFile> files, final SaveImageRequestDTO saveImageRequestDTO, final User user) {
+    public StatusResponseDTO saveImage(final List<MultipartFile> files, final SaveImageRequestDTO saveImageRequestDTO, final User user) {
 
         final LocalDateTime dateTime = saveImageRequestDTO.getLocalDateTime();
 
@@ -92,13 +92,12 @@ public class DayImageService {
         }
 
 
-        return SaveImageResponseDTO.builder()
+        return StatusResponseDTO.builder()
                 .status(Status.SUCCESS)
                 .build();
 
     }
 
-    @Transactional(readOnly = true)
     public List<ThumbNailImagesDTO> getThumbNailImages(final int year, final int month, final User user)  {
         final List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
         final List<ThumbNailImagesDTO> dayImagesDTOS = new ArrayList<>();
@@ -134,7 +133,7 @@ public class DayImageService {
 
         for (DayImage dayImage : dayImages) {
             final int day = dayImage.getTime().getDay();
-            final List<TimeLineResponseDTO.TimeLineImageResponseDTO> timeLineImageResponseDTOS = new ArrayList<>();
+            final List<TimeLineResponseDTO.ImageResponseDTO> imageResponseDTOS = new ArrayList<>();
             for (Image image : dayImage.getImages()) {
                 final byte[] bytes;
                 try {
@@ -144,15 +143,15 @@ public class DayImageService {
                     throw new RuntimeException(e);
                 }
 
-                final TimeLineResponseDTO.TimeLineImageResponseDTO timeLineImageResponseDTO = TimeLineResponseDTO.TimeLineImageResponseDTO
+                final TimeLineResponseDTO.ImageResponseDTO imageResponseDTO = TimeLineResponseDTO.ImageResponseDTO
                         .TimeLineImageResponse(image.getId(), bytes);
-                timeLineImageResponseDTOS.add(timeLineImageResponseDTO);
+                imageResponseDTOS.add(imageResponseDTO);
             }
 
             final int dayOfWeek = LocalDateTime.of(year, month, day, 0, 0)
                     .getDayOfWeek().getValue();
 
-            timeLineResponseDTOS.add(TimeLineResponseDTO.TimeLineResponse(dayImage, timeLineImageResponseDTOS, dayOfWeek));
+            timeLineResponseDTOS.add(TimeLineResponseDTO.TimeLineResponse(dayImage, imageResponseDTOS, dayOfWeek));
 
 
         }
