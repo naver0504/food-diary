@@ -21,3 +21,5 @@ cloud:
   aws:
     s3:
       dir: production
+server:
+  port: 80
