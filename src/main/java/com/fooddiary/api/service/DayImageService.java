@@ -12,7 +12,9 @@ import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.image.Time;
 import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.repository.DayImageQuerydslRepository;
 import com.fooddiary.api.repository.DayImageRepository;
+import com.fooddiary.api.repository.ImageQuerydslRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +39,8 @@ public class DayImageService {
     private final FileStorageService fileStorageService;
     private final ImageUtils imageUtils;
     private final AmazonS3 amazonS3;
+    private final DayImageQuerydslRepository dayImageQuerydslRepository;
+    private final ImageQuerydslRepository imageQuerydslRepository;
 
     @Value("${cloud.aws.s3.dir}")
     private String basePath;
@@ -61,11 +65,7 @@ public class DayImageService {
         final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         final List<Image> images;
 
-        try {
-            images = imageService.storeImage(files, dateTime, user, longitude, latitude, basePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        images = imageService.storeImage(files, dateTime, user, longitude, latitude, basePath);
 
         /***
          * 해당 날짜에 사진들이 있는 지 확인
@@ -75,7 +75,7 @@ public class DayImageService {
         if (dayImage == null) {
             final DayImage newDayImage = DayImage.createDayImage(images, dateTime, user);
             dayImageRepository.save(newDayImage);
-            newDayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user, amazonS3, bucket, basePath));
+            newDayImage.updateThumbNailImageName(imageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath));
 
 
         } else {
@@ -87,7 +87,7 @@ public class DayImageService {
             final String dirPath = ImageUtils.getDirPath(basePath, user);
 
             fileStorageService.deleteImage(dirPath + originalThumbnailPath);
-            dayImage.updateThumbNailImageName(imageUtils.createThumbnailName(files.get(0), user, amazonS3, bucket, basePath));
+            dayImage.updateThumbNailImageName(imageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath));
 
         }
 
@@ -124,9 +124,8 @@ public class DayImageService {
 
     }
 
-    @Transactional(readOnly = true)
-    public List<TimeLineResponseDTO> getTimeLine(final int year, final int month, final User user) {
-        final List<DayImage> dayImages = dayImageRepository.findDayImageByYearAndMonthOrderByDayDesc(year, month, user.getId());
+    public List<TimeLineResponseDTO> getTimeLine(final int year, final int month, final int startDay, final User user) {
+        final List<DayImage> dayImages = dayImageQuerydslRepository.getTimeLineDayImage(year, month, startDay, user.getId());
         final String dirPath = ImageUtils.getDirPath(basePath, user);
         final List<TimeLineResponseDTO> timeLineResponseDTOS = new ArrayList<>();
 
@@ -134,30 +133,31 @@ public class DayImageService {
         for (DayImage dayImage : dayImages) {
             final int day = dayImage.getTime().getDay();
             final List<TimeLineResponseDTO.ImageResponseDTO> imageResponseDTOS = new ArrayList<>();
-            for (Image image : dayImage.getImages()) {
-                final byte[] bytes;
-                try {
-                    bytes = fileStorageService.getObject(dirPath + image.getStoredFileName());
+            final List<Image> images = imageQuerydslRepository.findByDayImageId(dayImage.getId(), user.getId());
 
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            for (Image image : images) {
+                    final byte[] bytes;
+                    try {
+                        bytes = fileStorageService.getObject(dirPath + image.getStoredFileName());
 
-                final TimeLineResponseDTO.ImageResponseDTO imageResponseDTO = TimeLineResponseDTO.ImageResponseDTO
-                        .TimeLineImageResponse(image.getId(), bytes);
-                imageResponseDTOS.add(imageResponseDTO);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    final TimeLineResponseDTO.ImageResponseDTO imageResponseDTO = TimeLineResponseDTO.ImageResponseDTO
+                            .createImageResponseDTO(image.getId(), bytes);
+                    imageResponseDTOS.add(imageResponseDTO);
             }
 
             final int dayOfWeek = LocalDateTime.of(year, month, day, 0, 0)
                     .getDayOfWeek().getValue();
 
             timeLineResponseDTOS.add(TimeLineResponseDTO.TimeLineResponse(dayImage, imageResponseDTOS, dayOfWeek));
-
-
         }
 
         return timeLineResponseDTOS;
     }
+
 
 
 
