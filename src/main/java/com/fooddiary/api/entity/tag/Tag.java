@@ -26,9 +26,6 @@ public class Tag {
     @JoinColumn(name = "image_id")
     private Image image;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
 
     public void setImage(Image image) {
         this.image = image;
