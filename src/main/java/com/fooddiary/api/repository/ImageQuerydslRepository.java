@@ -21,9 +21,24 @@ public class ImageQuerydslRepository {
         jpaQueryFactory = new JPAQueryFactory(entityManager);
     }
 
+    public List<Image> findByDayImageId(final int dayImageId, final int userId) {
+
+
+        return jpaQueryFactory.selectFrom(image)
+                .join(image.dayImage, dayImage)
+                .where(
+                        image.user.id.eq(userId),
+                        dayImage.id.eq(dayImageId),
+                        image.parentImage.isNull()
+                )
+                .orderBy(image.id.desc())
+                .limit(5)
+                .fetch();
+    }
+
     public List<Image> findByYearAndMonthAndDay(final int year, final int month, final int day, final int userId) {
 
-        BooleanBuilder booleanBuilder = getImageWithTime(year, month, day, userId);
+        BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day, userId);
 
         return jpaQueryFactory.selectFrom(
                         image)
@@ -33,12 +48,24 @@ public class ImageQuerydslRepository {
                 .fetch();
     }
 
-    private static BooleanBuilder getImageWithTime(int year, int month, int day, int userId) {
+    public List<Image> findByYearAndMonthAndDayAndStartId(final int year, final int month, final int day, final int startId, final int userId) {
+        BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day, userId);
+        booleanBuilder.and(image.id.lt(startId));
+        return jpaQueryFactory.selectFrom(image)
+                .leftJoin(image.dayImage, dayImage)
+                .where(booleanBuilder)
+                .orderBy(image.id.desc())
+                .limit(5)
+                .fetch();
+
+    }
+
+    private static BooleanBuilder getBuilderWithTime(int year, int month, int day, int userId) {
         BooleanBuilder booleanBuilder = new BooleanBuilder();
+        booleanBuilder.and(image.user.id.eq(userId));
         booleanBuilder.and(dayImage.time.year.eq(year));
         booleanBuilder.and(dayImage.time.month.eq(month));
         booleanBuilder.and(dayImage.time.day.eq(day));
-        booleanBuilder.and(image.user.id.eq(userId));
         booleanBuilder.and(image.parentImage.isNull());
         return booleanBuilder;
     }
