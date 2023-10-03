@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,7 +30,6 @@ public class ImageController {
     private final DayImageService dayImageService;
     private final ImageService imageService;
     private final UserService userService;
-
 
     @PostMapping(value = "/saveImage", consumes = {
             MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE
@@ -51,9 +50,8 @@ public class ImageController {
      */
     @GetMapping("/image")
     public ResponseEntity<ShowImageOfDayDTO> showImageOfDay(final @RequestParam int year, final @RequestParam int month,
-                                                                  final @RequestParam int day) {
+                                                                  final @RequestParam int day, final @AuthenticationPrincipal User user) {
 
-        final User user = getUser();
         return ResponseEntity.ok(imageService.getImages(year, month, day, user));
     }
 
@@ -63,37 +61,46 @@ public class ImageController {
      * 한 달의 사진 받기
      */
     @GetMapping("/images")
-    public ResponseEntity<List<ThumbNailImagesDTO>> showThumbNailImages(final @RequestParam int year, final @RequestParam int month) {
-
-        final User user = getUser();
+    public ResponseEntity<List<ThumbNailImagesDTO>> showThumbNailImages(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) {
 
         return ResponseEntity.ok(dayImageService.getThumbNailImages(year, month, user));
     }
 
     @GetMapping("/timeline")
-    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam int year, final @RequestParam int month) {
-        final User user = getUser();
-        return ResponseEntity.ok(dayImageService.getTimeLine(year, month, user));
+    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam int year, final @RequestParam int month,
+                                                                  final @RequestParam(defaultValue = "31") int startDay, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(dayImageService.getTimeLine(year, month, startDay, user));
+    }
+
+    @GetMapping("/timeline/{startImageId}")
+    public ResponseEntity<List<TimeLineResponseDTO.ImageResponseDTO>> showTimeLineWithStartImageId(final @RequestParam int year, final @RequestParam int month, final @RequestParam int day,
+                                                                  final @PathVariable int startImageId, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(imageService.getTimeLineImagesWithStartImageId(year, month, day, startImageId, user));
     }
 
     @GetMapping("/{imageId}")
-    public ResponseEntity<ImageDetailResponseDTO> showImage(final @PathVariable Integer imageId) {
-        User user = getUser();
+    public ResponseEntity<ImageDetailResponseDTO> showImageDetail(final @PathVariable int imageId, final @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(imageService.getImageDetail(imageId, user));
     }
 
     @PatchMapping("/{imageId}")
-    public ResponseEntity<StatusResponseDTO> updateImage(final @PathVariable Integer imageId,
-                                                         final @RequestBody UpdateImageDetailDTO updateImageDetailDTO) {
-        final User user = getUser();
-        return ResponseEntity.ok(imageService.updateImageDetail(imageId, user, updateImageDetailDTO));
+    public ResponseEntity<StatusResponseDTO> updateImageFile(final @RequestPart MultipartFile file, final @PathVariable int imageId,
+                                                             final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(imageService.updateImage(imageId, file, user));
     }
 
+    @PostMapping("/{imageId}")
+    public ResponseEntity<StatusResponseDTO> uploadDetailImages(final @RequestPart List<MultipartFile> files, final @PathVariable int imageId,
+                                                                final @AuthenticationPrincipal User user) {
 
-    private User getUser() {
+        return ResponseEntity.ok(imageService.updateImageFile(files, imageId, user));
+    }
 
-        final User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return user;
+    @PostMapping("/{parentImageId}/detail")
+    public ResponseEntity<StatusResponseDTO> updateImageDetail(final @PathVariable int parentImageId,
+                                                               final @RequestBody UpdateImageDetailDTO updateImageDetailDTO,
+                                                               final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(imageService.updateImageDetail(parentImageId, user, updateImageDetailDTO));
     }
 
     private User getUser(HttpServletRequest request) {
