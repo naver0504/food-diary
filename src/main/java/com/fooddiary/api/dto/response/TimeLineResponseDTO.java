@@ -24,12 +24,12 @@ public class TimeLineResponseDTO {
     @Getter
     @NoArgsConstructor
     public static class ImageResponseDTO {
-        private int id;
+        private int imageId;
         private byte[] bytes;
 
         public static ImageResponseDTO createImageResponseDTO(final int imageId, final byte[] bytes) {
             return ImageResponseDTO.builder()
-                    .id(imageId)
+                    .imageId(imageId)
                     .bytes(bytes)
                     .build();
         }
