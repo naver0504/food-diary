@@ -1,6 +1,7 @@
 package com.fooddiary.api.repository;
 
 import com.fooddiary.api.entity.image.Image;
+import com.fooddiary.api.entity.image.TimeStatus;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -68,6 +69,13 @@ public class ImageQuerydslRepository {
         booleanBuilder.and(dayImage.time.day.eq(day));
         booleanBuilder.and(image.parentImage.isNull());
         return booleanBuilder;
+    }
+
+    public void updateTimeStatus(final int imageId, final TimeStatus timeStatus) {
+        jpaQueryFactory.update(image)
+                .set(image.timeStatus, timeStatus)
+                .where(image.id.eq(imageId).or(image.parentImage.id.eq(imageId)))
+                .execute();
     }
 }
 
