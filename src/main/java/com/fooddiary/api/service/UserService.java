@@ -1,48 +1,75 @@
 package com.fooddiary.api.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.UserNewRequestDTO;
+import com.fooddiary.api.dto.response.KakaoUnlink;
+import com.fooddiary.api.dto.response.KakaoUserInfo;
+import com.fooddiary.api.dto.response.KakaoUserInfo.KakaoAccount;
 import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.UserResponseDTO;
 import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.CreatePath;
 import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.UserRepository;
-
-import jakarta.mail.Authenticator;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import jakarta.mail.Message;
 import jakarta.mail.Message.RecipientType;
 import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.net.BindException;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.security.GeneralSecurityException;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private static final int PW_EXPIRED_DAY_LIMIT = 90;
+    private static final String GOOGLE = "google";
+    private static final String KAKAO = "kakao";
+    private static final String GOOGLE_AUTH_WEB_CLIENT_ID = "496603773945-n4ksng46582k26b3tk6k3k5tvaal9444.apps.googleusercontent.com"; // todo - ssl인증필요
+    private static final String KAKAO_SERVICE_APP_KEY = "217748336456a750c01563ee2749086f";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
+    private final UserResignService userResignService;
+    private final String EMAIL_PATTERN = "^(.+)@(\\S+)$";
     @Value("${food-diary.pw-try-limit}")
     private Integer pwTryLimit;
     @Value("${food-diary.pw-reset-size}")
@@ -54,6 +81,9 @@ public class UserService {
         if (userNewPasswordResponseDTO.getStatus() == UserNewPasswordResponseDTO.Status.SUCCESS) {
             if (getValidUser(userDto.getEmail()) != null) {
                 userResponseDto.setStatus(UserResponseDTO.Status.DUPLICATED_USER);
+                return userResponseDto;
+            } else if (!Pattern.compile(EMAIL_PATTERN).matcher(userDto.getEmail()).matches()) {
+                userResponseDto.setStatus(UserResponseDTO.Status.INVALID_EMAIL);
                 return userResponseDto;
             }
             final LocalDateTime now = LocalDateTime.now();
@@ -73,7 +103,10 @@ public class UserService {
 
     public UserResponseDTO loginUser(UserLoginRequestDTO userDto) {
         final UserResponseDTO userResponseDto = new UserResponseDTO();
-        final User user = userRepository.findByEmailAndStatus(userDto.getEmail(), Status.ACTIVE);
+        final User user = userRepository.findByEmailAndCreatePathAndStatus(userDto.getEmail(), CreatePath.NONE, Status.ACTIVE)
+                .stream()
+                .findFirst()
+                .orElse(null);
 
         if (user == null){
             userResponseDto.setStatus(UserResponseDTO.Status.INVALID_USER);
@@ -107,40 +140,131 @@ public class UserService {
      * 1. 이메일 유효성 검증
      * 2. 식사일기에 직접 가입한 경우, token 만료를 확인
      * 2. kakao, google 등 외부로 가입한 경우 access token 만료를 확인
-     * @param email request header 에서 가져옴
      * @param token request header 에서 가져옴
      * @return 유효하면 User 객체반환
      */
     @Nullable
-    public User getValidUser(String email, String token) {
+    public User getValidUser(String loginFrom, String token) throws GeneralSecurityException, IOException, InterruptedException {
         // todo
-        if (!StringUtils.hasText(email) || !StringUtils.hasText(token)) {return null;}
+        if (!StringUtils.hasText(loginFrom) || !StringUtils.hasText(token)) {return null;}
+        switch (loginFrom) {
+            case GOOGLE -> {
+                HttpTransport transport = new NetHttpTransport();
+                JsonFactory jsonFactory = new GsonFactory();
+                GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
+                        // Specify the CLIENT_ID of the app that accesses the backend:
+                        .setAudience(Collections.singletonList(GOOGLE_AUTH_WEB_CLIENT_ID)) // todo - test, android와 ios와 web용 구분이 필요함
+                        // Or, if multiple clients access the backend:
+                        //.setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
+                        .build();
 
-        List<User> userList = userRepository.findByEmail(email);
-        userList = userList.stream().filter(u -> u.getStatus() == Status.ACTIVE).collect(Collectors.toList());
+// (Receive idTokenString by HTTPS POST)
 
-        if (CollectionUtils.isEmpty(userList)) {return null;}
+                GoogleIdToken idToken = verifier.verify(token);
+                if (idToken != null) {
+                    GoogleIdToken.Payload payload = idToken.getPayload();
 
-        final Session session = sessionService.getSession(userList.get(0).getId(), token);
+                    // Print user identifier
+                    String userId = payload.getSubject();
 
-        if (session != null) {
-            userList.get(0).setSession(List.of(session));
-            return userList.get(0);
+                    // Get profile information from payload
+                    String email = payload.getEmail();
+                    boolean emailVerified = payload.getEmailVerified();
+                    String name = (String) payload.get("name");
+                    String pictureUrl = (String) payload.get("picture");
+                    String locale = (String) payload.get("locale");
+                    String familyName = (String) payload.get("family_name");
+                    String givenName = (String) payload.get("given_name");
+
+                    User user = userRepository.findByEmailAndCreatePathAndStatus(email, CreatePath.GOOGLE, Status.ACTIVE)
+                            .stream()
+                            .findFirst()
+                            .orElse(null);
+                    if (user == null) {
+                        user = new User();
+                        user.setRole(Role.CLIENT);
+                        user.setStatus(Status.ACTIVE);
+                        user.setEmail(email);
+                        user.setCreatePath(CreatePath.GOOGLE);
+                        user.setLastAccessAt(LocalDateTime.now());
+                        userRepository.save(user);
+                    }
+                    return user;
+
+                } else {
+                    return null;
+                }
+            }
+            case KAKAO -> {
+                HttpClient client = HttpClient.newBuilder()
+                        .version(HttpClient.Version.HTTP_1_1)
+                        .connectTimeout(Duration.ofSeconds(5))
+                        .proxy(ProxySelector.getDefault())
+                        .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://kapi.kakao.com/v2/user/me"))
+                        .header("Authorization", "Bearer " + token)
+                        .build();
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() != HttpServletResponse.SC_OK) {
+                    throw new BizException("kakao user info api error");
+                }
+                ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                KakaoUserInfo kakaoUserInfo = objectMapper.readValue(response.body(), KakaoUserInfo.class);
+
+                if (kakaoUserInfo.getKakao_account() == null) {
+                    throw new BizException("fail finding user info");
+                }
+                KakaoAccount kakaoAccount = kakaoUserInfo.getKakao_account();
+                if (!kakaoAccount.getIs_email_valid() || !kakaoAccount.getIs_email_verified()) {
+                    throw new BizException("invalid kakao email");
+                }
+
+                User user = userRepository.findByEmailAndCreatePathAndStatus(kakaoUserInfo.getKakao_account().getEmail(), CreatePath.KAKAO, Status.ACTIVE)
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+                if (user == null) {
+                    user = new User();
+                    user.setRole(Role.CLIENT);
+                    user.setStatus(Status.ACTIVE);
+                    user.setEmail(kakaoAccount.getEmail());
+                    user.setCreatePath(CreatePath.KAKAO);
+                    user.setLastAccessAt(LocalDateTime.now());
+                    userRepository.save(user);
+                }
+                return user;
+            }
+            default -> {
+                final Session session = sessionService.getSession(token);
+                if (session != null) {
+                    if (session.getUser().getStatus() != Status.ACTIVE) {
+                        return null;
+                    }
+                    User user = session.getUser();
+                    user.setLastAccessAt(LocalDateTime.now());
+                    userRepository.save(user);
+                    return user;
+                }
+            }
         }
 
         return null;
     }
 
+    /**
+     * 유효한 식사일기 전용계정을 반환합니다.
+     * @param email
+     * @return
+     */
     @Nullable
     public User getValidUser(String email) {
         if (!StringUtils.hasText(email)) {return null;}
 
-        List<User> userList = userRepository.findByEmail(email);
-        userList = userList.stream().filter(u -> u.getStatus() == Status.ACTIVE).collect(Collectors.toList());
-
-        if (CollectionUtils.isEmpty(userList)) {return null;}
-
-        return userList.get(0);
+        return userRepository.findByEmailAndCreatePathAndStatus(email, CreatePath.NONE, Status.ACTIVE)
+                .stream()
+                .findFirst()
+                .orElse(null);
     }
 
     public UserResponseDTO resetPw(String email) {
@@ -165,7 +289,7 @@ public class UserService {
             prop.put("mail.smtp.ssl.protocols", "TLSv1.2");
 
             final jakarta.mail.Session session = jakarta.mail.Session.getInstance(prop,
-                    new Authenticator() {
+                    new jakarta.mail.Authenticator() {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
                             return new PasswordAuthentication(username, password);
@@ -259,5 +383,114 @@ public class UserService {
 
         userNewPasswordResponseDTO.setStatus(UserNewPasswordResponseDTO.Status.SUCCESS);
         return userNewPasswordResponseDTO;
+    }
+
+    public void resign(String loginFrom, String token)
+            throws IOException, InterruptedException, GeneralSecurityException {
+        switch (loginFrom) {
+            case GOOGLE -> {
+                HttpTransport transport = new NetHttpTransport();
+                JsonFactory jsonFactory = new GsonFactory();
+                GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
+                        // Specify the CLIENT_ID of the app that accesses the backend:
+                        .setAudience(Collections.singletonList(GOOGLE_AUTH_WEB_CLIENT_ID)) // todo - test, android와 ios와 web용 구분이 필요함
+                        // Or, if multiple clients access the backend:
+                        //.setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
+                        .build();
+
+// (Receive idTokenString by HTTPS POST)
+
+                GoogleIdToken idToken = verifier.verify(token);
+                if (idToken != null) {
+                    GoogleIdToken.Payload payload = idToken.getPayload();
+
+                    // Print user identifier
+                    String userId = payload.getSubject();
+
+                    // Get profile information from payload
+                    String email = payload.getEmail();
+                    boolean emailVerified = payload.getEmailVerified();
+
+                    User user = userRepository.findByEmailAndCreatePathAndStatus(email, CreatePath.GOOGLE, Status.ACTIVE)
+                            .stream()
+                            .findFirst()
+                            .orElse(null);
+
+                    if (user != null) {
+                        user.setStatus(Status.SUSPENDED);
+                        userRepository.save(user);
+                        userResignService.resign(user);
+                    }
+                }
+            }
+            case KAKAO -> {
+                String email = unlinkKakao(token);
+                User user = userRepository.findByEmailAndCreatePathAndStatus(email, CreatePath.KAKAO, Status.ACTIVE)
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+
+                if (user != null) {
+                    user.setStatus(Status.SUSPENDED);
+                    userRepository.save(user);
+                    userResignService.resign(user);
+                }
+            }
+            default -> {
+                final Session session = sessionService.getSession(token);
+                if (session != null) {
+                    User user = session.getUser();
+                    if (user.getStatus() == Status.ACTIVE && user.getCreatePath() == CreatePath.NONE) {
+                        user.setStatus(Status.SUSPENDED);
+                        userRepository.save(user);
+                        userResignService.resign(user);
+                    }
+                }
+            }
+        }
+    }
+    public String unlinkKakao(String token) throws IOException, InterruptedException {
+
+        HttpClient client = HttpClient.newBuilder()
+                                      .version(HttpClient.Version.HTTP_1_1)
+                                      .connectTimeout(Duration.ofSeconds(5))
+                                      .proxy(ProxySelector.getDefault())
+                                      .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                                         .uri(URI.create("https://kapi.kakao.com/v2/user/me"))
+                                         .header("Authorization", "Bearer " + token)
+                                         .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != HttpServletResponse.SC_OK) {
+            throw new BizException("kakao user info api error");
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        KakaoUserInfo kakaoUserInfo = objectMapper.readValue(response.body(), KakaoUserInfo.class);
+
+        if (kakaoUserInfo.getKakao_account() == null) {
+            throw new BizException("fail finding user info");
+        }
+        KakaoAccount kakaoAccount = kakaoUserInfo.getKakao_account();
+        if (!kakaoAccount.getIs_email_valid() || !kakaoAccount.getIs_email_verified()) {
+            throw new BizException("invalid kakao email");
+        }
+
+        final String form = "target_id_type=user_id&" + "target_id=" + kakaoUserInfo.getId();
+        request = HttpRequest.newBuilder()
+                                         .uri(URI.create("https://kapi.kakao.com/v1/user/unlink"))
+                                         .POST(HttpRequest.BodyPublishers.ofString(form))
+                                         .header("Authorization", "KakaoAK " + KAKAO_SERVICE_APP_KEY)
+                                         .headers("Content-Type", "application/x-www-form-urlencoded")
+                                         .build();
+        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        KakaoUnlink kakaoUnlink = objectMapper.readValue(response.body(), KakaoUnlink.class);
+
+        if (!kakaoUnlink.getId().equals(kakaoUserInfo.getId())) {
+            throw new BindException("fail unlinking kakao");
+        }
+
+        return kakaoAccount.getEmail();
     }
 }

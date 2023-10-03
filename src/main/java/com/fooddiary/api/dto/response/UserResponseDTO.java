@@ -19,6 +19,6 @@ public class UserResponseDTO {
     private UserNewPasswordResponseDTO.Status passwordStatus;
 
     public enum Status {
-        SUCCESS, INVALID_USER, INVALID_PASSWORD, PASSWORD_LIMIT_OVER, DUPLICATED_USER
+        SUCCESS, INVALID_USER, INVALID_PASSWORD, PASSWORD_LIMIT_OVER, DUPLICATED_USER, INVALID_EMAIL
     }
 }

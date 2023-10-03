@@ -10,6 +10,7 @@ CREATE TABLE user (
     pw_try int DEFAULT NULL,
     pw_update_at datetime DEFAULT NULL,
     pw_update_delay_at datetime DEFAULT NULL,
+    last_access_at datetime DEFAULT NULL,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

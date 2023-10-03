@@ -25,9 +25,8 @@ public class SessionService {
         return sessionRepository.save(session);
     }
 
-    public Session getSession(Integer userId, String token) {
-        return sessionRepository.findByUserIdAndTokenAndTerminateAtGreaterThanEqual(userId, token,
-                                                                                    LocalDateTime.now());
+    public Session getSession(String token) {
+        return sessionRepository.findByTokenAndTerminateAtGreaterThanEqual(token, LocalDateTime.now());
     }
 
     public void deleteSession(Session session) {

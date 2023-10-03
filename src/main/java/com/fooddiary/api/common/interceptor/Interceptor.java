@@ -18,8 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.fooddiary.api.common.constants.UserConstants.MAIL_NAME;
-import static com.fooddiary.api.common.constants.UserConstants.TOKEN_NAME;
+import static com.fooddiary.api.common.constants.UserConstants.*;
 
 @Component
 @RequiredArgsConstructor
@@ -35,7 +34,6 @@ public class Interceptor implements HandlerInterceptor {
             add("/index.html"); // 두 path /, /index.html 는 상태확인용으로 넣었습니다.
             add("/user/new");
             add("/user/login");
-            add("/user/info");
             add("/user/is-login");
             add("/user/reset-password");
         }
@@ -47,7 +45,7 @@ public class Interceptor implements HandlerInterceptor {
 
         if (bypassUri.contains(request.getRequestURI())) {return true;}
 
-        final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
+        final User user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
 
         if (user == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

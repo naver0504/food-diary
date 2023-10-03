@@ -10,6 +10,5 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
 
     Session findByToken(String token);
 
-    Session findByUserIdAndTokenAndTerminateAtGreaterThanEqual(Integer userId, String token,
-                                                               LocalDateTime TerminateAt);
+    Session findByTokenAndTerminateAtGreaterThanEqual(String token, LocalDateTime TerminateAt);
 }

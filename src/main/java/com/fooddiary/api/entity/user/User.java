@@ -37,8 +37,7 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
-
-
+    private LocalDateTime lastAccessAt;
 
     @OneToMany(mappedBy = "user")
     private List<Session> session = new ArrayList<>();

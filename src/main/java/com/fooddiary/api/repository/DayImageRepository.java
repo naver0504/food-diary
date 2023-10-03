@@ -1,6 +1,8 @@
 package com.fooddiary.api.repository;
 
 import com.fooddiary.api.entity.image.DayImage;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,6 +26,6 @@ public interface DayImageRepository extends JpaRepository<DayImage, Integer> {
     int getDayImageCount(@Param("userId") int userId);
 
 
-
-
+    @Query("select d from DayImage d left join fetch d.images i where d.user.id = :userId and d.id > :id order by d.id asc")
+    List<DayImage> findByUserIdAndLimit(@Param("userId") int userId, @Param("id") int id, Pageable pageable);
 }
