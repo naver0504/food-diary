@@ -27,7 +27,7 @@ public class TimeLineResponseDTO {
         private int id;
         private byte[] bytes;
 
-        public static ImageResponseDTO TimeLineImageResponse(final int imageId, final byte[] bytes) {
+        public static ImageResponseDTO createImageResponseDTO(final int imageId, final byte[] bytes) {
             return ImageResponseDTO.builder()
                     .id(imageId)
                     .bytes(bytes)
