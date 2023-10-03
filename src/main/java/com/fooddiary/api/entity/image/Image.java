@@ -120,7 +120,6 @@ public class Image {
 
     public void update(final String memo, final TimeStatus timeStatus) {
         this.memo = memo;
-        this.timeStatus = timeStatus;
     }
 
 
