@@ -171,14 +171,14 @@ public class ImageService {
             byte[] bytes = fileStorageService.getObject(ImageUtils.getDirPath(basePath, user) + image.getStoredFileName());
             imageResponseDTOS.add(TimeLineResponseDTO.ImageResponseDTO.builder()
                     .bytes(bytes)
-                    .id(image.getId())
+                    .imageId(image.getId())
                     .build());
 
             for(Image child : children){
                 bytes = fileStorageService.getObject(ImageUtils.getDirPath(basePath, user) + child.getStoredFileName());
                 imageResponseDTOS.add(TimeLineResponseDTO.ImageResponseDTO.builder()
                         .bytes(bytes)
-                        .id(child.getId())
+                        .imageId(child.getId())
                         .build());
             }
         } catch (IOException e) {
@@ -193,7 +193,7 @@ public class ImageService {
 
         return ImageDetailResponseDTO.builder()
                 .memo(image.getMemo())
-                .TimeStatus(image.getTimeStatus().getCode())
+                .timeStatus(image.getTimeStatus().getCode())
                 .tags(tags)
                 .timeDetail(TimeDetailDTO.of(time))
                 .images(imageResponseDTOS)
@@ -201,7 +201,7 @@ public class ImageService {
     }
 
     @Transactional
-    public StatusResponseDTO updateImageFile(final List<MultipartFile> files, final int imageId, final User user) {
+    public StatusResponseDTO uploadImageFile(final List<MultipartFile> files, final int imageId, final User user) {
 
 
         for (int i = 0; i<files.size(); i++) {
@@ -209,7 +209,7 @@ public class ImageService {
 
             //파일 명 겹치면 안되므로 UUID + '-' + 원래 파일 이름으로 저장
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            Image parentImage = imageRepository.findById(imageId)
+            Image parentImage = imageRepository.findParentImageByImageIdAndUserId(imageId, user.getId())
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
             Image newImage = Image.createImage(parentImage, storeFilename, user);
             parentImage.addChildImage(newImage);
@@ -271,14 +271,13 @@ public class ImageService {
         final List<Tag> originalTags = image.getTags();
         final List<Integer> deleteTagIds = new ArrayList<>();
         final List<Tag> addTags = new ArrayList<>();
-        image.update(updateImageDetailDTO.getMemo(), TimeStatus.getTimeStatusByCode(updateImageDetailDTO.getTimeStatus()));
+
 
         tags.forEach(tag -> {
             if (originalTags.stream().noneMatch(originalTag -> originalTag.getTagName().equals(tag))) {
                 addTags.add(Tag.builder()
                         .tagName(tag)
                         .image(image)
-                        .user(user)
                         .build()
                 );
             }
@@ -298,7 +297,10 @@ public class ImageService {
         if(deleteTagIds.size() != 0) {
             tagService.deleteAllById(deleteTagIds);
         }
-
+        image.updateMemo(updateImageDetailDTO.getMemo());
+        if (image.getTimeStatus().getCode().equals(updateImageDetailDTO.getTimeStatus())) {
+            imageQuerydslRepository.updateTimeStatus(image.getId(), TimeStatus.getTimeStatusByCode(updateImageDetailDTO.getTimeStatus()));
+        }
 
         return StatusResponseDTO.builder()
                 .status(StatusResponseDTO.Status.SUCCESS)
@@ -308,7 +310,7 @@ public class ImageService {
 
     @Transactional
     public StatusResponseDTO updateImage(final int imageId, final MultipartFile file, final User user) {
-        final Image image = imageRepository.findById(imageId)
+        final Image image = imageRepository.findByImageIdAndUserId(imageId, user.getId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
         final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
         final String dirPath = ImageUtils.getDirPath(basePath, user);
