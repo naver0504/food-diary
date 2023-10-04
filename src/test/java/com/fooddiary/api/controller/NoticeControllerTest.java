@@ -72,7 +72,7 @@ class NoticeControllerTest {
         final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
         when(noticeService.getMoreNoticeList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeResponseDTO);
         final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("login-from", "none");
         httpHeaders.add("token", "asdf");
         final String param = "?startId=0&size=10";
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/more" + param)
@@ -100,7 +100,7 @@ class NoticeControllerTest {
 
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("login-from", "none");
         httpHeaders.add("token", "asdf");
 
         mockMvc.perform(post("/notice/new")
@@ -131,7 +131,7 @@ class NoticeControllerTest {
 
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("login-from", "none");
         httpHeaders.add("token", "asdf");
 
         mockMvc.perform(put("/notice/modify")
@@ -159,7 +159,7 @@ class NoticeControllerTest {
         final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
         final String title = noticeResponseDTO.getList().get(0).getTitle().substring(0, 2);
         final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("login-from", "none");
         httpHeaders.add("token", "asdf");
         final String param = "?page=0&size=10&title=" + title;
         when(noticeService.getPagingNoticeList(anyString(), any(), any(), any(), any(),
