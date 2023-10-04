@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.fooddiary.api.dto.response.SaveImageResponseDTO.*;
@@ -101,6 +102,9 @@ public class DayImageService {
     public List<DayImageDTO> getDayImage(int year, int month, int day, User user) {
 
         final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
+        if (dayImage == null) {
+            return Collections.emptyList();
+        }
         final List<Image> images = dayImage.getImages();
         final List<DayImageDTO> dayImageDto = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(basePath, user);
@@ -128,6 +132,9 @@ public class DayImageService {
     @Transactional(readOnly = true)
     public List<DayImagesDTO> getDayImages(final int year, final int month, final User user)  {
         final List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
+        if (dayImages == null) {
+            return Collections.emptyList();
+        }
         final List<DayImagesDTO> dayImagesDtos = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(basePath, user);
         for (DayImage dayImage : dayImages) {

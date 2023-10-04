@@ -1,31 +1,8 @@
 package com.fooddiary.api.common.filter;
 
-import static com.fooddiary.api.common.constants.UserConstants.MAIL_NAME;
-import static com.fooddiary.api.common.constants.UserConstants.TOKEN_NAME;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StreamUtils;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingResponseWrapper;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.UserService;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +10,21 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.RememberMeAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingResponseWrapper;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -96,11 +88,16 @@ public class LoggingFilter extends OncePerRequestFilter {
                                                      request.getCookies());
             filterChain.doFilter(request, response);
 
-            final User user = userService.getValidUser(request.getHeader(MAIL_NAME),
-                                                       request.getHeader(TOKEN_NAME));
+            User user = null;
+            if (SecurityContextHolder.getContext().getAuthentication() instanceof RememberMeAuthenticationToken && SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User) {
+                user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            }
+            //User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                    //userService.getValidUser(request.getHeader(LOGIN_FROM_KEY),
+                     //                                  request.getHeader(TOKEN_KEY));
             LogDTO.UserDTO userDTO = null;
             if (user != null) {
-                userDTO = new LogDTO.UserDTO(user.getEmail());
+                userDTO = new LogDTO.UserDTO(user.getEmail(), user.getCreatePath().getCode());
                 logPayload(requestLogDTO, userDTO, response, startTime);
             } else {
                 logPayload(requestLogDTO, userDTO, response, startTime);

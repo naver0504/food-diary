@@ -82,7 +82,7 @@ public class UserControllerTest {
     void is_login() throws Exception {
         given(userService.getValidUser(anyString(), anyString())).willReturn(new User());
         final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "jasuil@daum.net");
+        httpHeaders.add("login-from", "none");
         httpHeaders.add("token", "asdf");
 
         mockMvc.perform(get("/user/is-login")

@@ -13,8 +13,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.fooddiary.api.common.constants.UserConstants.LOGIN_FROM_KEY;
+import static com.fooddiary.api.common.constants.UserConstants.TOKEN_KEY;
 
 
 @RestController
@@ -33,7 +38,7 @@ public class ImageController {
     @PostMapping("/saveImage")
     public ResponseEntity<SaveImageResponseDTO> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
                                                           final @RequestParam("localDateTime") LocalDateTime localDateTime,
-                                                          HttpServletRequest request){
+                                                          HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
         final User user = getUser(request);
 
         return ResponseEntity.ok(dayImageService.saveImage(multipartFiles, localDateTime, user));
@@ -72,9 +77,8 @@ public class ImageController {
         return user;
     }
 
-    private User getUser(HttpServletRequest request) {
-        final User user = userService.getValidUser(request.getHeader(MAIL_NAME), request.getHeader(TOKEN_NAME));
-
+    private User getUser(HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
+        final User user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
         return user;
     }
 

@@ -92,7 +92,7 @@ public class ImageControllerTest {
 
         final String token = "2$asdf1g1";
         final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "qortmdwls1234@naver.com");
+        httpHeaders.add("login-from", "none");
         httpHeaders.add("token", token);
 
         //Mock파일생성
@@ -125,7 +125,7 @@ public class ImageControllerTest {
 
         final String token = "2$asdf1g1";
         final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "qortmdwls1234@naver.com");
+        httpHeaders.add("login-from", "none");
         httpHeaders.add("token", token);
 
         final List<DayImageDTO> dayImageDTOS = new ArrayList<>();
@@ -155,7 +155,7 @@ public class ImageControllerTest {
         when(dayImageService.getDayImage(year, month, day, principal)).thenReturn(dayImageDTOS);
 
 
-        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
 
         queryParams.add("year", String.valueOf(year));
         queryParams.add("month", String.valueOf(month));
@@ -173,7 +173,7 @@ public class ImageControllerTest {
 
         final String token = "2$asdf1g1";
         final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "qortmdwls1234@naver.com");
+        httpHeaders.add("login-from", "none");
         httpHeaders.add("token", token);
 
         final List<DayImagesDTO> dayImagesDtos = new ArrayList<>();
@@ -203,7 +203,7 @@ public class ImageControllerTest {
         when(dayImageService.getDayImages(year, month, principal)).thenReturn(dayImagesDtos);
 
 
-        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
 
         queryParams.add("year", String.valueOf(year));
         queryParams.add("month", String.valueOf(month));

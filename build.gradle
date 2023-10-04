@@ -46,8 +46,8 @@ dependencies {
 	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
 	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
-
-
+	// https://mvnrepository.com/artifact/com.google.api-client/google-api-client
+	implementation group: 'com.google.api-client', name: 'google-api-client', version: '2.2.0'
 
 	// https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
 	implementation 'com.google.code.findbugs:jsr305:3.0.2'

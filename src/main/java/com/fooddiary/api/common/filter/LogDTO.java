@@ -40,5 +40,6 @@ public class LogDTO {
     @AllArgsConstructor
     public static class UserDTO {
         private String email;
+        private String loginFrom;
     }
 }
