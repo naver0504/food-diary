@@ -1,5 +1,6 @@
 package com.fooddiary.api.entity.image;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fooddiary.api.entity.tag.Tag;
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
@@ -19,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@ToString
 public class Image {
 
     @Id
@@ -39,6 +41,7 @@ public class Image {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "day_image_id")
+    @JsonIgnore
     private DayImage dayImage;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -112,16 +115,30 @@ public class Image {
                 .storedFileName(fileName)
                 .user(user)
                 .build();
-
         image.setTimeStatus(dateTime);
         image.setGeography(longitude, latitude);
         return image;
     }
 
-    public void update(final String memo, final TimeStatus timeStatus) {
+    public static Image createImage(final Image parentImage, final String fileName, final User user) {
+        final Image image = Image.builder()
+                .storedFileName(fileName)
+                .user(user)
+                .build();
+        image.dayImage = parentImage.dayImage;
+        image.parentImage = parentImage;
+        image.timeStatus = parentImage.timeStatus;
+        image.geography = parentImage.geography;
+        return image;
+    }
+
+    public void updateMemo(final String memo) {
         this.memo = memo;
     }
 
 
+    public void updateStoredImage(String storeFilename) {
+        this.storedFileName = storeFilename;
+    }
 
 }
