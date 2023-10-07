@@ -298,7 +298,7 @@ public class ImageService {
             tagService.deleteAllById(deleteTagIds);
         }
         image.updateMemo(updateImageDetailDTO.getMemo());
-        if (image.getTimeStatus().getCode().equals(updateImageDetailDTO.getTimeStatus())) {
+        if (!image.getTimeStatus().getCode().equals(updateImageDetailDTO.getTimeStatus())) {
             imageQuerydslRepository.updateTimeStatus(image.getId(), TimeStatus.getTimeStatusByCode(updateImageDetailDTO.getTimeStatus()));
         }
 
