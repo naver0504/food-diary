@@ -63,7 +63,6 @@ public class DayImageQuerydslRepository {
                         )
                 .orderBy(dayImage.time.localDateTime.desc())
                 .fetchFirst();
-        System.out.println("beforeTime = " + beforeTime);
 
         if (beforeTime != null) {
             times.put("before", beforeTime);
