@@ -27,6 +27,7 @@ create table image (
     stored_file_name varchar(255) not null,
     time_status varchar(255),
     day_image_id integer,
+    geography GEOMETRY,
     primary key (id)
 ) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -35,6 +36,8 @@ create table day_image (
     day integer not null,
     month integer not null,
     year integer not null,
+    create_time datetime,
+    geography GEOMETRY,
     thumb_nail_image_path varchar(255),
     user_id integer,
     primary key (day_image_id)

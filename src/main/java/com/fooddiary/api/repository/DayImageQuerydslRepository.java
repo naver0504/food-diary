@@ -58,10 +58,10 @@ public class DayImageQuerydslRepository {
                 .from(dayImage)
                 .join(dayImage.images, image)
                 .where(dayImage.user.id.eq(userId),
-                        dayImage.time.localDateTime
+                        dayImage.time.createTime
                         .before(Time.getDateTime(year, month, day))
                         )
-                .orderBy(dayImage.time.localDateTime.desc())
+                .orderBy(dayImage.time.createTime.desc())
                 .fetchFirst();
 
         if (beforeTime != null) {
@@ -73,9 +73,9 @@ public class DayImageQuerydslRepository {
                 .from(dayImage)
                 .join(dayImage.images, image)
                 .where(dayImage.user.id.eq(userId),
-                        dayImage.time.localDateTime
+                        dayImage.time.createTime
                         .after(Time.getDateTime(year, month, day)))
-                .orderBy(dayImage.time.localDateTime.asc())
+                .orderBy(dayImage.time.createTime.asc())
                 .limit(2)
                 .fetch();
 

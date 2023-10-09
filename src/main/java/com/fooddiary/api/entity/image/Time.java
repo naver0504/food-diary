@@ -9,20 +9,19 @@ import java.time.LocalDateTime;
 @Getter
 @Embeddable
 @NoArgsConstructor
-@ToString
 public class Time {
 
     private int year;
     private int month;
     private int day;
-    private LocalDateTime localDateTime;
+    private LocalDateTime createTime;
 
 
     public Time(final LocalDateTime dateTime) {
         this.year = dateTime.getYear();
         this.month = dateTime.getMonth().getValue();
         this.day = dateTime.getDayOfMonth();
-        this.localDateTime = dateTime;
+        this.createTime = dateTime;
     }
 
     public static LocalDateTime getDateTime(final int year, final int month, final int day) {
