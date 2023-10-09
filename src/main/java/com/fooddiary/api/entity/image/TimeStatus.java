@@ -1,6 +1,7 @@
 package com.fooddiary.api.entity.image;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 public enum TimeStatus {
     BREAKFAST("아침"), BRUNCH("아점"),LUNCH("점심"), SNACK("간식"),
@@ -10,6 +11,13 @@ public enum TimeStatus {
 
     TimeStatus(String code) {
         this.code = code;
+    }
+
+    public static TimeStatus getTimeStatusByCode(final String code) {
+        return Arrays.stream(values())
+                .filter(timeStatus -> timeStatus.getCode().equals(code))
+                .findFirst()
+                .orElseThrow(() ->new RuntimeException("존재하지 않는 시간대입니다."));
     }
 
     public static TimeStatus getTime(final LocalDateTime dateTime) {

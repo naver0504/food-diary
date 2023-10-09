@@ -4,6 +4,7 @@ package com.fooddiary.api.entity.image;
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.geolatte.geom.Point;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,6 +34,9 @@ public class DayImage {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Column(nullable = true, columnDefinition = "GEOMETRY")
+    private Point geography;
 
 
     public static DayImage createDayImage(final List<Image> images, final LocalDateTime dateTime, final User user) {
