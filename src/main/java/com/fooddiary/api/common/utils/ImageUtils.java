@@ -44,9 +44,9 @@ public class ImageUtils {
         return storeFilename;
     }
 
-    public static String createThumbnailName(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) {
+    public static String createThumbnailImage(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) {
         final String originalFilename = file.getOriginalFilename();
-        final String storeFilename = "t_"+ UUID.randomUUID().toString() + "_" + originalFilename;
+        final String storeThumbnailFilename = "t_"+ UUID.randomUUID().toString() + "_" + originalFilename;
         final String fileContentType = getFileContentType(file.getContentType());
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -73,10 +73,9 @@ public class ImageUtils {
 
 
         try {
-            ObjectMetadata metadata = new ObjectMetadata();
-
+            final ObjectMetadata metadata = new ObjectMetadata();
             final String dirPath = ImageUtils.getDirPath(basePath, user);
-            amazonS3.putObject(bucket, dirPath+storeFilename, inputStream, metadata);
+            amazonS3.putObject(bucket, dirPath+storeThumbnailFilename, inputStream, metadata);
         } catch (AmazonServiceException e) {
             log.error("AmazonServiceException ", e);
             throw new RuntimeException(e.getMessage());
@@ -86,10 +85,10 @@ public class ImageUtils {
         }
 
 
-        return storeFilename;
+        return storeThumbnailFilename;
     }
 
-    private static String getFileContentType(String contentType) {
+    public static String getFileContentType(String contentType) {
         if (contentType.equals( "image/jpeg")) {
             return "jpg";
         } else if (contentType.equals("image/png")) {

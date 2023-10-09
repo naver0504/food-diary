@@ -11,6 +11,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect
   servlet:
     multipart:
       max-file-size: 7MB
