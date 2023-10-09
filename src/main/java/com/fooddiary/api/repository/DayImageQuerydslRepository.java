@@ -53,7 +53,7 @@ public class DayImageQuerydslRepository {
     public Map<String, Time> getBeforeAndAfterTime(final int year, final int month, final int day, final int userId) {
 
 
-        final Map<String, Time> times = new HashMap();
+        final Map<String, Time> times = new HashMap<>();
         final Time beforeTime = jpaQueryFactory.select(dayImage.time)
                 .from(dayImage)
                 .join(dayImage.images, image)

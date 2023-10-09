@@ -42,7 +42,7 @@ public class ImageController {
     })
     public ResponseEntity<StatusResponseDTO> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
                                                        final @RequestPart("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
-                                                       HttpServletRequest request){
+                                                       HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
         final User user = getUser(request);
 
         return ResponseEntity.ok(dayImageService.saveImage(multipartFiles, saveImageRequestDTO, user));
@@ -99,7 +99,7 @@ public class ImageController {
     public ResponseEntity<StatusResponseDTO> uploadDetailImages(final @RequestPart List<MultipartFile> files, final @PathVariable int imageId,
                                                                 final @AuthenticationPrincipal User user) {
 
-        return ResponseEntity.ok(imageService.updateImageFile(files, imageId, user));
+        return ResponseEntity.ok(imageService.uploadImageFile(files, imageId, user));
     }
 
     @PostMapping("/{parentImageId}/detail")
@@ -110,8 +110,7 @@ public class ImageController {
     }
 
     private User getUser(HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
-        final User user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
-        return user;
+        return userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
     }
 
 }
