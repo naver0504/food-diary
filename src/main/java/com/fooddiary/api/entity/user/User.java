@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fooddiary.api.entity.image.DayImage;
 
+import com.fooddiary.api.entity.image.Image;
 import org.hibernate.annotations.ColumnDefault;
 
 import com.fooddiary.api.entity.session.Session;
@@ -44,6 +45,8 @@ public class User {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     private List<DayImage> dayImages = new ArrayList<>();
+    @OneToMany(mappedBy = "user")
+    private List<Image> images = new ArrayList<>();
 
 
 

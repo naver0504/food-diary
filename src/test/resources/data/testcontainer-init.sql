@@ -22,6 +22,20 @@ CREATE TABLE session (
   PRIMARY KEY (token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+create table diary (
+    id integer not null auto_increment,
+    day integer not null,
+    month integer not null,
+    year integer not null,
+    `memo` varchar(255) DEFAULT NULL,
+    create_time datetime,
+    diary_time enum('breakfast', 'brunch', 'lunch', 'snack', 'linner','dinner', 'latesnack', 'etc'),
+    create_at datetime,
+    update_at datetime,
+    user_id integer,
+    primary key (id)
+) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 create table image (
     id integer not null auto_increment,
     stored_file_name varchar(255) not null,

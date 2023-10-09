@@ -1,6 +1,7 @@
 package com.fooddiary.api.entity.tag;
 
 
+import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
@@ -23,12 +24,12 @@ public class Tag {
     private String tagName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "image_id")
-    private Image image;
+    @JoinColumn(name = "diary_id")
+    private Diary diary;
 
 
-    public void setImage(Image image) {
-        this.image = image;
+    public void setDiary(Diary diary) {
+        this.diary = diary;
     }
 
     public static List<String> toStringList(List<Tag> tags) {

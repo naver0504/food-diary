@@ -24,9 +24,9 @@ public class DayImage {
     @Embedded
     private Time time;
 
-    @OneToMany(mappedBy = "dayImage", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<Image> images = new ArrayList<>();
+    //@OneToMany(mappedBy = "dayImage", cascade = CascadeType.ALL)
+    //@Builder.Default
+    //private List<Image> images = new ArrayList<>();
 
 
     private String thumbNailImagePath;
@@ -57,7 +57,7 @@ public class DayImage {
 
     public void setImages(final List<Image> images) {
         for (Image image : images) {
-            this.images.add(image);
+           // this.images.add(image);
             image.setDayImage(this);
         }
     }

@@ -1,7 +1,7 @@
 package com.fooddiary.api.repository;
 
+import com.fooddiary.api.entity.image.DiaryTime;
 import com.fooddiary.api.entity.image.Image;
-import com.fooddiary.api.entity.image.TimeStatus;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -9,10 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.fooddiary.api.entity.image.QDayImage.dayImage;
 import static com.fooddiary.api.entity.image.QImage.image;
-import static com.fooddiary.api.entity.tag.QTag.tag;
-
+import static com.fooddiary.api.entity.diary.QDiary.diary;
 @Repository
 public class ImageQuerydslRepository {
 
@@ -26,11 +24,11 @@ public class ImageQuerydslRepository {
 
 
         return jpaQueryFactory.selectFrom(image)
-                .join(image.dayImage, dayImage)
+                .join(image.diary, diary)
                 .where(
                         image.user.id.eq(userId),
-                        dayImage.id.eq(dayImageId),
-                        image.parentImage.isNull()
+                        diary.id.eq(dayImageId)
+                //        image.parentImage.isNull()
                 )
                 .orderBy(image.id.desc())
                 .limit(5)
@@ -43,8 +41,9 @@ public class ImageQuerydslRepository {
 
         return jpaQueryFactory.selectFrom(
                         image)
-                .leftJoin(image.dayImage, dayImage)
-                .leftJoin(image.tags, tag).fetchJoin()
+                .leftJoin(image.diary, diary)
+                // .leftJoin(image.tags, tag)
+                .fetchJoin()
                 .where(booleanBuilder)
                 .fetch();
     }
@@ -53,7 +52,7 @@ public class ImageQuerydslRepository {
         BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day, userId);
         booleanBuilder.and(image.id.lt(startId));
         return jpaQueryFactory.selectFrom(image)
-                .leftJoin(image.dayImage, dayImage)
+                .leftJoin(image.diary, diary)
                 .where(booleanBuilder)
                 .orderBy(image.id.desc())
                 .limit(5)
@@ -64,18 +63,21 @@ public class ImageQuerydslRepository {
     private static BooleanBuilder getBuilderWithTime(int year, int month, int day, int userId) {
         BooleanBuilder booleanBuilder = new BooleanBuilder();
         booleanBuilder.and(image.user.id.eq(userId));
-        booleanBuilder.and(dayImage.time.year.eq(year));
-        booleanBuilder.and(dayImage.time.month.eq(month));
-        booleanBuilder.and(dayImage.time.day.eq(day));
-        booleanBuilder.and(image.parentImage.isNull());
+        booleanBuilder.and(diary.time.year.eq(year));
+        booleanBuilder.and(diary.time.month.eq(month));
+        booleanBuilder.and(diary.time.day.eq(day));
+        // booleanBuilder.and(image.parentImage.isNull()); todo
         return booleanBuilder;
     }
 
-    public void updateTimeStatus(final int imageId, final TimeStatus timeStatus) {
+    public void updateTimeStatus(final int imageId, final DiaryTime diaryTime) {
+        /*
         jpaQueryFactory.update(image)
-                .set(image.timeStatus, timeStatus)
-                .where(image.id.eq(imageId).or(image.parentImage.id.eq(imageId)))
+                .set(image.diaryTime, diaryTime)
+              //  .where(image.id.eq(imageId).or(image.parentImage.id.eq(imageId))) todo
                 .execute();
+
+         */
     }
 }
 

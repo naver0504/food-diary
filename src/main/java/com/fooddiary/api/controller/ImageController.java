@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.fooddiary.api.common.constants.UserConstants.LOGIN_FROM_KEY;
@@ -37,15 +38,25 @@ public class ImageController {
     private final ImageService imageService;
     private final UserService userService;
 
+    /**
+     * 사진 추가를 하는 메소드
+     * @param multipartFiles
+     * @param saveImageRequestDTO
+     * @param request
+     * @return
+     * @throws GeneralSecurityException
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @PostMapping(value = "/saveImage", consumes = {
             MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE
     })
-    public ResponseEntity<StatusResponseDTO> saveImage(final @RequestPart("files") List<MultipartFile> multipartFiles,
+    public ResponseEntity<StatusResponseDTO> saveImage(final @RequestPart("file") MultipartFile multipartFiles,
                                                        final @RequestPart("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
                                                        HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
         final User user = getUser(request);
-
-        return ResponseEntity.ok(dayImageService.saveImage(multipartFiles, saveImageRequestDTO, user));
+        imageService.storeImage(Arrays.asList(multipartFiles), user, saveImageRequestDTO);
+        return ResponseEntity.ok().build();
     }
 
 
@@ -58,7 +69,8 @@ public class ImageController {
     public ResponseEntity<ShowImageOfDayDTO> showImageOfDay(final @RequestParam int year, final @RequestParam int month,
                                                                   final @RequestParam int day, final @AuthenticationPrincipal User user) {
 
-        return ResponseEntity.ok(imageService.getImages(year, month, day, user));
+        //return ResponseEntity.ok(imageService.getImages(year, month, day, user)); todo
+        return ResponseEntity.ok(null);
     }
 
     /***
@@ -81,32 +93,37 @@ public class ImageController {
     @GetMapping("/timeline/{startImageId}")
     public ResponseEntity<List<TimeLineResponseDTO.ImageResponseDTO>> showTimeLineWithStartImageId(final @RequestParam int year, final @RequestParam int month, final @RequestParam int day,
                                                                   final @PathVariable int startImageId, final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(imageService.getTimeLineImagesWithStartImageId(year, month, day, startImageId, user));
+        // return ResponseEntity.ok(imageService.getTimeLineImagesWithStartImageId(year, month, day, startImageId, user)); todo
+        return ResponseEntity.ok(null);
     }
 
     @GetMapping("/{imageId}")
     public ResponseEntity<ImageDetailResponseDTO> showImageDetail(final @PathVariable int imageId, final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(imageService.getImageDetail(imageId, user));
+        //return ResponseEntity.ok(imageService.getImageDetail(imageId, user));
+        return ResponseEntity.ok(null);
     }
 
     @PatchMapping("/{imageId}")
     public ResponseEntity<StatusResponseDTO> updateImageFile(final @RequestPart MultipartFile file, final @PathVariable int imageId,
                                                              final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(imageService.updateImage(imageId, file, user));
+        // return ResponseEntity.ok(imageService.updateImage(imageId, file, user));
+        return ResponseEntity.ok(null);
     }
 
     @PostMapping("/{imageId}")
     public ResponseEntity<StatusResponseDTO> uploadDetailImages(final @RequestPart List<MultipartFile> files, final @PathVariable int imageId,
                                                                 final @AuthenticationPrincipal User user) {
 
-        return ResponseEntity.ok(imageService.uploadImageFile(files, imageId, user));
+       //  return ResponseEntity.ok(imageService.uploadImageFile(files, imageId, user));
+        return ResponseEntity.ok(null);
     }
 
     @PostMapping("/{parentImageId}/detail")
     public ResponseEntity<StatusResponseDTO> updateImageDetail(final @PathVariable int parentImageId,
                                                                final @RequestBody UpdateImageDetailDTO updateImageDetailDTO,
                                                                final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(imageService.updateImageDetail(parentImageId, user, updateImageDetailDTO));
+        // return ResponseEntity.ok(imageService.updateImageDetail(parentImageId, user, updateImageDetailDTO));
+        return ResponseEntity.ok(null);
     }
 
     private User getUser(HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {

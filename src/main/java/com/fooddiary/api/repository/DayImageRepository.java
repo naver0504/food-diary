@@ -15,6 +15,7 @@ import java.util.Optional;
 @Repository
 public interface DayImageRepository extends JpaRepository<DayImage, Integer> {
 
+    /*
     @Query("select d from DayImage d join  d.images i where i.id = :imageId and d.user.id = :userId")
     Optional<DayImage> findByImageIdAndUserId(@Param("imageId") int imageId, @Param("userId") int userId);
 
@@ -33,4 +34,6 @@ public interface DayImageRepository extends JpaRepository<DayImage, Integer> {
 
     @Query("select d from DayImage d left join fetch d.images i where d.user.id = :userId and d.id > :id order by d.id asc")
     List<DayImage> findByUserIdAndLimit(@Param("userId") int userId, @Param("id") int id, Pageable pageable);
+
+     */
 }

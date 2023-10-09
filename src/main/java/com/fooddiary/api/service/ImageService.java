@@ -7,12 +7,12 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
+import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.request.UpdateImageDetailDTO;
 import com.fooddiary.api.dto.response.*;
-import com.fooddiary.api.entity.image.DayImage;
+import com.fooddiary.api.entity.image.DiaryTime;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.image.Time;
-import com.fooddiary.api.entity.image.TimeStatus;
 import com.fooddiary.api.entity.tag.Tag;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.DayImageQuerydslRepository;
@@ -27,12 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 
 @Service
@@ -54,62 +55,56 @@ public class ImageService {
     @Value("${cloud.aws.s3.dir}")
     private String basePath;
 
-    public List<Image> storeImage(final List<MultipartFile> files, final LocalDateTime localDateTime, final User user, final Double longitude, final Double latitude,final String basePath)  {
+    public List<Image> storeImage(final List<MultipartFile> files, final User user, final SaveImageRequestDTO saveImageRequestDTO)  {
 
         final List<Image> images = new ArrayList<>();
-        Image firstImage = null;
 
-        long startTime = System.currentTimeMillis();
         for (int i = 0; i<files.size(); i++) {
             final MultipartFile file = files.get(i);
-
-            //파일 명 겹치면 안되므로 UUID + '-' + 원래 파일 이름으로 저장
-
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            final Image image = Image.createImage(localDateTime, storeFilename, longitude, latitude, user);
-            if (i == 0) {
-                firstImage = image;
-            } else {
-                firstImage.addChildImage(image);
-            }
-            final int userId = user.getId();
+            final Image image = Image.createImage(storeFilename, saveImageRequestDTO, user);
 
-            //S3에 저장하는 로직
-                final ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentLength(file.getSize());
-                metadata.setContentType(file.getContentType());
+            final ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(file.getSize());
+            metadata.setContentType(file.getContentType());
 
-                final String dirPath = ImageUtils.getDirPath(basePath, user);
-                if(dayImageQuerydslRepository.existByUserId(userId)) {
+            final String dirPath = ImageUtils.getDirPath(basePath, user);
+            try {
+                if (amazonS3.getObject(bucket, dirPath).getObjectContent().available() == 0) {
                     amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
                 }
-                PutObjectRequest putObjectRequest;
-                try {
 
-                 putObjectRequest = new PutObjectRequest(bucket, dirPath + storeFilename, file.getInputStream(), metadata);
-                 } catch (AmazonServiceException e) {
-                    log.error("AmazonServiceException ", e);
-                    throw new RuntimeException(e.getMessage());
-                } catch (SdkClientException e) {
-                    log.error("SdkClientException ", e);
-                    throw new RuntimeException(e.getMessage());
-                } catch (IOException e) {
-                    log.error("IOException ", e);
-                    throw new RuntimeException(e.getMessage());
-                }
-                amazonS3.putObject(putObjectRequest);
-//                amazonS3.putObject(bucket, dirPath+storeFilename, file.getInputStream(), metadata);
+                inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
 
-
+                ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath);
+                final ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
+                final String storeThumbnailFilename = "t_" + UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                inputIntoFileStorage(dirPath, storeThumbnailFilename, thumbnailInputStream);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
             final Image saveImage = imageRepository.save(image);
             images.add(saveImage);
         }
         return images;
-
-
     }
 
+    public void inputIntoFileStorage(final String dirPath, final String storeFilename, final InputStream inputStream) {
+        try {
+            final ObjectMetadata metadata = new ObjectMetadata();
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucket, dirPath + storeFilename, inputStream, metadata);
+            amazonS3.putObject(putObjectRequest);
+        } catch (AmazonServiceException e) {
+            log.error("AmazonServiceException ", e);
+            throw new RuntimeException(e.getMessage());
+        } catch (SdkClientException e) {
+            log.error("SdkClientException ", e);
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    /*
     public ShowImageOfDayDTO getImages(final int year, final int month, final int day, final User user) {
         final List<Image> images = imageQuerydslRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
         final List<ShowImageOfDayDTO.ImageDTO> ImageDTOS = new ArrayList<>();
@@ -124,22 +119,21 @@ public class ImageService {
                 log.error("IOException ", e);
                 throw new RuntimeException(e);
             }
-            final TimeStatus timeStatus = storedImage.getTimeStatus();
+            // final TimeStatus timeStatus = storedImage.getTimeStatus();
 
-            final String time = storedImage.getTimeStatus().getCode();
+            // final String time = storedImage.getTimeStatus().getCode();
             ImageDTOS.add(
                     ShowImageOfDayDTO.ImageDTO.builder()
                             .bytes(bytes)
-                            .timeStatus(timeStatus)
-                            .time(time)
-                            .tags(Tag.toStringList(storedImage.getTags()))
+                  //           .timeStatus(timeStatus)
+                  //           .time(time)
                             .id(storedImage.getId())
                             .build()
             );
         }
 
-        ImageDTOS.sort((o1, o2) ->
-                o1.getTimeStatus().compareTo(o2.getTimeStatus()));
+       // ImageDTOS.sort((o1, o2) ->
+       //         o1.getTimeStatus().compareTo(o2.getTimeStatus()));
         ShowImageOfDayDTO.ShowImageOfDayDTOBuilder showImageOfDayDTOBuilder = ShowImageOfDayDTO.builder()
                 .images(ImageDTOS);
         final Map<String, Time> beforeAndAfterDay = dayImageQuerydslRepository.getBeforeAndAfterTime(year, month, day, user.getId());
@@ -186,15 +180,10 @@ public class ImageService {
         }
 
 
-        final List<String> tags = image.getTags()
-                .stream().map(tag -> tag.getTagName()).collect(Collectors.toList());
-
         final Time time = dayImageQuerydslRepository.getTime(imageId);
 
         return ImageDetailResponseDTO.builder()
-                .memo(image.getMemo())
-                .timeStatus(image.getTimeStatus().getCode())
-                .tags(tags)
+                .timeStatus(image.getDiaryTime().getCode())
                 .timeDetail(TimeDetailDTO.of(time))
                 .images(imageResponseDTOS)
                 .build();
@@ -212,7 +201,7 @@ public class ImageService {
             Image parentImage = imageRepository.findParentImageByImageIdAndUserId(imageId, user.getId())
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
             Image newImage = Image.createImage(parentImage, storeFilename, user);
-            parentImage.addChildImage(newImage);
+            // parentImage.addChildImage(newImage);
 
             //S3에 저장하는 로직
             try {
@@ -268,28 +257,8 @@ public class ImageService {
         final Image image = imageRepository.findByIdWithTag(parentImageId, user.getId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
         final List<String> tags = updateImageDetailDTO.getTags();
-        final List<Tag> originalTags = image.getTags();
         final List<Integer> deleteTagIds = new ArrayList<>();
         final List<Tag> addTags = new ArrayList<>();
-
-
-        tags.forEach(tag -> {
-            if (originalTags.stream().noneMatch(originalTag -> originalTag.getTagName().equals(tag))) {
-                addTags.add(Tag.builder()
-                        .tagName(tag)
-                        .image(image)
-                        .build()
-                );
-            }
-        });
-
-        originalTags.forEach(originalTag -> {
-            if (tags.stream().noneMatch(tag -> tag.equals(originalTag.getTagName()))) {
-                deleteTagIds.add(originalTag.getId());
-            }
-        });
-
-        image.setTag(addTags);
 
         if(addTags.size() != 0) {
             tagService.saveAll(addTags);
@@ -297,9 +266,9 @@ public class ImageService {
         if(deleteTagIds.size() != 0) {
             tagService.deleteAllById(deleteTagIds);
         }
-        image.updateMemo(updateImageDetailDTO.getMemo());
-        if (!image.getTimeStatus().getCode().equals(updateImageDetailDTO.getTimeStatus())) {
-            imageQuerydslRepository.updateTimeStatus(image.getId(), TimeStatus.getTimeStatusByCode(updateImageDetailDTO.getTimeStatus()));
+
+        if (!image.getDiaryTime().getCode().equals(updateImageDetailDTO.getTimeStatus())) {
+            imageQuerydslRepository.updateTimeStatus(image.getId(), DiaryTime.getTimeStatusByCode(updateImageDetailDTO.getTimeStatus()));
         }
 
         return StatusResponseDTO.builder()
@@ -329,6 +298,7 @@ public class ImageService {
         }
         amazonS3.putObject(putObjectRequest);
 
+        /* todo
         if (image.getParentImage() == null) {
             DayImage dayImage = dayImageRepository.findByImageIdAndUserId(imageId, user.getId())
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
@@ -336,12 +306,13 @@ public class ImageService {
             String thumbnailFileName = ImageUtils.createThumbnailImage(file, user, amazonS3, bucket, basePath);
             dayImage.updateThumbNailImageName(thumbnailFileName);
 
-        }
-
+        }*/
+/*
         return StatusResponseDTO.builder()
                 .status(StatusResponseDTO.Status.SUCCESS)
                 .build();
 
 
     }
+    */
 }

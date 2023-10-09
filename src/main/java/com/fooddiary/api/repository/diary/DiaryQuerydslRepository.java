@@ -1,5 +1,6 @@
-package com.fooddiary.api.repository;
+package com.fooddiary.api.repository.diary;
 
+import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Time;
 import com.fooddiary.api.entity.user.QUser;
@@ -12,28 +13,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.fooddiary.api.entity.image.QDayImage.*;
-import static com.fooddiary.api.entity.image.QImage.*;
+import static com.fooddiary.api.entity.diary.QDiary.diary;
+import static com.fooddiary.api.entity.image.QDayImage.dayImage;
+import static com.fooddiary.api.entity.image.QImage.image;
 
 @Repository
 @Slf4j
-public class DayImageQuerydslRepository {
+public class DiaryQuerydslRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
-    public DayImageQuerydslRepository(EntityManager entityManager) {
+    public DiaryQuerydslRepository(EntityManager entityManager) {
         jpaQueryFactory = new JPAQueryFactory(entityManager);
     }
-/*
-    public List<DayImage> getTimeLineDayImage(final int year, final int month, final int startDay, final int userId) {
-        return jpaQueryFactory.selectFrom(dayImage)
+
+    public List<Diary> getTimeLineDayImage(final int year, final int month, final int startDay, final int userId) {
+        return jpaQueryFactory.selectFrom(diary)
                 .where(
-                        dayImage.user.id.eq(userId),
-                        dayImage.time.year.eq(year),
-                        dayImage.time.month.eq(month),
-                        dayImage.time.day.lt(startDay)
+                        diary.user.id.eq(userId),
+                        diary.time.year.eq(year),
+                        diary.time.month.eq(month),
+                        diary.time.day.lt(startDay)
                 )
-                .orderBy(dayImage.time.day.desc())
+                .orderBy(diary.time.day.desc())
                 .limit(4)
                 .fetch();
 
@@ -42,9 +44,9 @@ public class DayImageQuerydslRepository {
 
     public Time getTime(final int imageId) {
 
-        return jpaQueryFactory.select(dayImage.time)
-                .from(dayImage)
-                .leftJoin(dayImage.images, image)
+        return jpaQueryFactory.select(diary.time)
+                .from(diary)
+                .leftJoin(diary.images, image)
                 .where(image.id.eq(imageId))
                 .fetchOne();
 
@@ -54,14 +56,14 @@ public class DayImageQuerydslRepository {
 
 
         final Map<String, Time> times = new HashMap<>();
-        final Time beforeTime = jpaQueryFactory.select(dayImage.time)
-                .from(dayImage)
-                .join(dayImage.images, image)
-                .where(dayImage.user.id.eq(userId),
-                        dayImage.time.createTime
+        final Time beforeTime = jpaQueryFactory.select(diary.time)
+                .from(diary)
+                .join(diary.images, image)
+                .where(diary.user.id.eq(userId),
+                        diary.time.createTime
                         .before(Time.getDateTime(year, month, day))
                         )
-                .orderBy(dayImage.time.createTime.desc())
+                .orderBy(diary.time.createTime.desc())
                 .fetchFirst();
 
         if (beforeTime != null) {
@@ -69,13 +71,13 @@ public class DayImageQuerydslRepository {
         }
 
         //자기 자신을 포함한 후 + 이후의 시간을 가져온다.
-        final List<Time> AfterTime = jpaQueryFactory.select(dayImage.time).distinct()
-                .from(dayImage)
-                .join(dayImage.images, image)
-                .where(dayImage.user.id.eq(userId),
-                        dayImage.time.createTime
+        final List<Time> AfterTime = jpaQueryFactory.select(diary.time).distinct()
+                .from(diary)
+                .join(diary.images, image)
+                .where(diary.user.id.eq(userId),
+                        diary.time.createTime
                         .after(Time.getDateTime(year, month, day)))
-                .orderBy(dayImage.time.createTime.asc())
+                .orderBy(diary.time.createTime.asc())
                 .limit(2)
                 .fetch();
 
@@ -88,16 +90,13 @@ public class DayImageQuerydslRepository {
 
     }
 
-
     public boolean existByUserId(final int userId) {
         Integer fetchFirst = jpaQueryFactory
                 .selectOne()
-                .from(dayImage)
-                .join(dayImage.user, QUser.user)
+                .from(diary)
+                .join(diary.user, QUser.user)
                 .fetchFirst();
 
         return fetchFirst != null;
     }
-    
- */
 }

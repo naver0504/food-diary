@@ -3,11 +3,13 @@ package com.fooddiary.api.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
+import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.StatusResponseDTO;
 import com.fooddiary.api.dto.response.TimeLineResponseDTO;
+import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.image.Time;
@@ -15,6 +17,8 @@ import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.DayImageQuerydslRepository;
 import com.fooddiary.api.repository.DayImageRepository;
 import com.fooddiary.api.repository.ImageQuerydslRepository;
+import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;
+import com.fooddiary.api.repository.diary.DiaryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,12 +38,14 @@ import static com.fooddiary.api.dto.response.StatusResponseDTO.*;
 @Slf4j
 public class DayImageService {
 
-    private final DayImageRepository dayImageRepository;
+    //private final DayImageRepository dayImageRepository;
     private final ImageService imageService;
     private final FileStorageService fileStorageService;
     private final ImageUtils imageUtils;
     private final AmazonS3 amazonS3;
-    private final DayImageQuerydslRepository dayImageQuerydslRepository;
+    //private final DayImageQuerydslRepository dayImageQuerydslRepository;
+    private final DiaryRepository diaryRepository;
+    private final DiaryQuerydslRepository diaryQuerydslRepository;
     private final ImageQuerydslRepository imageQuerydslRepository;
 
     @Value("${cloud.aws.s3.dir}")
@@ -52,9 +58,7 @@ public class DayImageService {
     @Transactional
     public StatusResponseDTO saveImage(final List<MultipartFile> files, final SaveImageRequestDTO saveImageRequestDTO, final User user) {
 
-        final LocalDateTime dateTime = saveImageRequestDTO.getLocalDateTime();
-
-
+        final LocalDateTime dateTime = saveImageRequestDTO.getCreateTime();
         final int year = dateTime.getYear();
         final int month = dateTime.getMonthValue();
         final int day = dateTime.getDayOfMonth();
@@ -62,26 +66,27 @@ public class DayImageService {
         final Double latitude = saveImageRequestDTO.getLatitude();
 
 
-        final DayImage dayImage = dayImageRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
+        final int todayDiaryCount = diaryRepository.getByYearAndMonthAndDayCount(year, month, day, user.getId());
+
+        if (todayDiaryCount >= 10) {
+            throw new BizException("register only 10 per day");
+        }
         final List<Image> images;
 
-        images = imageService.storeImage(files, dateTime, user, longitude, latitude, basePath);
+        images = imageService.storeImage(files, user, saveImageRequestDTO);
 
         /***
          * 해당 날짜에 사진들이 있는 지 확인
          * 있다면 사진들을 추가하고 첫 번째 사진 썸네일로
          * 없다면 해당 날짜 이미지 엔티티 생성 후 사진 썸네일 설정
          */
-        if (dayImage == null) {
+
             final DayImage newDayImage = DayImage.createDayImage(images, dateTime, user);
-            dayImageRepository.save(newDayImage);
-            newDayImage.updateThumbNailImageName(imageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath));
+         //   dayImageRepository.save(newDayImage);
+          //  newDayImage.updateThumbNailImageName(imageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath));
 
-
-        } else {
-            /**
-             * 변경 감지로 알아서 update 쿼리
-             */
+        /*
+        else {
             dayImage.setImages(images);
             final String originalThumbnailPath = dayImage.getThumbNailImagePath();
             final String dirPath = ImageUtils.getDirPath(basePath, user);
@@ -90,6 +95,7 @@ public class DayImageService {
             dayImage.updateThumbNailImageName(imageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath));
 
         }
+        */
 
 
         return StatusResponseDTO.builder()
@@ -99,7 +105,7 @@ public class DayImageService {
     }
 
     public List<ThumbNailImagesDTO> getThumbNailImages(final int year, final int month, final User user)  {
-        final List<DayImage> dayImages = dayImageRepository.findByYearAndMonth(year, month, user.getId());
+        final List<DayImage> dayImages = null; //dayImageRepository.findByYearAndMonth(year, month, user.getId()); todo
         final List<ThumbNailImagesDTO> dayImagesDTOS = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(basePath, user);
         for (DayImage dayImage : dayImages) {
@@ -125,7 +131,7 @@ public class DayImageService {
     }
 
     public List<TimeLineResponseDTO> getTimeLine(final int year, final int month, final int startDay, final User user) {
-        final List<DayImage> dayImages = dayImageQuerydslRepository.getTimeLineDayImage(year, month, startDay, user.getId());
+        final List<DayImage> dayImages = null; // dayImageQuerydslRepository.getTimeLineDayImage(year, month, startDay, user.getId()); todo
         final String dirPath = ImageUtils.getDirPath(basePath, user);
         final List<TimeLineResponseDTO> timeLineResponseDTOS = new ArrayList<>();
 
@@ -157,8 +163,5 @@ public class DayImageService {
 
         return timeLineResponseDTOS;
     }
-
-
-
 
 }

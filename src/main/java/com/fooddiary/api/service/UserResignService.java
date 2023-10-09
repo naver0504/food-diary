@@ -40,12 +40,14 @@ public class UserResignService {
 
     public void deleteAllImages(final User user) {
         Integer id = -1;
+        /*
         while(true) {
             List<DayImage> dayImageList = dayImageRepository.findByUserIdAndLimit(user.getId(), id, PageRequest.of(0, 10));
             if (dayImageList.isEmpty()) {
                 break;
             }
             id = dayImageList.get(dayImageList.size() - 1).getId();
+
 
             for (DayImage dayImage : dayImageList) {
                 List<Image> imageList = dayImage.getImages();
@@ -57,6 +59,8 @@ public class UserResignService {
                 dayImageRepository.delete(dayImage);
             }
         }
+        
+         */
         amazonS3.deleteObject(bucket, ImageUtils.getDirPath(basePath, user));
     }
 }
