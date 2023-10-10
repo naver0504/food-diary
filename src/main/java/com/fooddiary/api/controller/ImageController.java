@@ -78,36 +78,23 @@ public class ImageController {
      * /image?year=2023&month=7
      * 한 달의 사진 받기
      */
-    @GetMapping("/images")
+    //@GetMapping("/images")
     public ResponseEntity<List<ThumbNailImagesDTO>> showThumbNailImages(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) {
 
         return ResponseEntity.ok(dayImageService.getThumbNailImages(year, month, user));
     }
 
-    @GetMapping("/timeline")
-    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam int year, final @RequestParam int month,
-                                                                  final @RequestParam(defaultValue = "31") int startDay, final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(dayImageService.getTimeLine(year, month, startDay, user));
-    }
-
-    @GetMapping("/timeline/{startImageId}")
-    public ResponseEntity<List<TimeLineResponseDTO.ImageResponseDTO>> showTimeLineWithStartImageId(final @RequestParam int year, final @RequestParam int month, final @RequestParam int day,
-                                                                  final @PathVariable int startImageId, final @AuthenticationPrincipal User user) {
-        // return ResponseEntity.ok(imageService.getTimeLineImagesWithStartImageId(year, month, day, startImageId, user)); todo
-        return ResponseEntity.ok(null);
-    }
-
-    @GetMapping("/{imageId}")
-    public ResponseEntity<ImageDetailResponseDTO> showImageDetail(final @PathVariable int imageId, final @AuthenticationPrincipal User user) {
-        //return ResponseEntity.ok(imageService.getImageDetail(imageId, user));
-        return ResponseEntity.ok(null);
-    }
-
+    /**
+     * 사진 수정
+     * @param file
+     * @param imageId
+     * @param user
+     * @return
+     */
     @PatchMapping("/{imageId}")
     public ResponseEntity<StatusResponseDTO> updateImageFile(final @RequestPart MultipartFile file, final @PathVariable int imageId,
                                                              final @AuthenticationPrincipal User user) {
-        // return ResponseEntity.ok(imageService.updateImage(imageId, file, user));
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(imageService.updateImage(imageId, file, user));
     }
 
     @PostMapping("/{imageId}")

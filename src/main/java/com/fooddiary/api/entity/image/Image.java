@@ -44,11 +44,6 @@ public class Image {
     @JsonIgnore
     private Diary diary;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
-
-
     @PrePersist
     public void prePersist() {
         createAt = createAt == null ? LocalDateTime.now() : createAt;
@@ -58,9 +53,6 @@ public class Image {
         this.diaryTime = diaryTime;
     }
 
-    public void setDayImage(final DayImage dayImage) {
-        this.diary = diary;
-    }
     public void setThumbnailFileName(final String thumbnailFileName) {
         this.thumbnailFileName = thumbnailFileName;
     }
@@ -81,13 +73,12 @@ public class Image {
     }
 
 
-    public static Image createImage(final Diary diary, final String fileName, final SaveImageRequestDTO saveImageRequestDTO, final User user) {
+    public static Image createImage(final Diary diary, final String fileName, final SaveImageRequestDTO saveImageRequestDTO) {
         final Image image = Image.builder()
                 .storedFileName(fileName)
                 .diary(diary)
-                .user(user)
                 .build();
-      //  image.setTimeStatus(saveImageRequestDTO.getDiaryTime());
+        image.setTimeStatus(saveImageRequestDTO.getDiaryTime());
        // image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
         return image;
     }
@@ -95,14 +86,13 @@ public class Image {
     public static Image createImage(final Image parentImage, final String fileName, final User user) {
         final Image image = Image.builder()
                 .storedFileName(fileName)
-                .user(user)
                 .build();
         image.diary = parentImage.diary;
         image.geography = parentImage.geography;
         return image;
     }
 
-    public void updateStoredImage(String storeFilename) {
+    public void setStoredFileName(String storeFilename) {
         this.storedFileName = storeFilename;
     }
 

@@ -31,9 +31,6 @@ public class DayImage {
 
     private String thumbNailImagePath;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
 
     @Column(nullable = true, columnDefinition = "GEOMETRY")
     private Point geography;
@@ -43,7 +40,6 @@ public class DayImage {
 
         final DayImage dayImage = DayImage.builder()
                 .time(new Time(dateTime))
-                .user(user)
                 .build();
 
         dayImage.updateThumbNailImageName(images.get(0).getStoredFileName());
@@ -56,15 +52,11 @@ public class DayImage {
     }
 
     public void setImages(final List<Image> images) {
-        for (Image image : images) {
-           // this.images.add(image);
-            image.setDayImage(this);
-        }
+
     }
 
     public void setUser(final User user) {
-        this.user = user;
-        user.getDayImages().add(this);
+
     }
 
 

@@ -14,14 +14,14 @@ import java.util.Optional;
 @Repository
 public interface DiaryRepository extends JpaRepository<Diary, Integer> {
 
-    @Query("select d from Diary d join  d.images i where i.id = :imageId and d.user.id = :userId")
+    @Query("select d from Diary d join d.images i where i.id = :imageId and d.user.id = :userId")
     Optional<Diary> findByImageIdAndUserId(@Param("imageId") int imageId, @Param("userId") int userId);
 
 
-    @Query("select d from Diary d where d.time.year = :year and d.time.month = :month and d.user.id = :userId order by d.time.day asc")
+    @Query("select d from Diary d inner join d.images where d.time.year = :year and d.time.month = :month and d.user.id = :userId order by d.time.day asc")
     List<Diary> findByYearAndMonth(@Param("year") int year, @Param("month") int month, @Param("userId") int userId);
 
-    @Query("select d from Diary d join fetch d.images " +
+    @Query("select d from Diary d inner join d.images " +
             "where d.time.year = :year and d.time.month = :month and d.time.day = :day and d.user.id = :userId")
     Diary findByYearAndMonthAndDay(@Param("year") int year,
                                              @Param("month") int month, @Param("day") int day, @Param("userId") int userId);
@@ -31,8 +31,8 @@ public interface DiaryRepository extends JpaRepository<Diary, Integer> {
     int getByYearAndMonthAndDayCount(@Param("year") int year,
                                    @Param("month") int month, @Param("day") int day, @Param("userId") int userId);
 
-    @Query("select count(*) from Diary d where d.user.id = :userId")
-    int getDayImageCount(@Param("userId") int userId);
+    @Query("select count(d.id) from Diary d inner join d.images where d.id = :id")
+    int getDiaryImagesCount(@Param("id") int id);
 
 
     @Query("select d from Diary d left join fetch d.images i where d.user.id = :userId and d.id > :id order by d.id asc")

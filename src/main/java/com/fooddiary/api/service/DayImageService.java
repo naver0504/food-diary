@@ -141,7 +141,7 @@ public class DayImageService {
         for (DayImage dayImage : dayImages) {
             final int day = dayImage.getTime().getDay();
             final List<TimeLineResponseDTO.ImageResponseDTO> imageResponseDTOS = new ArrayList<>();
-            final List<Image> images = imageQuerydslRepository.findByDayImageId(dayImage.getId(), user.getId());
+            final List<Image> images = imageQuerydslRepository.findByDayImageId(dayImage.getId());
 
             for (Image image : images) {
                     final byte[] bytes;

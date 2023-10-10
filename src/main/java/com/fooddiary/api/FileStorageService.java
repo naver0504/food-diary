@@ -50,8 +50,6 @@ public class FileStorageService {
         if (isObjectExist) {
             amazonS3.deleteObject(bucket, key);
         }
-
-
-
     }
+
 }

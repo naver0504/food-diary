@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.image.DayImage;
 
 import com.fooddiary.api.entity.image.Image;
@@ -44,11 +45,7 @@ public class User {
     private List<Session> session = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-    private List<DayImage> dayImages = new ArrayList<>();
-    @OneToMany(mappedBy = "user")
-    private List<Image> images = new ArrayList<>();
-
-
+    private List<Diary> diaries = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

@@ -20,13 +20,12 @@ public class ImageQuerydslRepository {
         jpaQueryFactory = new JPAQueryFactory(entityManager);
     }
 
-    public List<Image> findByDayImageId(final int dayImageId, final int userId) {
+    public List<Image> findByDayImageId(final int dayImageId) {
 
 
         return jpaQueryFactory.selectFrom(image)
                 .join(image.diary, diary)
                 .where(
-                        image.user.id.eq(userId),
                         diary.id.eq(dayImageId)
                 //        image.parentImage.isNull()
                 )
@@ -35,9 +34,9 @@ public class ImageQuerydslRepository {
                 .fetch();
     }
 
-    public List<Image> findByYearAndMonthAndDay(final int year, final int month, final int day, final int userId) {
+    public List<Image> findByYearAndMonthAndDay(final int year, final int month, final int day) {
 
-        BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day, userId);
+        BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day);
 
         return jpaQueryFactory.selectFrom(
                         image)
@@ -48,8 +47,8 @@ public class ImageQuerydslRepository {
                 .fetch();
     }
 
-    public List<Image> findByYearAndMonthAndDayAndStartId(final int year, final int month, final int day, final int startId, final int userId) {
-        BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day, userId);
+    public List<Image> findByYearAndMonthAndDayAndStartId(final int year, final int month, final int day, final int startId) {
+        BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day);
         booleanBuilder.and(image.id.lt(startId));
         return jpaQueryFactory.selectFrom(image)
                 .leftJoin(image.diary, diary)
@@ -60,9 +59,8 @@ public class ImageQuerydslRepository {
 
     }
 
-    private static BooleanBuilder getBuilderWithTime(int year, int month, int day, int userId) {
+    private static BooleanBuilder getBuilderWithTime(int year, int month, int day) {
         BooleanBuilder booleanBuilder = new BooleanBuilder();
-        booleanBuilder.and(image.user.id.eq(userId));
         booleanBuilder.and(diary.time.year.eq(year));
         booleanBuilder.and(diary.time.month.eq(month));
         booleanBuilder.and(diary.time.day.eq(day));

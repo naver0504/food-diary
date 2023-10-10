@@ -45,22 +45,6 @@ public class Diary {
     @Builder.Default
     private List<Tag> tags = new ArrayList<>();
 
-
-    public void addTags(List<Tag> tags) {
-        for (Tag tag : tags) {
-            this.tags.add(tag);
-            tag.setDiary(this);
-        }
-    }
-
-
-    public void setTag(final List<Tag> tags) {
-        for (Tag tag : tags) {
-            this.tags.add(tag);
-            tag.setDiary(this);
-        }
-    }
-
     public static Diary createDiaryImage(final LocalDateTime dateTime, final User user) {
         final Diary diaryImage = Diary.builder()
                 .time(new Time(dateTime))

@@ -73,7 +73,7 @@ public class ImageService {
         for (int i = 0; i<files.size(); i++) {
             final MultipartFile file = files.get(i);
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO, user);
+            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO);
 
             final ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(file.getSize());
@@ -107,7 +107,7 @@ public class ImageService {
         for (int i = 0; i<files.size(); i++) {
             final MultipartFile file = files.get(i);
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO, user);
+            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO);
 
             final ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(file.getSize());
@@ -313,43 +313,32 @@ public class ImageService {
                 .build();
     }
 
-
+*/
     @Transactional
     public StatusResponseDTO updateImage(final int imageId, final MultipartFile file, final User user) {
-        final Image image = imageRepository.findByImageIdAndUserId(imageId, user.getId())
+        final Image image = imageRepository.findByImageIdAndUserId(imageId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
         final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
         final String dirPath = ImageUtils.getDirPath(basePath, user);
-        fileStorageService.deleteImage(dirPath + image.getStoredFileName());
-        image.updateStoredImage(storeFilename);
 
-        final ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(file.getSize());
-        metadata.setContentType(file.getContentType());
-
-        PutObjectRequest putObjectRequest = null;
         try {
-            putObjectRequest = new PutObjectRequest(bucket, dirPath + storeFilename, file.getInputStream(), metadata);
+            fileStorageService.deleteImage(dirPath + image.getStoredFileName());
+            fileStorageService.deleteImage(dirPath + image.getThumbnailFileName());
+
+            image.setStoredFileName(storeFilename);
+            inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
+            ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(file, user, amazonS3, bucket, basePath);
+            final ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
+            final String storeThumbnailFilename = "t_" + UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            inputIntoFileStorage(dirPath, storeThumbnailFilename, thumbnailInputStream);
+            image.setThumbnailFileName(storeThumbnailFilename);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        amazonS3.putObject(putObjectRequest);
 
-        /* todo
-        if (image.getParentImage() == null) {
-            DayImage dayImage = dayImageRepository.findByImageIdAndUserId(imageId, user.getId())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
-            fileStorageService.deleteImage(dirPath + dayImage.getThumbNailImagePath());
-            String thumbnailFileName = ImageUtils.createThumbnailImage(file, user, amazonS3, bucket, basePath);
-            dayImage.updateThumbNailImageName(thumbnailFileName);
-
-        }*/
-/*
         return StatusResponseDTO.builder()
                 .status(StatusResponseDTO.Status.SUCCESS)
                 .build();
-
-
     }
-    */
+
 }
