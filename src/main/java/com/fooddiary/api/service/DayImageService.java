@@ -55,6 +55,7 @@ public class DayImageService {
     private String bucket;
 
 
+    /*
     @Transactional
     public StatusResponseDTO saveImage(final List<MultipartFile> files, final SaveImageRequestDTO saveImageRequestDTO, final User user) {
 
@@ -62,8 +63,8 @@ public class DayImageService {
         final int year = dateTime.getYear();
         final int month = dateTime.getMonthValue();
         final int day = dateTime.getDayOfMonth();
-        final Double longitude = saveImageRequestDTO.getLongitude();
-        final Double latitude = saveImageRequestDTO.getLatitude();
+        final Double longitude = null;// saveImageRequestDTO.getLongitude();
+        final Double latitude =  null;//saveImageRequestDTO.getLatitude();
 
 
         final int todayDiaryCount = diaryRepository.getByYearAndMonthAndDayCount(year, month, day, user.getId());
@@ -81,7 +82,7 @@ public class DayImageService {
          * 없다면 해당 날짜 이미지 엔티티 생성 후 사진 썸네일 설정
          */
 
-            final DayImage newDayImage = DayImage.createDayImage(images, dateTime, user);
+         //   final DayImage newDayImage = DayImage.createDayImage(images, dateTime, user);
          //   dayImageRepository.save(newDayImage);
           //  newDayImage.updateThumbNailImageName(imageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath));
 
@@ -95,14 +96,15 @@ public class DayImageService {
             dayImage.updateThumbNailImageName(imageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath));
 
         }
-        */
+
 
 
         return StatusResponseDTO.builder()
                 .status(Status.SUCCESS)
                 .build();
 
-    }
+    }*/
+
 
     public List<ThumbNailImagesDTO> getThumbNailImages(final int year, final int month, final User user)  {
         final List<DayImage> dayImages = null; //dayImageRepository.findByYearAndMonth(year, month, user.getId()); todo

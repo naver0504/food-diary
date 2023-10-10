@@ -1,6 +1,7 @@
 package com.fooddiary.api.controller;
 
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
+import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
 import com.fooddiary.api.dto.response.StatusResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DiaryService;
@@ -26,19 +27,20 @@ public class DiaryController {
 
     /**
      * 한 장의 사진을 받아서 일기를 등록합니다. 우선 사진만 등록됩니다.
-     * @param saveImageRequestDTO
+     * @param newDiaryRequestDTO
      * @param user
-     * @param request
      * @return
      * @throws GeneralSecurityException
      * @throws IOException
      * @throws InterruptedException
      */
-    @PostMapping(value = "/new")
-    public ResponseEntity<Integer> createDiary(@RequestBody final SaveImageRequestDTO saveImageRequestDTO,
-                                                         final @AuthenticationPrincipal User user,
-                                                       HttpServletRequest request) {
-        return ResponseEntity.ok(diaryService.createDiary(Arrays.asList(saveImageRequestDTO.getImage()), saveImageRequestDTO, user));
+    @PostMapping(value = "/new", consumes = {
+            MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Void> createDiary(final @RequestPart("files") List<MultipartFile> images,
+                                               final @RequestPart("imageDetail") NewDiaryRequestDTO newDiaryRequestDTO,
+                                                         final @AuthenticationPrincipal User user) {
+        diaryService.createDiary(images, newDiaryRequestDTO, user);
+        return ResponseEntity.ok().build();
     }
 
 

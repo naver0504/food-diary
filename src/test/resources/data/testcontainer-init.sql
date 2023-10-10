@@ -23,25 +23,29 @@ CREATE TABLE session (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 create table diary (
-    id integer not null auto_increment,
-    day integer not null,
-    month integer not null,
-    year integer not null,
-    `memo` varchar(255) DEFAULT NULL,
-    create_time datetime,
-    diary_time enum('breakfast', 'brunch', 'lunch', 'snack', 'linner','dinner', 'latesnack', 'etc'),
-    create_at datetime,
-    update_at datetime,
-    user_id integer,
+    id int NOT NULL AUTO_INCREMENT,
+    day int NOT NULL,
+    month int NOT NULL,
+    year int NOT NULL,
+    memo varchar(255) DEFAULT NULL,
+    create_time datetime DEFAULT NULL,
+    diary_time enum('breakfast','brunch','lunch','snack','linner','dinner','latesnack','etc') DEFAULT NULL,
+    create_at datetime DEFAULT NULL,
+    update_at datetime DEFAULT NULL,
+    user_id int DEFAULT NULL,
     primary key (id)
 ) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 create table image (
-    id integer not null auto_increment,
-    stored_file_name varchar(255) not null,
-    time_status varchar(255),
-    day_image_id integer,
-    geography GEOMETRY,
+    id int NOT NULL AUTO_INCREMENT,
+    stored_file_name varchar(255) NOT NULL,
+    time_status varchar(255) DEFAULT NULL,
+    diary_id int DEFAULT NULL,
+    geography geometry DEFAULT NULL,
+    create_at datetime DEFAULT NULL,
+    diary_time varchar(255) DEFAULT NULL,
+    thumbnail_file_name varchar(255) NOT NULL,
+    user_id int DEFAULT NULL,
     primary key (id)
 ) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

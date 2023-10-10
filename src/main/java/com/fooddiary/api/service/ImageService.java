@@ -10,6 +10,7 @@ import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.request.UpdateImageDetailDTO;
 import com.fooddiary.api.dto.response.*;
+import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.image.DiaryTime;
 import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.image.Time;
@@ -19,6 +20,8 @@ import com.fooddiary.api.repository.DayImageQuerydslRepository;
 import com.fooddiary.api.repository.DayImageRepository;
 import com.fooddiary.api.repository.ImageQuerydslRepository;
 import com.fooddiary.api.repository.ImageRepository;
+import com.fooddiary.api.repository.diary.DiaryRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +46,7 @@ public class ImageService {
 
     private final ImageRepository imageRepository;
     private final DayImageRepository dayImageRepository;
+    private final DiaryRepository diaryRepository;
     private final AmazonS3 amazonS3;
     private final FileStorageService fileStorageService;
     private final TagService tagService;
@@ -55,31 +59,33 @@ public class ImageService {
     @Value("${cloud.aws.s3.dir}")
     private String basePath;
 
-    public List<Image> storeImage(final List<MultipartFile> files, final User user, final SaveImageRequestDTO saveImageRequestDTO)  {
+    public List<Image> storeImage(final int diaryId, final List<MultipartFile> files, final User user, final SaveImageRequestDTO saveImageRequestDTO)  {
 
         final List<Image> images = new ArrayList<>();
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+
+        if (!amazonS3.doesObjectExist(bucket, dirPath)) {
+            amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
+        }
+
+        Diary diary = diaryRepository.findById(diaryId).get();
 
         for (int i = 0; i<files.size(); i++) {
             final MultipartFile file = files.get(i);
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            final Image image = Image.createImage(storeFilename, saveImageRequestDTO, user);
+            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO, user);
 
             final ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(file.getSize());
             metadata.setContentType(file.getContentType());
 
-            final String dirPath = ImageUtils.getDirPath(basePath, user);
             try {
-                if (amazonS3.getObject(bucket, dirPath).getObjectContent().available() == 0) {
-                    amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
-                }
-
                 inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
-
                 ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath);
                 final ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
                 final String storeThumbnailFilename = "t_" + UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
                 inputIntoFileStorage(dirPath, storeThumbnailFilename, thumbnailInputStream);
+                image.setThumbnailFileName(storeThumbnailFilename);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -88,6 +94,37 @@ public class ImageService {
             images.add(saveImage);
         }
         return images;
+    }
+
+    public void storeImage(final Diary diary, final List<MultipartFile> files, final User user, final SaveImageRequestDTO saveImageRequestDTO)  {
+
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+
+        if (!amazonS3.doesObjectExist(bucket, dirPath)) {
+            amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
+        }
+
+        for (int i = 0; i<files.size(); i++) {
+            final MultipartFile file = files.get(i);
+            final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
+            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO, user);
+
+            final ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(file.getSize());
+            metadata.setContentType(file.getContentType());
+
+            try {
+                inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
+                ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath);
+                final ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
+                final String storeThumbnailFilename = "t_" + UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                inputIntoFileStorage(dirPath, storeThumbnailFilename, thumbnailInputStream);
+                image.setThumbnailFileName(storeThumbnailFilename);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            imageRepository.save(image);
+        }
     }
 
     public void inputIntoFileStorage(final String dirPath, final String storeFilename, final InputStream inputStream) {

@@ -55,7 +55,7 @@ public class ImageController {
                                                        final @RequestPart("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
                                                        HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
         final User user = getUser(request);
-        imageService.storeImage(Arrays.asList(multipartFiles), user, saveImageRequestDTO);
+        imageService.storeImage(saveImageRequestDTO.getDiaryId(), Arrays.asList(multipartFiles), user, saveImageRequestDTO);
         return ResponseEntity.ok().build();
     }
 

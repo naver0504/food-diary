@@ -61,6 +61,9 @@ public class Image {
     public void setDayImage(final DayImage dayImage) {
         this.diary = diary;
     }
+    public void setThumbnailFileName(final String thumbnailFileName) {
+        this.thumbnailFileName = thumbnailFileName;
+    }
 
     public void setGeography(final Double longitude, final Double latitude) {
         if(longitude == -200D && latitude == -200D) {
@@ -78,13 +81,14 @@ public class Image {
     }
 
 
-    public static Image createImage(final String fileName, final SaveImageRequestDTO saveImageRequestDTO, final User user) {
+    public static Image createImage(final Diary diary, final String fileName, final SaveImageRequestDTO saveImageRequestDTO, final User user) {
         final Image image = Image.builder()
                 .storedFileName(fileName)
+                .diary(diary)
                 .user(user)
                 .build();
-        image.setTimeStatus(saveImageRequestDTO.getDiaryTime());
-        image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
+      //  image.setTimeStatus(saveImageRequestDTO.getDiaryTime());
+       // image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
         return image;
     }
 

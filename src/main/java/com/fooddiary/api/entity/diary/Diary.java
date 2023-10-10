@@ -17,6 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class Diary {
 
@@ -60,13 +61,13 @@ public class Diary {
         }
     }
 
-    public static Diary createDiaryImage(final List<Image> images, final LocalDateTime dateTime, final User user) {
+    public static Diary createDiaryImage(final LocalDateTime dateTime, final User user) {
         final Diary diaryImage = Diary.builder()
                 .time(new Time(dateTime))
                 .createAt(LocalDateTime.now())
                 .user(user)
                 .build();
-        diaryImage.setImages(images);
+
         return diaryImage;
     }
 }

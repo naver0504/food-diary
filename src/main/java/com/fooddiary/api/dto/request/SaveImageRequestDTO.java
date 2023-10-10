@@ -10,10 +10,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@Setter
 public class SaveImageRequestDTO {
-    private MultipartFile image;
+    private Integer diaryId;
     private LocalDateTime createTime;
     private DiaryTime diaryTime;
-    private Double longitude = -200D;
-    private Double latitude = -200D;
+
+   // private Double longitude = -200D;
+   // private Double latitude = -200D;
 }
