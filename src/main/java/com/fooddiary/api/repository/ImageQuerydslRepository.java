@@ -41,7 +41,7 @@ public class ImageQuerydslRepository {
         return jpaQueryFactory.selectFrom(
                         image)
                 .leftJoin(image.diary, diary)
-                // .leftJoin(image.tags, tag)
+                // .leftJoin(image.diaryTags, tag)
                 .fetchJoin()
                 .where(booleanBuilder)
                 .fetch();

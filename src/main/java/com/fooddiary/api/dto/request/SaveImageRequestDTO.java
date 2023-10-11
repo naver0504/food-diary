@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
 public class SaveImageRequestDTO {
     private Integer diaryId;
     private LocalDateTime createTime;
-    private DiaryTime diaryTime;
-
    // private Double longitude = -200D;
    // private Double latitude = -200D;
 }

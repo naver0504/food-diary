@@ -1,38 +1,23 @@
 package com.fooddiary.api.entity.tag;
 
-
-import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.image.Image;
-import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 @Getter
+@Setter
 public class Tag {
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @Column(nullable = false, name = "tag_name")
+    @Column(nullable = false, name = "tag_name", unique = true)
     private String tagName;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "diary_id")
-    private Diary diary;
-
-
-    public void setDiary(Diary diary) {
-        this.diary = diary;
-    }
-
-    public static List<String> toStringList(List<Tag> tags) {
-        return tags.stream().map(Tag::getTagName).collect(Collectors.toList());
-    }
+    @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<DiaryTag> diaryTags = new ArrayList<>();
 }

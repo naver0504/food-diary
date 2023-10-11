@@ -174,13 +174,13 @@ public class ImageControllerTest {
         imageDTOS.add(ShowImageOfDayDTO.ImageDTO.builder()
                         .id(1)
                         .bytes(bytes)
-                        .tags(List.of("샐러드", "맛있다"))
+                        .diaryTags(List.of("샐러드", "맛있다"))
                         .time("아침")
                         .build());
         imageDTOS.add(ShowImageOfDayDTO.ImageDTO.builder()
                 .id(4)
                 .bytes(bytes)
-                .tags(List.of("샌드위치"))
+                .diaryTags(List.of("샌드위치"))
                 .time("점심")
                 .build());
         imageDTOS.add(ShowImageOfDayDTO.ImageDTO.builder()
@@ -379,14 +379,14 @@ public class ImageControllerTest {
         imageResponseDTOS.add(TimeLineResponseDTO.ImageResponseDTO.createImageResponseDTO(15, bytes));
         imageResponseDTOS.add(TimeLineResponseDTO.ImageResponseDTO.createImageResponseDTO(16, bytes));
 
-        final List<String> tags = List.of("샐러드", "맛있다");
+        final List<String> diaryTags = List.of("샐러드", "맛있다");
         final String timeStatus = "아침";
         final String memo = "오늘 아침에는 샌드위치를 먹었다.......";
         final TimeDetailDTO timeDetailDTO = TimeDetailDTO.of(new Time(LocalDateTime.of(2023, 10, 10, 0, 0, 0)));
 
         final ImageDetailResponseDTO imageDetailDTO = ImageDetailResponseDTO.builder()
                 .images(imageResponseDTOS)
-                .tags(tags)
+                .diaryTags(diaryTags)
                 .memo(memo)
                 .timeDetail(timeDetailDTO)
                 .timeStatus(timeStatus)
@@ -482,11 +482,11 @@ public class ImageControllerTest {
 
         final String memo = "오늘 아침에는 샌드위치를 먹었다......." +
                 "정말 맛있었다........";
-        final List<String> tags = List.of("샌드위치", "맛있다", "배부르다");
+        final List<String> diaryTags = List.of("샌드위치", "맛있다", "배부르다");
         final String timeStatus = "아침";
         final UpdateImageDetailDTO updateImageDetailDTO = UpdateImageDetailDTO.builder()
                 .memo(memo)
-                .tags(tags)
+                .diaryTags(diaryTags)
                 .timeStatus(timeStatus)
                 .build();
 

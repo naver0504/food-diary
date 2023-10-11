@@ -5,10 +5,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
+import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
+import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
+import com.fooddiary.api.entity.image.DiaryTime;
+import com.fooddiary.api.entity.tag.DiaryTag;
+import com.fooddiary.api.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
@@ -32,6 +38,7 @@ public class DiaryService {
 
     private final DiaryRepository diaryRepository;
     private final DiaryQuerydslRepository diaryQuerydslRepository;
+    private final TagRepository tagRepository;
     private final FileStorageService fileStorageService;
     private final ImageService imageService;
     @Value("${cloud.aws.s3.dir}")
@@ -53,19 +60,58 @@ public class DiaryService {
             throw new BizException("register only 10 per day");
         }
 
-        final Diary newDiary = Diary.createDiaryImage(dateTime, user);
+        final Diary newDiary = Diary.createDiaryImage(dateTime, user, DiaryTime.ETC);
         diaryRepository.save(newDiary);
-        imageService.storeImage(newDiary, files, user, SaveImageRequestDTO.builder().diaryTime(
-                newDiaryRequestDTO.getDiaryTime()).createTime(newDiaryRequestDTO.getCreateTime()).build());
+        imageService.storeImage(newDiary, files, user, SaveImageRequestDTO.builder().createTime(newDiaryRequestDTO.getCreateTime()).build());
     }
 
     public void addImages(final int diaryId, final List<MultipartFile> files, final NewDiaryRequestDTO newDiaryRequestDTO, final User user) {
         if (diaryRepository.getDiaryImagesCount(diaryId) + files.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
-        Diary diary = diaryRepository.findById(diaryId).get();
-        imageService.storeImage(diary, files, user, SaveImageRequestDTO.builder().diaryTime(
-                newDiaryRequestDTO.getDiaryTime()).createTime(newDiaryRequestDTO.getCreateTime()).build());
+        Diary diary = diaryRepository.findById(diaryId).orElse(null);
+        if (diary == null) {
+            throw new BizException("invalid diary id");
+        }
+        imageService.storeImage(diary, files, user, SaveImageRequestDTO.builder().createTime(newDiaryRequestDTO.getCreateTime()).build());
+    }
+
+    public DiaryDetailResponseDTO getDiaryDetail(final int id, final User user) {
+        Diary diary = diaryRepository.findDiaryAndImagesById(id).orElse(null);
+        if (diary == null) {
+            throw new BizException("invalid diary id");
+        }
+        DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
+        diaryDetailResponseDTO.setImages(imageService.getImages(diary, user));
+        diaryDetailResponseDTO.setTags(diary.getDiaryTags().stream().map(tag -> tag.getTag().getTagName()).collect(Collectors.toList()));
+        diaryDetailResponseDTO.setDate(diary.getTime().getCreateTime().toLocalDate());
+        diaryDetailResponseDTO.setMemo(diary.getMemo());
+        diaryDetailResponseDTO.setDiaryTime(diary.getDiaryTime().name());
+
+        return diaryDetailResponseDTO;
+    }
+
+    public void updateMemo(final Integer diaryId, final DiaryMemoRequestDTO diaryMemoRequestDTO, final User user) {
+        Diary diary = diaryRepository.findById(diaryId).orElse(null);
+        if (diary == null) {
+            throw new BizException("invalid diary id");
+        }
+
+        List<DiaryTag> diaryTagList = new ArrayList<>();
+        for (String tagName : diaryMemoRequestDTO.getTags()) {
+            DiaryTag diaryTag = tagRepository.findTagByTagName(tagName);
+            if (diaryTag == null) {
+                diaryTag = DiaryTag.builder().tag(tagName).diary(diary).build();
+                tagRepository.save(diaryTag);
+            }
+            diaryTagList.add(diaryTag);
+        }
+
+        diary.setMemo(diaryMemoRequestDTO.getMemo());
+        diary.setDiaryTags(diaryTagList);
+        diary.setDiaryTime(diaryMemoRequestDTO.getDiaryTime());
+        diary.setUpdateAt(LocalDateTime.now());
+        diaryRepository.save(diary);
     }
 
     public List<ThumbNailImagesDTO> getMonthlyImages(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) throws IOException {

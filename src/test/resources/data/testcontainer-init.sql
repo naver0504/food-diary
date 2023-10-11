@@ -22,44 +22,48 @@ CREATE TABLE session (
   PRIMARY KEY (token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-create table diary (
-    id int NOT NULL AUTO_INCREMENT,
-    day int NOT NULL,
-    month int NOT NULL,
-    year int NOT NULL,
-    memo varchar(255) DEFAULT NULL,
-    create_time datetime DEFAULT NULL,
-    diary_time enum('breakfast','brunch','lunch','snack','linner','dinner','latesnack','etc') DEFAULT NULL,
-    create_at datetime DEFAULT NULL,
-    update_at datetime DEFAULT NULL,
-    user_id int DEFAULT NULL,
-    primary key (id)
-) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `diary` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `create_at` datetime(6) NOT NULL,
+  `diary_time` varchar(255) DEFAULT NULL,
+  `memo` varchar(255) DEFAULT NULL,
+  `create_time` datetime(6) DEFAULT NULL,
+  `day` int NOT NULL,
+  `month` int NOT NULL,
+  `year` int NOT NULL,
+  `update_at` datetime(6) DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKf0xms46ulxc36096k9gg6j9ip` (`user_id`),
+  CONSTRAINT `FKf0xms46ulxc36096k9gg6j9ip` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-create table image (
-    id int NOT NULL AUTO_INCREMENT,
-    stored_file_name varchar(255) NOT NULL,
-    time_status varchar(255) DEFAULT NULL,
-    diary_id int DEFAULT NULL,
-    geography geometry DEFAULT NULL,
-    create_at datetime DEFAULT NULL,
-    diary_time varchar(255) DEFAULT NULL,
-    thumbnail_file_name varchar(255) NOT NULL,
-    user_id int DEFAULT NULL,
-    primary key (id)
-) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `image` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `create_at` datetime(6) NOT NULL,
+  `geography` geometry DEFAULT NULL,
+  `stored_file_name` varchar(255) NOT NULL,
+  `thumbnail_file_name` varchar(255) NOT NULL,
+  `diary_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKbdrqdeheur7qvwntqi42uhr2k` (`diary_id`),
+  CONSTRAINT `FKbdrqdeheur7qvwntqi42uhr2k` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-create table day_image (
-    day_image_id integer not null auto_increment,
-    day integer not null,
-    month integer not null,
-    year integer not null,
-    create_time datetime,
-    geography GEOMETRY,
-    thumb_nail_image_path varchar(255),
-    user_id integer,
-    primary key (day_image_id)
-) engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `day_image` (
+  `day_image_id` int NOT NULL AUTO_INCREMENT,
+  `day` int NOT NULL,
+  `month` int NOT NULL,
+  `year` int NOT NULL,
+  `thumb_nail_image_id` int DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  `thumb_nail_image_path` varchar(255) DEFAULT NULL,
+  `geography` geometry DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`day_image_id`),
+  KEY `FKtnk67ooq5j8cspg69r5ypyp` (`user_id`),
+  CONSTRAINT `FKtnk67ooq5j8cspg69r5ypyp` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
  CREATE TABLE notice (
@@ -74,4 +78,14 @@ create table day_image (
    update_user_id int,
    PRIMARY KEY (id)
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tag` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `tag_name` varchar(255) NOT NULL,
+  `diary_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UK_1r1tyf6uga9k6jwdqnoqwtk2a` (`tag_name`),
+  KEY `FKjq0ven5q3nx5cknhd0ax3kwxm` (`diary_id`),
+  CONSTRAINT `FKjq0ven5q3nx5cknhd0ax3kwxm` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

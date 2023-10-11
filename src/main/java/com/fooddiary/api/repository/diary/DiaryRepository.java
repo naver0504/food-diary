@@ -14,8 +14,8 @@ import java.util.Optional;
 @Repository
 public interface DiaryRepository extends JpaRepository<Diary, Integer> {
 
-    @Query("select d from Diary d join d.images i where i.id = :imageId and d.user.id = :userId")
-    Optional<Diary> findByImageIdAndUserId(@Param("imageId") int imageId, @Param("userId") int userId);
+    @Query("select d from Diary d join d.images i where i.id = :id")
+    Optional<Diary> findDiaryAndImagesById(@Param("id") int diaryId);
 
 
     @Query("select d from Diary d inner join d.images where d.time.year = :year and d.time.month = :month and d.user.id = :userId order by d.time.day asc")

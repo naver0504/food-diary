@@ -8,13 +8,10 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
-import com.fooddiary.api.dto.request.UpdateImageDetailDTO;
 import com.fooddiary.api.dto.response.*;
+import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.image.DiaryTime;
 import com.fooddiary.api.entity.image.Image;
-import com.fooddiary.api.entity.image.Time;
-import com.fooddiary.api.entity.tag.Tag;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.DayImageQuerydslRepository;
 import com.fooddiary.api.repository.DayImageRepository;
@@ -33,10 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -139,6 +133,25 @@ public class ImageService {
             log.error("SdkClientException ", e);
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    public List<ImageResponseDTO> getImages(final Diary diary, final User user) {
+        List<ImageResponseDTO> imageResponseDTOList = new LinkedList<>();
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+        for (Image image : diary.getImages()) {
+            byte[] bytes;
+            try {
+                bytes = fileStorageService.getObject(dirPath + image.getStoredFileName());
+            } catch (IOException e) {
+                log.error("IOException ", e);
+                throw new RuntimeException(e);
+            }
+            ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
+            imageResponseDTO.setImageId(image.getId());
+            imageResponseDTO.setBytes(bytes);
+            imageResponseDTOList.add(imageResponseDTO);
+        }
+        return imageResponseDTOList;
     }
 
     /*
@@ -293,9 +306,9 @@ public class ImageService {
     public StatusResponseDTO updateImageDetail(final int parentImageId, final User user, final UpdateImageDetailDTO updateImageDetailDTO) {
         final Image image = imageRepository.findByIdWithTag(parentImageId, user.getId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
-        final List<String> tags = updateImageDetailDTO.getTags();
+        final List<String> diaryTags = updateImageDetailDTO.getDiaryTags();
         final List<Integer> deleteTagIds = new ArrayList<>();
-        final List<Tag> addTags = new ArrayList<>();
+        final List<DiaryTag> addTags = new ArrayList<>();
 
         if(addTags.size() != 0) {
             tagService.saveAll(addTags);

@@ -1,8 +1,10 @@
 package com.fooddiary.api.controller;
 
 import com.fooddiary.api.common.exception.BizException;
+import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
+import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DiaryService;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +61,20 @@ public class DiaryController {
             throw new BizException("we allow max 5 images");
         }
         diaryService.addImages(diaryId, images, newDiaryRequestDTO, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{diaryId}")
+    public ResponseEntity<DiaryDetailResponseDTO> getDiaryDetail(@PathVariable("diaryId") final int diaryId, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.getDiaryDetail(diaryId, user));
+    }
+
+    /**
+     * 일기에 메모, 태그를 수정합니다.
+     */
+    @PutMapping("/{diaryId}/memo")
+    public ResponseEntity<Void> updateMemo(@PathVariable("diaryId") Integer diaryId, @RequestBody DiaryMemoRequestDTO diaryMemoRequestDTO, final @AuthenticationPrincipal User user) {
+        diaryService.updateMemo(diaryId, diaryMemoRequestDTO, user);
         return ResponseEntity.ok().build();
     }
 

@@ -30,9 +30,6 @@ public class Image {
     @Column(nullable = false)
     private String thumbnailFileName;
 
-    @Enumerated(EnumType.STRING)
-    private DiaryTime diaryTime;
-
     @Column(nullable = true, columnDefinition = "GEOMETRY")
     private Point geography;
 
@@ -49,9 +46,6 @@ public class Image {
         createAt = createAt == null ? LocalDateTime.now() : createAt;
     }
 
-    public void setTimeStatus(DiaryTime diaryTime) {
-        this.diaryTime = diaryTime;
-    }
 
     public void setThumbnailFileName(final String thumbnailFileName) {
         this.thumbnailFileName = thumbnailFileName;
@@ -78,7 +72,6 @@ public class Image {
                 .storedFileName(fileName)
                 .diary(diary)
                 .build();
-        image.setTimeStatus(saveImageRequestDTO.getDiaryTime());
        // image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
         return image;
     }
