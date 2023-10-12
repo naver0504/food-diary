@@ -25,7 +25,7 @@ public class TagService {
     @Transactional
     public void saveAll(List<DiaryTag> diaryTags) {
 
-        tagRepository.saveAll(diaryTags);
+     //   tagRepository.saveAll(diaryTags);
 
         // tag가 두 개씩 저장된다...
 //        String sql = "INSERT INTO TAG (TAG_NAME, IMAGE_ID, USER_ID) VALUES (?, ?, ?)";

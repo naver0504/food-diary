@@ -15,6 +15,6 @@ public interface TagRepository extends JpaRepository<Tag, Integer>{
     @Query("delete from Tag t where t.id in :ids")
     void deleteAll(@Param("ids") List<Integer> ids);
 
-    @Query("select t from Tag t where t.tagName =: tagName")
-    DiaryTag findTagByTagName(@Param("tagName") String tagName);
+    @Query("select t from Tag t where t.tagName = :tagName")
+    Tag findTagByTagName(@Param("tagName") String tagName);
 }

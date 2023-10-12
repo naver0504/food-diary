@@ -14,6 +14,8 @@ import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.entity.image.DiaryTime;
 import com.fooddiary.api.entity.tag.DiaryTag;
+import com.fooddiary.api.entity.tag.Tag;
+import com.fooddiary.api.repository.DiaryTagRepository;
 import com.fooddiary.api.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,6 +40,7 @@ public class DiaryService {
 
     private final DiaryRepository diaryRepository;
     private final DiaryQuerydslRepository diaryQuerydslRepository;
+    private final DiaryTagRepository diaryTagRepository;
     private final TagRepository tagRepository;
     private final FileStorageService fileStorageService;
     private final ImageService imageService;
@@ -97,15 +100,23 @@ public class DiaryService {
             throw new BizException("invalid diary id");
         }
 
+
+        diaryTagRepository.deleteAll(diary.getDiaryTags());
+
         List<DiaryTag> diaryTagList = new ArrayList<>();
         for (String tagName : diaryMemoRequestDTO.getTags()) {
-            DiaryTag diaryTag = tagRepository.findTagByTagName(tagName);
-            if (diaryTag == null) {
-                diaryTag = DiaryTag.builder().tag(tagName).diary(diary).build();
-                tagRepository.save(diaryTag);
+            Tag tag = tagRepository.findTagByTagName(tagName);
+            if (tag == null) {
+                tag = new Tag();
+                tag.setTagName(tagName);
+                tagRepository.save(tag);
             }
+            DiaryTag diaryTag = new DiaryTag();
+            diaryTag.setTag(tag);
+            diaryTag.setDiary(diary);
             diaryTagList.add(diaryTag);
         }
+        diaryTagRepository.saveAll(diaryTagList);
 
         diary.setMemo(diaryMemoRequestDTO.getMemo());
         diary.setDiaryTags(diaryTagList);
