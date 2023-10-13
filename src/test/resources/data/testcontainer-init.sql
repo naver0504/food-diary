@@ -89,3 +89,12 @@ CREATE TABLE `tag` (
   CONSTRAINT `FKjq0ven5q3nx5cknhd0ax3kwxm` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE `diary_tag` (
+  `diary_id` int NOT NULL,
+  `tag_id` int NOT NULL,
+  PRIMARY KEY (`diary_id`,`tag_id`),
+  KEY `FKoubxtedj8osbw8j4gksb3jy65` (`tag_id`),
+  CONSTRAINT `FKfj71a53y08nd1aslcew09cf5w` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`),
+  CONSTRAINT `FKoubxtedj8osbw8j4gksb3jy65` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+

@@ -2,9 +2,7 @@ package com.fooddiary.api.service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.fooddiary.api.FileStorageService;
@@ -14,6 +12,7 @@ import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.entity.image.DiaryTime;
 import com.fooddiary.api.entity.tag.DiaryTag;
+import com.fooddiary.api.entity.tag.DiaryTagId;
 import com.fooddiary.api.entity.tag.Tag;
 import com.fooddiary.api.repository.DiaryTagRepository;
 import com.fooddiary.api.repository.TagRepository;
@@ -100,23 +99,34 @@ public class DiaryService {
             throw new BizException("invalid diary id");
         }
 
-
-        diaryTagRepository.deleteAll(diary.getDiaryTags());
+        Map<String, DiaryTag> diaryTagMap = new HashMap<>();
+        diary.getDiaryTags().forEach(obj -> diaryTagMap.put(obj.getTag().getTagName(), obj));
 
         List<DiaryTag> diaryTagList = new ArrayList<>();
-        for (String tagName : diaryMemoRequestDTO.getTags()) {
-            Tag tag = tagRepository.findTagByTagName(tagName);
-            if (tag == null) {
-                tag = new Tag();
-                tag.setTagName(tagName);
-                tagRepository.save(tag);
+        diaryMemoRequestDTO.getTags().forEach(tagName -> {
+            if (diaryTagMap.get(tagName) == null) {
+                Tag tag = tagRepository.findTagByTagName(tagName);
+                if (tag == null) {
+                    tag = new Tag();
+                    tag.setTagName(tagName);
+                    tagRepository.save(tag);
+                }
+                DiaryTag diaryTag = new DiaryTag();
+                diaryTag.setDiary(diary);
+                diaryTag.setTag(tag);
+                diaryTag.setId(new DiaryTagId(diary.getId(), tag.getId()));
+                diaryTagList.add(diaryTag);
+            } else if (diaryTagMap.get(tagName) != null) {
+                diaryTagMap.remove(tagName);
             }
-            DiaryTag diaryTag = new DiaryTag();
-            diaryTag.setTag(tag);
-            diaryTag.setDiary(diary);
-            diaryTagList.add(diaryTag);
-        }
+        });
         diaryTagRepository.saveAll(diaryTagList);
+
+        for (DiaryTag diaryTag : diaryTagMap.values()) {
+            diaryTag.getDiary().getDiaryTags().remove(diaryTag);
+            diaryTag.getTag().getDiaryTags().remove(diaryTag);
+        }
+        diaryTagRepository.deleteAll(diaryTagMap.values());
 
         diary.setMemo(diaryMemoRequestDTO.getMemo());
         diary.setDiaryTags(diaryTagList);

@@ -45,19 +45,17 @@ public class Diary {
 
     private String memo;
 
-    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL)
     @Builder.Default
     private List<DiaryTag> diaryTags = new ArrayList<>();
 
     public static Diary createDiaryImage(final LocalDateTime dateTime, final User user, final DiaryTime diaryTime) {
-        final Diary diaryImage = Diary.builder()
+        return Diary.builder()
                 .time(new Time(dateTime))
                 .createAt(LocalDateTime.now())
                 .diaryTime(diaryTime)
                 .user(user)
                 .build();
-
-        return diaryImage;
     }
 }
 

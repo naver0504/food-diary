@@ -12,10 +12,12 @@ public class DiaryTag {
 
     @EmbeddedId
     private DiaryTagId id;
-    @MapsId("diaryId")
+    @ManyToOne
+    @MapsId("diary_id")
     @JoinColumn(name = "diary_id")
     private Diary diary;
-    @MapsId("tagId")
+    @ManyToOne
+    @MapsId("tag_id")
     @JoinColumn(name = "tag_id")
     private Tag tag;
 
