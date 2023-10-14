@@ -35,7 +35,7 @@ public class Diary {
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
 
-    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Image> images = new ArrayList<>();
 
@@ -45,7 +45,7 @@ public class Diary {
 
     private String memo;
 
-    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<DiaryTag> diaryTags = new ArrayList<>();
 

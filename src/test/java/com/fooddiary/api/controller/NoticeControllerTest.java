@@ -42,11 +42,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
-import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
-import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
-import com.fooddiary.api.dto.request.NoticeNewRequestDTO;
-import com.fooddiary.api.dto.response.NoticeResponseDTO;
-import com.fooddiary.api.service.NoticeService;
+import com.fooddiary.api.dto.request.notice.NoticeGetListRequestDTO;
+import com.fooddiary.api.dto.request.notice.NoticeModifyRequestDTO;
+import com.fooddiary.api.dto.request.notice.NoticeNewRequestDTO;
+import com.fooddiary.api.dto.response.notice.NoticeResponseDTO;
+import com.fooddiary.api.service.notice.NoticeService;
 
 @SpringBootTest
 @ActiveProfiles(Profiles.TEST)

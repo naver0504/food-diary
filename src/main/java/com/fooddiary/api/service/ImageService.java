@@ -19,6 +19,7 @@ import com.fooddiary.api.repository.ImageQuerydslRepository;
 import com.fooddiary.api.repository.ImageRepository;
 import com.fooddiary.api.repository.diary.DiaryRepository;
 
+import com.fooddiary.api.service.diary.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

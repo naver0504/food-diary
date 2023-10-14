@@ -5,7 +5,7 @@ import com.fooddiary.api.dto.response.*;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DayImageService;
 import com.fooddiary.api.service.ImageService;
-import com.fooddiary.api.service.UserService;
+import com.fooddiary.api.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 

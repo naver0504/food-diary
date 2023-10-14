@@ -16,7 +16,6 @@ public class Time {
     private int day;
     private LocalDateTime createTime;
 
-
     public Time(final LocalDateTime dateTime) {
         this.year = dateTime.getYear();
         this.month = dateTime.getMonth().getValue();

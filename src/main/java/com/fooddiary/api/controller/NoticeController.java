@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fooddiary.api.common.exception.BizException;
-import com.fooddiary.api.dto.request.NoticeGetListRequestDTO;
-import com.fooddiary.api.dto.request.NoticeModifyRequestDTO;
-import com.fooddiary.api.dto.request.NoticeNewRequestDTO;
-import com.fooddiary.api.dto.response.NoticeResponseDTO;
-import com.fooddiary.api.service.NoticeService;
+import com.fooddiary.api.dto.request.notice.NoticeGetListRequestDTO;
+import com.fooddiary.api.dto.request.notice.NoticeModifyRequestDTO;
+import com.fooddiary.api.dto.request.notice.NoticeNewRequestDTO;
+import com.fooddiary.api.dto.response.notice.NoticeResponseDTO;
+import com.fooddiary.api.service.notice.NoticeService;
 
 import lombok.RequiredArgsConstructor;
 

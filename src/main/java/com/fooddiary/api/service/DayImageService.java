@@ -3,19 +3,11 @@ package com.fooddiary.api.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
-import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.utils.ImageUtils;
-import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
-import com.fooddiary.api.dto.response.StatusResponseDTO;
-import com.fooddiary.api.dto.response.TimeLineResponseDTO;
-import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.image.DayImage;
-import com.fooddiary.api.entity.image.Image;
 import com.fooddiary.api.entity.image.Time;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.repository.DayImageQuerydslRepository;
-import com.fooddiary.api.repository.DayImageRepository;
 import com.fooddiary.api.repository.ImageQuerydslRepository;
 import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;
 import com.fooddiary.api.repository.diary.DiaryRepository;
@@ -23,15 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.fooddiary.api.dto.response.StatusResponseDTO.*;
 
 @RequiredArgsConstructor
 @Service
@@ -132,6 +119,7 @@ public class DayImageService {
 
     }
 
+    /*
     public List<TimeLineResponseDTO> getTimeLine(final int year, final int month, final int startDay, final User user) {
         final List<DayImage> dayImages = null; // dayImageQuerydslRepository.getTimeLineDayImage(year, month, startDay, user.getId()); todo
         final String dirPath = ImageUtils.getDirPath(basePath, user);
@@ -164,6 +152,6 @@ public class DayImageService {
         }
 
         return timeLineResponseDTOS;
-    }
+    }*/
 
 }

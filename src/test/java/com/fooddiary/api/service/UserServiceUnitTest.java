@@ -1,8 +1,9 @@
 package com.fooddiary.api.service;
 
-import com.fooddiary.api.dto.response.UserNewPasswordResponseDTO;
+import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.repository.UserRepository;
+import com.fooddiary.api.repository.user.UserRepository;
+import com.fooddiary.api.service.user.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-import static com.fooddiary.api.dto.response.UserNewPasswordResponseDTO.Status.*;
+import static com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO.Status.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
