@@ -1,19 +1,9 @@
 package com.fooddiary.api.repository;
 
-import com.fooddiary.api.entity.image.DayImage;
-import com.fooddiary.api.entity.image.Time;
-import com.fooddiary.api.entity.user.QUser;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.fooddiary.api.entity.image.QDayImage.*;
-import static com.fooddiary.api.entity.image.QImage.*;
 
 @Repository
 @Slf4j

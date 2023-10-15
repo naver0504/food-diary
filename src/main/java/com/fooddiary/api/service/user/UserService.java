@@ -12,7 +12,7 @@ import com.fooddiary.api.dto.response.user.KakaoUserInfo;
 import com.fooddiary.api.dto.response.user.KakaoUserInfo.KakaoAccount;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.user.UserResponseDTO;
-import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Session;
 import com.fooddiary.api.entity.user.CreatePath;
 import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.Status;

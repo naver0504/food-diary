@@ -27,7 +27,7 @@ import static com.fooddiary.api.common.constants.UserConstants.TOKEN_KEY;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping("/image")
+//@RequestMapping("/image")
 public class ImageController {
 
     private static final String MAIL_NAME = "email";
@@ -47,9 +47,9 @@ public class ImageController {
      * @throws IOException
      * @throws InterruptedException
      */
-    @PostMapping(value = "/saveImage", consumes = {
-            MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE
-    })
+    //@PostMapping(value = "/saveImage", consumes = {
+    //        MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE
+   // })
     public ResponseEntity<StatusResponseDTO> saveImage(final @RequestPart("file") MultipartFile multipartFiles,
                                                        final @RequestPart("imageDetails") SaveImageRequestDTO saveImageRequestDTO,
                                                        HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
@@ -64,7 +64,7 @@ public class ImageController {
      * /image?year=2023&month=6&day=30
      * 하루 사진 받기
      */
-    @GetMapping("/image")
+    //@GetMapping("/image")
     public ResponseEntity<ShowImageOfDayDTO> showImageOfDay(final @RequestParam int year, final @RequestParam int month,
                                                                   final @RequestParam int day, final @AuthenticationPrincipal User user) {
 
@@ -90,13 +90,13 @@ public class ImageController {
      * @param user
      * @return
      */
-    @PatchMapping("/{imageId}")
+    //@PatchMapping("/{imageId}")
     public ResponseEntity<StatusResponseDTO> updateImageFile(final @RequestPart MultipartFile file, final @PathVariable int imageId,
                                                              final @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(imageService.updateImage(imageId, file, user));
     }
 
-    @PostMapping("/{imageId}")
+    //@PostMapping("/{imageId}")
     public ResponseEntity<StatusResponseDTO> uploadDetailImages(final @RequestPart List<MultipartFile> files, final @PathVariable int imageId,
                                                                 final @AuthenticationPrincipal User user) {
 
@@ -104,7 +104,7 @@ public class ImageController {
         return ResponseEntity.ok(null);
     }
 
-    @PostMapping("/{parentImageId}/detail")
+    //@PostMapping("/{parentImageId}/detail")
     public ResponseEntity<StatusResponseDTO> updateImageDetail(final @PathVariable int parentImageId,
                                                                final @RequestBody UpdateImageDetailDTO updateImageDetailDTO,
                                                                final @AuthenticationPrincipal User user) {

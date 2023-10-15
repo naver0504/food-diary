@@ -1,4 +1,4 @@
-package com.fooddiary.api.entity.session;
+package com.fooddiary.api.entity.user;
 
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;

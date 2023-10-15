@@ -1,7 +1,7 @@
 package com.fooddiary.api.repository;
 
 import com.fooddiary.api.entity.image.DiaryTime;
-import com.fooddiary.api.entity.image.Image;
+import com.fooddiary.api.entity.diary.Image;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.fooddiary.api.entity.image.QImage.image;
+import static com.fooddiary.api.entity.diary.QImage.image;
 import static com.fooddiary.api.entity.diary.QDiary.diary;
 @Repository
 public class ImageQuerydslRepository {

@@ -1,8 +1,7 @@
-package com.fooddiary.api.entity.image;
+package com.fooddiary.api.entity.diary;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
-import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,11 +29,13 @@ public class Image {
     @Column(nullable = false)
     private String thumbnailFileName;
 
-    @Column(nullable = true, columnDefinition = "GEOMETRY")
+    @Column(columnDefinition = "GEOMETRY")
     private Point geography;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createAt;
+    @Column(nullable = false)
+    private LocalDateTime updateAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "diary_id")
@@ -72,7 +73,7 @@ public class Image {
                 .storedFileName(fileName)
                 .diary(diary)
                 .build();
-       // image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
+        image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
         return image;
     }
 
@@ -87,6 +88,9 @@ public class Image {
 
     public void setStoredFileName(String storeFilename) {
         this.storedFileName = storeFilename;
+    }
+    public void setUpdateAt(LocalDateTime updateAt) {
+        this.updateAt = updateAt;
     }
 
 }

@@ -10,7 +10,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class NewDiaryRequestDTO {
-    private LocalDateTime createTime;
     private Double longitude = -200D;
     private Double latitude = -200D;
 }

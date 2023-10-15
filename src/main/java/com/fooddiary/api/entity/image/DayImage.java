@@ -1,13 +1,14 @@
 package com.fooddiary.api.entity.image;
 
 
+import com.fooddiary.api.entity.diary.Image;
+import com.fooddiary.api.entity.diary.Time;
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.geolatte.geom.Point;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -32,7 +33,7 @@ public class DayImage {
     private String thumbNailImagePath;
 
 
-    @Column(nullable = true, columnDefinition = "GEOMETRY")
+    @Column(columnDefinition = "GEOMETRY")
     private Point geography;
 
 

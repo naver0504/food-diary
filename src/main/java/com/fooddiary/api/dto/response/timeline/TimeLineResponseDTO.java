@@ -3,7 +3,7 @@ package com.fooddiary.api.dto.response.timeline;
 import com.fooddiary.api.dto.response.TimeDetailDTO;
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import com.fooddiary.api.entity.image.DayImage;
-import com.fooddiary.api.entity.image.Time;
+import com.fooddiary.api.entity.diary.Time;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

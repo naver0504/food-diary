@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 @Setter
 public class SaveImageRequestDTO {
     private Integer diaryId;
-    private LocalDateTime createTime;
-   // private Double longitude = -200D;
-   // private Double latitude = -200D;
+    @Builder.Default
+    private Double longitude = -200D;
+    @Builder.Default
+    private Double latitude = -200D;
 }

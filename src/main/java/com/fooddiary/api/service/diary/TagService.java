@@ -1,6 +1,6 @@
 package com.fooddiary.api.service.diary;
 
-import com.fooddiary.api.entity.tag.DiaryTag;
+import com.fooddiary.api.entity.diary.DiaryTag;
 import com.fooddiary.api.repository.diary.TagRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;

@@ -11,8 +11,9 @@ import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.entity.image.DiaryTime;
-import com.fooddiary.api.entity.tag.DiaryTag;
-import com.fooddiary.api.entity.tag.Tag;
+import com.fooddiary.api.entity.diary.DiaryTag;
+import com.fooddiary.api.entity.diary.Tag;
+import com.fooddiary.api.repository.ImageRepository;
 import com.fooddiary.api.repository.diary.DiaryTagRepository;
 import com.fooddiary.api.repository.diary.TagRepository;
 import com.fooddiary.api.service.ImageService;
@@ -28,7 +29,7 @@ import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
 import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.image.Image;
+import com.fooddiary.api.entity.diary.Image;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;
 import com.fooddiary.api.repository.diary.DiaryRepository;
@@ -42,6 +43,7 @@ public class DiaryService {
     private final DiaryRepository diaryRepository;
     private final DiaryQuerydslRepository diaryQuerydslRepository;
     private final DiaryTagRepository diaryTagRepository;
+    private final ImageRepository imageRepository;
     private final TagRepository tagRepository;
     private final FileStorageService fileStorageService;
     private final ImageService imageService;
@@ -51,12 +53,11 @@ public class DiaryService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public void createDiary(final List<MultipartFile> files, final NewDiaryRequestDTO newDiaryRequestDTO,
+    public void createDiary(final List<MultipartFile> files, final LocalDateTime createTime, final List<NewDiaryRequestDTO> newDiaryRequestDTOList,
                             final User user) {
-        final LocalDateTime dateTime = newDiaryRequestDTO.getCreateTime();
-        final int year = dateTime.getYear();
-        final int month = dateTime.getMonthValue();
-        final int day = dateTime.getDayOfMonth();
+        final int year = createTime.getYear();
+        final int month = createTime.getMonthValue();
+        final int day = createTime.getDayOfMonth();
         final int todayDiaryCount = diaryRepository.getByYearAndMonthAndDayCount(year, month, day,
                                                                                  user.getId());
 
@@ -64,12 +65,16 @@ public class DiaryService {
             throw new BizException("register only 10 per day");
         }
 
-        final Diary newDiary = Diary.createDiaryImage(dateTime, user, DiaryTime.ETC);
+        final Diary newDiary = Diary.createDiaryImage(createTime, user, DiaryTime.ETC);
         diaryRepository.save(newDiary);
-        imageService.storeImage(newDiary, files, user, SaveImageRequestDTO.builder().createTime(newDiaryRequestDTO.getCreateTime()).build());
+        List<SaveImageRequestDTO> saveImageRequestDTOList = new ArrayList<>();
+        newDiaryRequestDTOList.forEach(data -> saveImageRequestDTOList.add(SaveImageRequestDTO.builder()
+                .latitude(data.getLatitude())
+                .longitude(data.getLongitude()).build()));
+        imageService.storeImage(newDiary, files, user, createTime, saveImageRequestDTOList);
     }
 
-    public void addImages(final int diaryId, final List<MultipartFile> files, final NewDiaryRequestDTO newDiaryRequestDTO, final User user) {
+    public void addImages(final int diaryId, final List<MultipartFile> files, final List<NewDiaryRequestDTO> newDiaryRequestDTOList, final User user) {
         if (diaryRepository.getDiaryImagesCount(diaryId) + files.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
@@ -77,7 +82,29 @@ public class DiaryService {
         if (diary == null) {
             throw new BizException("invalid diary id");
         }
-        imageService.storeImage(diary, files, user, SaveImageRequestDTO.builder().createTime(newDiaryRequestDTO.getCreateTime()).build());
+
+        List<SaveImageRequestDTO> saveImageRequestDTOList = new ArrayList<>();
+        newDiaryRequestDTOList.forEach(data -> saveImageRequestDTOList.add(SaveImageRequestDTO.builder()
+                .latitude(data.getLatitude())
+                .longitude(data.getLongitude()).build()));
+
+        imageService.storeImage(diary, files, user, diary.getTime().getCreateTime(), saveImageRequestDTOList);
+        diaryRepository.save(diary);
+    }
+
+    public void updateImage(final int imageId, final MultipartFile file, final User user, final NewDiaryRequestDTO newDiaryRequestDTO) {
+        Image image = imageRepository.findById(imageId).orElse(null);
+        if (image == null) {
+            throw new BizException("invalid image id");
+        }
+        Diary diary = image.getDiary();
+
+        if (!diary.getUser().getId().equals(user.getId())) {
+            throw new BizException("no permission user");
+        }
+        imageService.updateImage(image, file, user, newDiaryRequestDTO);
+        diary.setUpdateAt(LocalDateTime.now());
+        diaryRepository.save(diary);
     }
 
     public DiaryDetailResponseDTO getDiaryDetail(final int id, final User user) {
@@ -110,7 +137,7 @@ public class DiaryService {
         Map<Long, DiaryTag> diaryTagMap = new HashMap<>();
         diary.getDiaryTags().forEach(obj -> diaryTagMap.put(obj.getId(), obj));
 
-        List<String> tagNames = diaryMemoRequestDTO.getTags().stream().filter(tag -> StringUtils.hasText(tag.getName())).map(tag -> tag.getName()).toList();
+        Set<String> tagNames = diaryMemoRequestDTO.getTags().stream().map(DiaryMemoRequestDTO.TagRequestDTO::getName).filter(StringUtils::hasText).collect(Collectors.toSet());
         if (tagNames.size() != diaryMemoRequestDTO.getTags().size()) {
             throw new BizException("이름 있고 중복되지 않은 태그만 입력해주세요");
         }
@@ -167,7 +194,7 @@ public class DiaryService {
             if (!diary.getImages().isEmpty()) {
                 Image image = diary.getImages().get(0);
                 ThumbNailImagesDTO thumbNailImagesDTO = new ThumbNailImagesDTO();
-                thumbNailImagesDTO.setId(image.getId());
+                thumbNailImagesDTO.setId(diary.getId());
                 thumbNailImagesDTO.setTime(diary.getTime());
                 thumbNailImagesDTO.setBytes(fileStorageService.getObject(ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName()));
                 thumbNailImagesDTOList.add(thumbNailImagesDTO);

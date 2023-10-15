@@ -1,8 +1,7 @@
 package com.fooddiary.api.repository.diary;
 
 import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.image.DayImage;
-import com.fooddiary.api.entity.image.Time;
+import com.fooddiary.api.entity.diary.Time;
 import com.fooddiary.api.entity.user.QUser;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -14,8 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.fooddiary.api.entity.diary.QDiary.diary;
-import static com.fooddiary.api.entity.image.QDayImage.dayImage;
-import static com.fooddiary.api.entity.image.QImage.image;
+import static com.fooddiary.api.entity.diary.QImage.image;
 
 @Repository
 @Slf4j

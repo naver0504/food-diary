@@ -5,12 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.image.DayImage;
 
-import com.fooddiary.api.entity.image.Image;
 import org.hibernate.annotations.ColumnDefault;
 
-import com.fooddiary.api.entity.session.Session;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

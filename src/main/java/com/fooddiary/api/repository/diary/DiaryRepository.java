@@ -14,11 +14,11 @@ import java.util.Optional;
 @Repository
 public interface DiaryRepository extends JpaRepository<Diary, Integer> {
 
-    @Query("select d from Diary d join d.images i where i.id = :id")
+    @Query("select d from Diary d join fetch d.images i where d.id = :id order by i.updateAt desc")
     Optional<Diary> findDiaryAndImagesById(@Param("id") int diaryId);
 
 
-    @Query("select d from Diary d inner join d.images where d.time.year = :year and d.time.month = :month and d.user.id = :userId order by d.time.day asc")
+    @Query("select d from Diary d inner join fetch d.images i where d.time.year = :year and d.time.month = :month and d.user.id = :userId order by d.time.day asc, i.updateAt desc")
     List<Diary> findByYearAndMonth(@Param("year") int year, @Param("month") int month, @Param("userId") int userId);
 
     @Query("select d from Diary d inner join d.images " +

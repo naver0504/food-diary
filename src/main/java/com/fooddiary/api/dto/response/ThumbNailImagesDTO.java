@@ -1,6 +1,6 @@
 package com.fooddiary.api.dto.response;
 
-import com.fooddiary.api.entity.image.Time;
+import com.fooddiary.api.entity.diary.Time;
 import lombok.*;
 
 @Getter

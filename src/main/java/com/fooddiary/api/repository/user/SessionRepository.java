@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Session;
 
 public interface SessionRepository extends JpaRepository<Session, Integer> {
 

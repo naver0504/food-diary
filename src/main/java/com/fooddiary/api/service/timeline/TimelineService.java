@@ -3,7 +3,7 @@ package com.fooddiary.api.service.timeline;
 import com.fooddiary.api.dto.response.TimeDetailDTO;
 import com.fooddiary.api.dto.response.timeline.TimeLineResponseDTO;
 import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.image.Time;
+import com.fooddiary.api.entity.diary.Time;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.timeline.TimelineQuerydslRepository;
 import com.fooddiary.api.service.ImageService;

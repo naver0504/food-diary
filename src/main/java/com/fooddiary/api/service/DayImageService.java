@@ -6,7 +6,7 @@ import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.entity.image.DayImage;
-import com.fooddiary.api.entity.image.Time;
+import com.fooddiary.api.entity.diary.Time;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.ImageQuerydslRepository;
 import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;

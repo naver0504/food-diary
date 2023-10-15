@@ -17,6 +17,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
 import java.util.UUID;
 
 @Component
@@ -43,12 +45,12 @@ public class ImageUtils {
 
     public static ByteArrayOutputStream createThumbnailImage(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) {
         final String originalFilename = file.getOriginalFilename();
-        final String fileContentType = getFileContentType(file.getContentType());
+        final String fileContentType = getFileContentType(Objects.requireNonNull(file.getContentType()));
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         final BufferedImage originalImage;
 
-        try {
-            originalImage = ImageIO.read(file.getInputStream());
+        try (InputStream fileInputStream = file.getInputStream()) {
+            originalImage = ImageIO.read(fileInputStream);
 
             Thumbnails.of(originalImage)
                     .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
@@ -63,14 +65,11 @@ public class ImageUtils {
     }
 
     public static String getFileContentType(String contentType) {
-        if (contentType.equals( "image/jpeg")) {
-            return "jpg";
-        } else if (contentType.equals("image/png")) {
-            return "png";
-        } else if (contentType.equals("image/gif")) {
-            return "gif";
-        } else {
-            return "jpg";
-        }
+        return switch (contentType) {
+            case "image/jpeg" -> "jpg";
+            case "image/png" -> "png";
+            case "image/gif" -> "gif";
+            default -> "jpg";
+        };
     }
 }

@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Session;
 import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.User;
 

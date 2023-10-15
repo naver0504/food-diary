@@ -1,6 +1,5 @@
 package com.fooddiary.api.service;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -8,10 +7,11 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
+import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
 import com.fooddiary.api.dto.response.*;
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.image.Image;
+import com.fooddiary.api.entity.diary.Image;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.DayImageQuerydslRepository;
 import com.fooddiary.api.repository.DayImageRepository;
@@ -24,13 +24,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -84,14 +84,14 @@ public class ImageService {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
+            image.setUpdateAt(LocalDateTime.now());
             final Image saveImage = imageRepository.save(image);
             images.add(saveImage);
         }
         return images;
     }
 
-    public void storeImage(final Diary diary, final List<MultipartFile> files, final User user, final SaveImageRequestDTO saveImageRequestDTO)  {
+    public void storeImage(final Diary diary, final List<MultipartFile> files, final User user, final LocalDateTime createTime, final List<SaveImageRequestDTO> saveImageRequestDTO)  {
 
         final String dirPath = ImageUtils.getDirPath(basePath, user);
 
@@ -99,40 +99,39 @@ public class ImageService {
             amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
         }
 
-        for (int i = 0; i<files.size(); i++) {
+        for (int i = 0; i< files.size(); i++) {
             final MultipartFile file = files.get(i);
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO);
+            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO.get(i));
 
             final ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(file.getSize());
             metadata.setContentType(file.getContentType());
 
-            try {
+            try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath);
+                 ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray())) {
                 inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
-                ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath);
-                final ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
+
                 final String storeThumbnailFilename = "t_" + UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
                 inputIntoFileStorage(dirPath, storeThumbnailFilename, thumbnailInputStream);
                 image.setThumbnailFileName(storeThumbnailFilename);
             } catch (IOException e) {
+                log.error("storeImage error, user id;" + user.getId() + ", diary;" + diary.getId());
                 throw new RuntimeException(e);
             }
+            image.setUpdateAt(LocalDateTime.now());
             imageRepository.save(image);
         }
     }
 
-    public void inputIntoFileStorage(final String dirPath, final String storeFilename, final InputStream inputStream) {
-        try {
+    public void inputIntoFileStorage(final String dirPath, final String storeFilename, final InputStream inputStream) throws IOException {
+        try (inputStream) {
             final ObjectMetadata metadata = new ObjectMetadata();
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucket, dirPath + storeFilename, inputStream, metadata);
             amazonS3.putObject(putObjectRequest);
-        } catch (AmazonServiceException e) {
-            log.error("AmazonServiceException ", e);
-            throw new RuntimeException(e.getMessage());
         } catch (SdkClientException e) {
-            log.error("SdkClientException ", e);
-            throw new RuntimeException(e.getMessage());
+            log.error("aws exception", e);
+            throw new IOException(e.getMessage());
         }
     }
 
@@ -328,24 +327,25 @@ public class ImageService {
     }
 
 */
-    @Transactional
+
     public StatusResponseDTO updateImage(final int imageId, final MultipartFile file, final User user) {
         final Image image = imageRepository.findByImageIdAndUserId(imageId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
         final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
         final String dirPath = ImageUtils.getDirPath(basePath, user);
 
-        try {
+        try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(file, user, amazonS3, bucket, basePath);
+             ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray())) {
             fileStorageService.deleteImage(dirPath + image.getStoredFileName());
             fileStorageService.deleteImage(dirPath + image.getThumbnailFileName());
 
-            image.setStoredFileName(storeFilename);
             inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
-            ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(file, user, amazonS3, bucket, basePath);
-            final ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
+            image.setStoredFileName(storeFilename);
+
             final String storeThumbnailFilename = "t_" + UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
             inputIntoFileStorage(dirPath, storeThumbnailFilename, thumbnailInputStream);
             image.setThumbnailFileName(storeThumbnailFilename);
+            image.setUpdateAt(LocalDateTime.now());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -353,6 +353,29 @@ public class ImageService {
         return StatusResponseDTO.builder()
                 .status(StatusResponseDTO.Status.SUCCESS)
                 .build();
+    }
+
+    public void updateImage(final Image image, final MultipartFile file, final User user, final NewDiaryRequestDTO newDiaryRequestDTO) {
+
+        final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+
+        try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(file, user, amazonS3, bucket, basePath);
+             ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray())) {
+            fileStorageService.deleteImage(dirPath + image.getStoredFileName());
+            fileStorageService.deleteImage(dirPath + image.getThumbnailFileName());
+
+            inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
+            image.setStoredFileName(storeFilename);
+            final String storeThumbnailFilename = "t_" + UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            inputIntoFileStorage(dirPath, storeThumbnailFilename, thumbnailInputStream);
+            image.setThumbnailFileName(storeThumbnailFilename);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        image.setUpdateAt(LocalDateTime.now());
+        image.setGeography(newDiaryRequestDTO.getLongitude(), newDiaryRequestDTO.getLatitude());
+        imageRepository.save(image);
     }
 
 }

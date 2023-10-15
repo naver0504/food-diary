@@ -2,9 +2,6 @@ package com.fooddiary.api.entity.diary;
 
 
 import com.fooddiary.api.entity.image.DiaryTime;
-import com.fooddiary.api.entity.image.Image;
-import com.fooddiary.api.entity.image.Time;
-import com.fooddiary.api.entity.tag.DiaryTag;
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;

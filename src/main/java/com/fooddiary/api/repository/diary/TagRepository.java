@@ -1,7 +1,6 @@
 package com.fooddiary.api.repository.diary;
 
-import com.fooddiary.api.entity.tag.DiaryTag;
-import com.fooddiary.api.entity.tag.Tag;
+import com.fooddiary.api.entity.diary.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

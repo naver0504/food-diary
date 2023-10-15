@@ -6,6 +6,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class HttpConfig {
+    /**
+     * HttpClient pool 설정
+     * @return PoolingHttpClientConnectionManager
+     */
     @Bean
     public PoolingHttpClientConnectionManager poolingHttpClientConnectionManager() {
         PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();

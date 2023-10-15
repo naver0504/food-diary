@@ -1,4 +1,4 @@
-package com.fooddiary.api.entity.tag;
+package com.fooddiary.api.entity.diary;
 
 import jakarta.persistence.*;
 import lombok.Getter;

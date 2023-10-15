@@ -1,6 +1,6 @@
 package com.fooddiary.api.service.user;
 
-import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Session;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.user.SessionRepository;
 import lombok.RequiredArgsConstructor;

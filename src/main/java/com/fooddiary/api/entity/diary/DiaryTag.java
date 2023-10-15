@@ -1,7 +1,6 @@
-package com.fooddiary.api.entity.tag;
+package com.fooddiary.api.entity.diary;
 
 
-import com.fooddiary.api.entity.diary.Diary;
 import jakarta.persistence.*;
 import lombok.*;
 
