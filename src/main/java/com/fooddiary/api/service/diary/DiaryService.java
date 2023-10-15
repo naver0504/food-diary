@@ -12,7 +12,6 @@ import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.entity.image.DiaryTime;
 import com.fooddiary.api.entity.tag.DiaryTag;
-import com.fooddiary.api.entity.tag.DiaryTagId;
 import com.fooddiary.api.entity.tag.Tag;
 import com.fooddiary.api.repository.diary.DiaryTagRepository;
 import com.fooddiary.api.repository.diary.TagRepository;
@@ -20,6 +19,8 @@ import com.fooddiary.api.service.ImageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -86,7 +87,12 @@ public class DiaryService {
         }
         DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
         diaryDetailResponseDTO.setImages(imageService.getImages(diary, user));
-        diaryDetailResponseDTO.setTags(diary.getDiaryTags().stream().map(tag -> tag.getTag().getTagName()).collect(Collectors.toList()));
+        diaryDetailResponseDTO.setTags(diary.getDiaryTags().stream().map(tag -> {
+            DiaryDetailResponseDTO.TagResponseDTO tagResponseDTO = new DiaryDetailResponseDTO.TagResponseDTO();
+            tagResponseDTO.setName(tag.getTag().getTagName());
+            tagResponseDTO.setId(tag.getId());
+            return tagResponseDTO;
+        }).collect(Collectors.toList()));
         diaryDetailResponseDTO.setDate(diary.getTime().getCreateTime().toLocalDate());
         diaryDetailResponseDTO.setMemo(diary.getMemo());
         diaryDetailResponseDTO.setDiaryTime(diary.getDiaryTime().name());
@@ -94,35 +100,53 @@ public class DiaryService {
         return diaryDetailResponseDTO;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void updateMemo(final Integer diaryId, final DiaryMemoRequestDTO diaryMemoRequestDTO, final User user) {
         Diary diary = diaryRepository.findById(diaryId).orElse(null);
         if (diary == null) {
             throw new BizException("invalid diary id");
         }
 
-        Map<String, DiaryTag> diaryTagMap = new HashMap<>();
-        diary.getDiaryTags().forEach(obj -> diaryTagMap.put(obj.getTag().getTagName(), obj));
+        Map<Long, DiaryTag> diaryTagMap = new HashMap<>();
+        diary.getDiaryTags().forEach(obj -> diaryTagMap.put(obj.getId(), obj));
+
+        List<String> tagNames = diaryMemoRequestDTO.getTags().stream().filter(tag -> StringUtils.hasText(tag.getName())).map(tag -> tag.getName()).toList();
+        if (tagNames.size() != diaryMemoRequestDTO.getTags().size()) {
+            throw new BizException("이름 있고 중복되지 않은 태그만 입력해주세요");
+        }
 
         List<DiaryTag> diaryTagList = new ArrayList<>();
-        diaryMemoRequestDTO.getTags().forEach(tagName -> {
-            if (diaryTagMap.get(tagName) == null) {
-                Tag tag = tagRepository.findTagByTagName(tagName);
+        diaryMemoRequestDTO.getTags().forEach(tagRequestDTO -> {
+            if (diaryTagMap.get(tagRequestDTO.getId()) == null) { // 신규
+                Tag tag = tagRepository.findTagByTagName(tagRequestDTO.getName());
                 if (tag == null) {
                     tag = new Tag();
-                    tag.setTagName(tagName);
+                    tag.setTagName(tagRequestDTO.getName());
+                    tag.setCreateAt(LocalDateTime.now());
                     tagRepository.save(tag);
                 }
                 DiaryTag diaryTag = new DiaryTag();
                 diaryTag.setDiary(diary);
                 diaryTag.setTag(tag);
-                diaryTag.setId(new DiaryTagId(diary.getId(), tag.getId()));
+                diaryTag.setCreateAt(LocalDateTime.now());
                 diaryTagList.add(diaryTag);
-            } else if (diaryTagMap.get(tagName) != null) {
-                diaryTagMap.remove(tagName);
+            } else { // 수정
+                DiaryTag diaryTag = diaryTagMap.get(tagRequestDTO.getId());
+                if (!diaryTag.getTag().getTagName().equals(tagRequestDTO.getName())) {
+                    Tag tag = new Tag();
+                    tag.setTagName(tagRequestDTO.getName());
+                    tag.setCreateAt(LocalDateTime.now());
+                    tagRepository.save(tag);
+                    diaryTag.setTag(tag);
+                    diaryTag.setUpdateAt(LocalDateTime.now());
+                    diaryTagRepository.save(diaryTag);
+                }
+                diaryTagMap.remove(tagRequestDTO.getId());
             }
         });
         diaryTagRepository.saveAll(diaryTagList);
 
+        // 삭제
         for (DiaryTag diaryTag : diaryTagMap.values()) {
             diaryTag.getDiary().getDiaryTags().remove(diaryTag);
             diaryTag.getTag().getDiaryTags().remove(diaryTag);

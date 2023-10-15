@@ -11,6 +11,14 @@ import java.util.List;
 @Setter
 public class DiaryMemoRequestDTO {
     private String memo;
-    private DiaryTime diaryTime;
-    private List<String> tags;
+    private DiaryTime diaryTime = DiaryTime.ETC;
+    private List<TagRequestDTO> tags;
+
+
+    @Getter
+    @Setter
+    public static class TagRequestDTO {
+        private Long id;
+        private String name;
+    }
 }

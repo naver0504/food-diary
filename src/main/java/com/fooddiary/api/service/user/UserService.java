@@ -186,9 +186,9 @@ public class UserService {
                         user.setStatus(Status.ACTIVE);
                         user.setEmail(email);
                         user.setCreatePath(CreatePath.GOOGLE);
-                        user.setLastAccessAt(LocalDateTime.now());
-                        userRepository.save(user);
                     }
+                    user.setLastAccessAt(LocalDateTime.now());
+                    userRepository.save(user);
                     return user;
 
                 } else {
@@ -230,9 +230,10 @@ public class UserService {
                     user.setStatus(Status.ACTIVE);
                     user.setEmail(kakaoAccount.getEmail());
                     user.setCreatePath(CreatePath.KAKAO);
-                    user.setLastAccessAt(LocalDateTime.now());
-                    userRepository.save(user);
+
                 }
+                user.setLastAccessAt(LocalDateTime.now());
+                userRepository.save(user);
                 return user;
             }
             default -> {
