@@ -2,6 +2,7 @@ package com.fooddiary.api.controller;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.request.UpdateImageDetailDTO;
 import com.fooddiary.api.dto.response.*;
+import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.DayImageService;
 import com.fooddiary.api.service.ImageService;
@@ -9,7 +10,6 @@ import com.fooddiary.api.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -78,7 +78,7 @@ public class ImageController {
      * 한 달의 사진 받기
      */
     //@GetMapping("/images")
-    public ResponseEntity<List<ThumbNailImagesDTO>> showThumbNailImages(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) {
+    public ResponseEntity<List<HomeResponseDTO>> showThumbNailImages(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) {
 
         return ResponseEntity.ok(dayImageService.getThumbNailImages(year, month, user));
     }

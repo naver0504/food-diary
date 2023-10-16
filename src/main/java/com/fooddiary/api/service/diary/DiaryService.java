@@ -8,8 +8,9 @@ import java.util.stream.Collectors;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
-import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
+import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
+import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
 import com.fooddiary.api.entity.image.DiaryTime;
 import com.fooddiary.api.entity.diary.DiaryTag;
 import com.fooddiary.api.entity.diary.Tag;
@@ -18,11 +19,9 @@ import com.fooddiary.api.repository.diary.DiaryTagRepository;
 import com.fooddiary.api.repository.diary.TagRepository;
 import com.fooddiary.api.service.ImageService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fooddiary.api.common.exception.BizException;
@@ -187,20 +186,38 @@ public class DiaryService {
         diaryRepository.save(diary);
     }
 
-    public List<ThumbNailImagesDTO> getMonthlyImages(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) throws IOException {
-        List<ThumbNailImagesDTO> thumbNailImagesDTOList = new LinkedList<>();
+    public List<HomeResponseDTO> getHome(final int year, final int month, final User user) throws IOException {
+        List<HomeResponseDTO> homeResponseDTOList = new LinkedList<>();
         List<Diary> diaryList = diaryRepository.findByYearAndMonth(year, month, user.getId());
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
                 Image image = diary.getImages().get(0);
-                ThumbNailImagesDTO thumbNailImagesDTO = new ThumbNailImagesDTO();
-                thumbNailImagesDTO.setId(diary.getId());
-                thumbNailImagesDTO.setTime(diary.getTime());
-                thumbNailImagesDTO.setBytes(fileStorageService.getObject(ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName()));
-                thumbNailImagesDTOList.add(thumbNailImagesDTO);
+                HomeResponseDTO homeResponseDTO = new HomeResponseDTO();
+                homeResponseDTO.setId(diary.getId());
+                homeResponseDTO.setTime(diary.getTime());
+                homeResponseDTO.setBytes(fileStorageService.getObject(ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName()));
+                homeResponseDTOList.add(homeResponseDTO);
             }
         }
-        return thumbNailImagesDTOList;
+        return homeResponseDTOList;
+    }
+
+    public List<HomeDayResponseDTO> getHomeDay(final int year, final int month, final int day, final User user) {
+        List<HomeDayResponseDTO> imageDetailResponseDTOList = new LinkedList<>();
+        List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
+        for (Diary diary : diaryList) {
+            if (!diary.getImages().isEmpty()) {
+                Image image = diary.getImages().get(0);
+                HomeDayResponseDTO imageDetailResponseDTO = HomeDayResponseDTO.builder()
+                        .id(diary.getId())
+                        .memo(diary.getMemo())
+                        .diaryTime(diary.getDiaryTime())
+                        .tags(diary.getDiaryTags().stream().map(diaryTag -> diaryTag.getTag().getTagName()).collect(Collectors.toList()))
+                        .image(imageService.getImage(image, user)).build();
+                imageDetailResponseDTOList.add(imageDetailResponseDTO);
+            }
+        }
+        return imageDetailResponseDTOList;
     }
 
 }

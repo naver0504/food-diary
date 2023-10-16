@@ -3,8 +3,9 @@ package com.fooddiary.api.controller;
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
-import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
+import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
+import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.diary.DiaryService;
 import lombok.RequiredArgsConstructor;
@@ -104,12 +105,25 @@ public class DiaryController {
      * @param year
      * @param month
      * @param user
-     * @return ThumbNailImagesDTO 썸네일 이미지를 보여줍니다. id는 일기 id입니다.
+     * @return HomeResponseDTO 썸네일 이미지를 보여줍니다. id는 일기 id입니다.
      * @throws IOException
      */
     @GetMapping("/home")
-    public ResponseEntity<List<ThumbNailImagesDTO>> home(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) throws IOException {
-        return ResponseEntity.ok(diaryService.getMonthlyImages(year, month, user));
+    public ResponseEntity<List<HomeResponseDTO>> home(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) throws IOException {
+        return ResponseEntity.ok(diaryService.getHome(year, month, user));
     }
 
+    /**
+     * 하루치 일기들을 보여주기
+     * @param year
+     * @param month
+     * @param day
+     * @param user
+     * @return
+     * @throws IOException
+     */
+    @GetMapping("/home-day")
+    public ResponseEntity<List<HomeDayResponseDTO>> homeDay(final @RequestParam int year, final @RequestParam int month, final @RequestParam int day, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.getHomeDay(year, month, day, user));
+    }
 }

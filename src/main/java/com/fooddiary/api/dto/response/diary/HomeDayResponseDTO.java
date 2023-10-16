@@ -1,7 +1,9 @@
-package com.fooddiary.api.dto.response;
+package com.fooddiary.api.dto.response.diary;
 
 
+import com.fooddiary.api.dto.response.TimeDetailDTO;
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
+import com.fooddiary.api.entity.image.DiaryTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,11 +15,10 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Getter
-public class ImageDetailResponseDTO {
-    private Integer id;
+public class HomeDayResponseDTO {
+    private Integer id; // diary id
     private String memo;
-    private String timeStatus;
-    private TimeDetailDTO timeDetail;
+    private DiaryTime diaryTime;
     private List<String> tags;
-    private List<ImageResponseDTO> images;
+    private ImageResponseDTO image;
 }

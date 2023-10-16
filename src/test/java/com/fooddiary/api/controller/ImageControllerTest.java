@@ -202,11 +202,11 @@ public class ImageControllerTest {
         httpHeaders.add("login-from", "none");
         httpHeaders.add("token", token);
 
-        final List<ThumbNailImagesDTO> dayImagesDtos = new ArrayList<>();
+        final List<HomeResponseDTO> dayImagesDtos = new ArrayList<>();
         final FileInputStream fileInputStream = new FileInputStream("src/test/resources/image/apple.png");
         final Time time1 = new Time(LocalDateTime.now().minusDays(1));
         final byte[] bytes = fileInputStream.readAllBytes();
-        final ThumbNailImagesDTO dayImagesDto = ThumbNailImagesDTO.builder()
+        final HomeResponseDTO dayImagesDto = HomeResponseDTO.builder()
                 .id(1)
                 .bytes(bytes)
                 .time(time1)
@@ -214,7 +214,7 @@ public class ImageControllerTest {
         dayImagesDtos.add(dayImagesDto);
         final Time time2 = new Time(LocalDateTime.now());
 
-        final ThumbNailImagesDTO dayImagesDto2 = ThumbNailImagesDTO.builder()
+        final HomeResponseDTO dayImagesDto2 = HomeResponseDTO.builder()
                 .id(2)
                 .bytes(bytes)
                 .time(time2)

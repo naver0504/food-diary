@@ -4,7 +4,7 @@ package com.fooddiary.api.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.utils.ImageUtils;
-import com.fooddiary.api.dto.response.ThumbNailImagesDTO;
+import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.diary.Time;
 import com.fooddiary.api.entity.user.User;
@@ -93,9 +93,9 @@ public class DayImageService {
     }*/
 
 
-    public List<ThumbNailImagesDTO> getThumbNailImages(final int year, final int month, final User user)  {
+    public List<HomeResponseDTO> getThumbNailImages(final int year, final int month, final User user)  {
         final List<DayImage> dayImages = null; //dayImageRepository.findByYearAndMonth(year, month, user.getId()); todo
-        final List<ThumbNailImagesDTO> dayImagesDTOS = new ArrayList<>();
+        final List<HomeResponseDTO> dayImagesDTOS = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(basePath, user);
         for (DayImage dayImage : dayImages) {
             byte[] bytes;
@@ -107,7 +107,7 @@ public class DayImageService {
             }
             final Time time = dayImage.getTime();
             dayImagesDTOS.add(
-                    ThumbNailImagesDTO.builder()
+                    HomeResponseDTO.builder()
                             .id(dayImage.getId())
                             .time(time)
                             .bytes(bytes)

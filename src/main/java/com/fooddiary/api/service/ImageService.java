@@ -153,6 +153,21 @@ public class ImageService {
         return imageResponseDTOList;
     }
 
+    public ImageResponseDTO getImage (final Image image, final User user) {
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+        byte[] bytes;
+        try {
+            bytes = fileStorageService.getObject(dirPath + image.getStoredFileName());
+        } catch (IOException e) {
+            log.error("IOException ", e);
+            throw new RuntimeException(e);
+        }
+        ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
+        imageResponseDTO.setImageId(image.getId());
+        imageResponseDTO.setBytes(bytes);
+        return imageResponseDTO;
+    }
+
     /*
     public ShowImageOfDayDTO getImages(final int year, final int month, final int day, final User user) {
         final List<Image> images = imageQuerydslRepository.findByYearAndMonthAndDay(year, month, day, user.getId());

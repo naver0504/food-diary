@@ -1,4 +1,4 @@
-package com.fooddiary.api.dto.response;
+package com.fooddiary.api.dto.response.diary;
 
 import com.fooddiary.api.entity.diary.Time;
 import lombok.*;
@@ -8,10 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ThumbNailImagesDTO {
-
-    private int id;
+public class HomeResponseDTO {
+    private int id; // diary id
     private byte[] bytes;
     private Time time;
-
 }
