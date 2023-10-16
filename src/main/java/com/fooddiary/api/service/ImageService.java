@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fooddiary.api.FileStorageService;
+import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.utils.ImageUtils;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
@@ -63,12 +64,11 @@ public class ImageService {
             amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
         }
 
-        Diary diary = diaryRepository.findById(diaryId).get();
+        Diary diary = diaryRepository.findById(diaryId).orElseThrow(() -> new BizException("invalid diaryId"));
 
-        for (int i = 0; i<files.size(); i++) {
-            final MultipartFile file = files.get(i);
+        for (final MultipartFile file : files) {
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO);
+            final Image image = Image.createImage(diary, storeFilename);
 
             final ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(file.getSize());
@@ -99,10 +99,9 @@ public class ImageService {
             amazonS3.putObject(bucket, dirPath, new ByteArrayInputStream(new byte[0]), new ObjectMetadata());
         }
 
-        for (int i = 0; i< files.size(); i++) {
-            final MultipartFile file = files.get(i);
+        for (final MultipartFile file : files) {
             final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
-            final Image image = Image.createImage(diary, storeFilename, saveImageRequestDTO.get(i));
+            final Image image = Image.createImage(diary, storeFilename);
 
             final ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(file.getSize());
@@ -374,7 +373,7 @@ public class ImageService {
             throw new RuntimeException(e);
         }
         image.setUpdateAt(LocalDateTime.now());
-        image.setGeography(newDiaryRequestDTO.getLongitude(), newDiaryRequestDTO.getLatitude());
+        // image.setGeography(newDiaryRequestDTO.getLongitude(), newDiaryRequestDTO.getLatitude());
         imageRepository.save(image);
     }
 

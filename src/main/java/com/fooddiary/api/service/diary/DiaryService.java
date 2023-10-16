@@ -68,9 +68,9 @@ public class DiaryService {
         final Diary newDiary = Diary.createDiaryImage(createTime, user, DiaryTime.ETC);
         diaryRepository.save(newDiary);
         List<SaveImageRequestDTO> saveImageRequestDTOList = new ArrayList<>();
-        newDiaryRequestDTOList.forEach(data -> saveImageRequestDTOList.add(SaveImageRequestDTO.builder()
-                .latitude(data.getLatitude())
-                .longitude(data.getLongitude()).build()));
+      //  newDiaryRequestDTOList.forEach(data -> saveImageRequestDTOList.add(SaveImageRequestDTO.builder()
+      //          .latitude(data.getLatitude())
+      //          .longitude(data.getLongitude()).build()));
         imageService.storeImage(newDiary, files, user, createTime, saveImageRequestDTOList);
     }
 
@@ -84,9 +84,9 @@ public class DiaryService {
         }
 
         List<SaveImageRequestDTO> saveImageRequestDTOList = new ArrayList<>();
-        newDiaryRequestDTOList.forEach(data -> saveImageRequestDTOList.add(SaveImageRequestDTO.builder()
-                .latitude(data.getLatitude())
-                .longitude(data.getLongitude()).build()));
+     //   newDiaryRequestDTOList.forEach(data -> saveImageRequestDTOList.add(SaveImageRequestDTO.builder()
+     //           .latitude(data.getLatitude())
+     //           .longitude(data.getLongitude()).build()));
 
         imageService.storeImage(diary, files, user, diary.getTime().getCreateTime(), saveImageRequestDTOList);
         diaryRepository.save(diary);

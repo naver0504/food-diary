@@ -68,12 +68,12 @@ public class Image {
     }
 
 
-    public static Image createImage(final Diary diary, final String fileName, final SaveImageRequestDTO saveImageRequestDTO) {
+    public static Image createImage(final Diary diary, final String fileName) {
         final Image image = Image.builder()
                 .storedFileName(fileName)
                 .diary(diary)
                 .build();
-        image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
+      //  image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
         return image;
     }
 

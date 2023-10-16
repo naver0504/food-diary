@@ -36,7 +36,7 @@ public class DiaryController {
             MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Void> createDiary(final @RequestPart("images") List<MultipartFile> images,
                                                final @RequestParam("createTime") LocalDateTime createTime,
-                                               final @RequestPart(value = "imageInfo") List<NewDiaryRequestDTO> newDiaryRequestDTO,
+                                               final @RequestPart(value = "imageInfo", required = false) List<NewDiaryRequestDTO> newDiaryRequestDTO,
                                                          final @AuthenticationPrincipal User user) {
         if (images.size() > 5) {
             throw new BizException("we allow max 5 images");
@@ -55,7 +55,7 @@ public class DiaryController {
      */
     @PostMapping(value = "/{diaryId}/images", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Void> addImages(@PathVariable("diaryId") Integer diaryId, final @RequestPart("files") List<MultipartFile> files,
-                                            final @RequestPart(value = "imageInfo") List<NewDiaryRequestDTO> newDiaryRequestDTOList,
+                                            final @RequestPart(value = "imageInfo", required = false) List<NewDiaryRequestDTO> newDiaryRequestDTOList,
                                             final @AuthenticationPrincipal User user) {
         if (files.size() > 5) {
             throw new BizException("we allow max 5 images");

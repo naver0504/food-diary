@@ -81,18 +81,20 @@ CREATE TABLE `day_image` (
 
 CREATE TABLE `tag` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `create_at` datetime(6) NOT NULL,
   `tag_name` varchar(255) NOT NULL,
-  `diary_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UK_1r1tyf6uga9k6jwdqnoqwtk2a` (`tag_name`),
-  KEY `FKjq0ven5q3nx5cknhd0ax3kwxm` (`diary_id`),
-  CONSTRAINT `FKjq0ven5q3nx5cknhd0ax3kwxm` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`)
+  UNIQUE KEY `UK_1r1tyf6uga9k6jwdqnoqwtk2a` (`tag_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `diary_tag` (
-  `diary_id` int NOT NULL,
-  `tag_id` int NOT NULL,
-  PRIMARY KEY (`diary_id`,`tag_id`),
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_at` datetime(6) NOT NULL,
+  `update_at` datetime(6) DEFAULT NULL,
+  `diary_id` int DEFAULT NULL,
+  `tag_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKfj71a53y08nd1aslcew09cf5w` (`diary_id`),
   KEY `FKoubxtedj8osbw8j4gksb3jy65` (`tag_id`),
   CONSTRAINT `FKfj71a53y08nd1aslcew09cf5w` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`),
   CONSTRAINT `FKoubxtedj8osbw8j4gksb3jy65` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`)
