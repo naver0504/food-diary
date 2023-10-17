@@ -1,9 +1,8 @@
 package com.fooddiary.api.dto.request;
 
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.annotation.Nullable;
+import com.fooddiary.api.entity.image.DiaryTime;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -11,9 +10,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@Setter
 public class SaveImageRequestDTO {
-
-    private LocalDateTime localDateTime;
+    private Integer diaryId;
+    @Builder.Default
     private Double longitude = -200D;
+    @Builder.Default
     private Double latitude = -200D;
 }

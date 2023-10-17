@@ -4,11 +4,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fooddiary.api.entity.image.DayImage;
+import com.fooddiary.api.entity.diary.Diary;
 
 import org.hibernate.annotations.ColumnDefault;
 
-import com.fooddiary.api.entity.session.Session;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -43,9 +42,7 @@ public class User {
     private List<Session> session = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-    private List<DayImage> dayImages = new ArrayList<>();
-
-
+    private List<Diary> diaries = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

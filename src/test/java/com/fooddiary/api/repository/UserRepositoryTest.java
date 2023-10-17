@@ -1,5 +1,6 @@
 package com.fooddiary.api.repository;
 
+import com.fooddiary.api.repository.user.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

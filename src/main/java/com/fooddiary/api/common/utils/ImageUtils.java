@@ -17,6 +17,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
 import java.util.UUID;
 
 @Component
@@ -30,11 +32,8 @@ public class ImageUtils {
 
     @NotNull
     public static String getDirPath(final String basePath, final User user) {
-
-
         final String dirPath = basePath + "/" + user.getId() + "/";
         return dirPath;
-
     }
 
 
@@ -44,59 +43,33 @@ public class ImageUtils {
         return storeFilename;
     }
 
-    public static String createThumbnailImage(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) {
+    public static ByteArrayOutputStream createThumbnailImage(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) {
         final String originalFilename = file.getOriginalFilename();
-        final String storeThumbnailFilename = "t_"+ UUID.randomUUID().toString() + "_" + originalFilename;
-        final String fileContentType = getFileContentType(file.getContentType());
+        final String fileContentType = getFileContentType(Objects.requireNonNull(file.getContentType()));
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
         final BufferedImage originalImage;
 
-        try {
-            originalImage = ImageIO.read(file.getInputStream());
-
+        try (InputStream fileInputStream = file.getInputStream()) {
+            originalImage = ImageIO.read(fileInputStream);
 
             Thumbnails.of(originalImage)
                     .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
                     .keepAspectRatio(false)
                     .outputFormat(fileContentType)
                     .toOutputStream(outputStream);
-
-
-
         } catch (IOException e) {
             log.error("IOException {}", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
-
-        final ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-
-
-        try {
-            final ObjectMetadata metadata = new ObjectMetadata();
-            final String dirPath = ImageUtils.getDirPath(basePath, user);
-            amazonS3.putObject(bucket, dirPath+storeThumbnailFilename, inputStream, metadata);
-        } catch (AmazonServiceException e) {
-            log.error("AmazonServiceException ", e);
-            throw new RuntimeException(e.getMessage());
-        } catch (SdkClientException e) {
-            log.error("SdkClientException ", e);
-            throw new RuntimeException(e.getMessage());
-        }
-
-
-        return storeThumbnailFilename;
+        return outputStream;
     }
 
     public static String getFileContentType(String contentType) {
-        if (contentType.equals( "image/jpeg")) {
-            return "jpg";
-        } else if (contentType.equals("image/png")) {
-            return "png";
-        } else if (contentType.equals("image/gif")) {
-            return "gif";
-        } else {
-            return "jpg";
-        }
+        return switch (contentType) {
+            case "image/jpeg" -> "jpg";
+            case "image/png" -> "png";
+            case "image/gif" -> "gif";
+            default -> "jpg";
+        };
     }
 }

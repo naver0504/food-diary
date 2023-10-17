@@ -1,7 +1,7 @@
 package com.fooddiary.api.common.interceptor;
 
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.service.UserService;
+import com.fooddiary.api.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

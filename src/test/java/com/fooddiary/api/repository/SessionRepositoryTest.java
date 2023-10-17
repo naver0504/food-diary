@@ -2,6 +2,8 @@ package com.fooddiary.api.repository;
 
 import java.time.LocalDateTime;
 
+import com.fooddiary.api.repository.user.SessionRepository;
+import com.fooddiary.api.repository.user.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fooddiary.api.common.constants.Profiles;
-import com.fooddiary.api.entity.session.Session;
+import com.fooddiary.api.entity.user.Session;
 import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.User;
 

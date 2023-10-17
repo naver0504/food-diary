@@ -2,7 +2,7 @@ package com.fooddiary.api.dto.response;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fooddiary.api.entity.image.TimeStatus;
+import com.fooddiary.api.entity.image.DiaryTime;
 import lombok.*;
 
 import java.util.List;
@@ -32,7 +32,7 @@ public class ShowImageOfDayDTO {
         private List<String> tags;
 
         @JsonIgnore
-        private TimeStatus timeStatus;
+        private DiaryTime timeStatus;
 
         private String time;
 

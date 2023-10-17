@@ -1,6 +1,7 @@
 package com.fooddiary.api.dto.response;
 
 
+import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,10 +14,10 @@ import java.util.List;
 @Builder
 @Getter
 public class ImageDetailResponseDTO {
-
+    private Integer id;
     private String memo;
     private String timeStatus;
     private TimeDetailDTO timeDetail;
     private List<String> tags;
-    private List<TimeLineResponseDTO.ImageResponseDTO> images;
+    private List<ImageResponseDTO> images;
 }

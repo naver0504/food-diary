@@ -1,19 +1,9 @@
 package com.fooddiary.api.repository;
 
-import com.fooddiary.api.entity.image.DayImage;
-import com.fooddiary.api.entity.image.Time;
-import com.fooddiary.api.entity.user.QUser;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.fooddiary.api.entity.image.QDayImage.*;
-import static com.fooddiary.api.entity.image.QImage.*;
 
 @Repository
 @Slf4j
@@ -24,7 +14,7 @@ public class DayImageQuerydslRepository {
     public DayImageQuerydslRepository(EntityManager entityManager) {
         jpaQueryFactory = new JPAQueryFactory(entityManager);
     }
-
+/*
     public List<DayImage> getTimeLineDayImage(final int year, final int month, final int startDay, final int userId) {
         return jpaQueryFactory.selectFrom(dayImage)
                 .where(
@@ -88,6 +78,7 @@ public class DayImageQuerydslRepository {
 
     }
 
+
     public boolean existByUserId(final int userId) {
         Integer fetchFirst = jpaQueryFactory
                 .selectOne()
@@ -97,4 +88,6 @@ public class DayImageQuerydslRepository {
 
         return fetchFirst != null;
     }
+    
+ */
 }

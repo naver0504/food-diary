@@ -2,7 +2,7 @@ package com.fooddiary.api.common.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.service.UserService;
+import com.fooddiary.api.service.user.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
