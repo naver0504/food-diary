@@ -1,6 +1,7 @@
 package com.fooddiary.api.service.diary;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -11,9 +12,8 @@ import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
+import com.fooddiary.api.entity.diary.*;
 import com.fooddiary.api.entity.image.DiaryTime;
-import com.fooddiary.api.entity.diary.DiaryTag;
-import com.fooddiary.api.entity.diary.Tag;
 import com.fooddiary.api.repository.ImageRepository;
 import com.fooddiary.api.repository.diary.DiaryTagRepository;
 import com.fooddiary.api.repository.diary.TagRepository;
@@ -27,8 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
-import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.diary.Image;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;
 import com.fooddiary.api.repository.diary.DiaryRepository;
@@ -202,22 +200,37 @@ public class DiaryService {
         return homeResponseDTOList;
     }
 
-    public List<HomeDayResponseDTO> getHomeDay(final int year, final int month, final int day, final User user) {
-        List<HomeDayResponseDTO> imageDetailResponseDTOList = new LinkedList<>();
+    public HomeDayResponseDTO getHomeDay(final int year, final int month, final int day, final User user) {
+        List<HomeDayResponseDTO.HomeDay> homeDayList = new LinkedList<>();
         List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
+
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
                 Image image = diary.getImages().get(0);
-                HomeDayResponseDTO imageDetailResponseDTO = HomeDayResponseDTO.builder()
+                HomeDayResponseDTO.HomeDay imageDetailResponseDTO = HomeDayResponseDTO.HomeDay.builder()
                         .id(diary.getId())
                         .memo(diary.getMemo())
                         .diaryTime(diary.getDiaryTime())
                         .tags(diary.getDiaryTags().stream().map(diaryTag -> diaryTag.getTag().getTagName()).collect(Collectors.toList()))
                         .image(imageService.getImage(image, user)).build();
-                imageDetailResponseDTOList.add(imageDetailResponseDTO);
+                homeDayList.add(imageDetailResponseDTO);
             }
         }
-        return imageDetailResponseDTOList;
+
+        HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
+        homeDayResponseDTO.setHomeDayList(homeDayList);
+
+        Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(year, month, day, user.getId());
+        if (timeMap.get("before") != null) {
+            Time before = timeMap.get("before");
+            homeDayResponseDTO.setBeforeDay(LocalDate.of(before.getYear(), before.getMonth(), before.getDay()));
+        }
+        if (timeMap.get("after") != null) {
+            Time after = timeMap.get("after");
+            homeDayResponseDTO.setAfterDay(LocalDate.of(after.getYear(), after.getMonth(), after.getDay()));
+        }
+
+        return homeDayResponseDTO;
     }
 
 }

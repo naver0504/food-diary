@@ -51,41 +51,30 @@ public class DiaryQuerydslRepository {
     }
 
     public Map<String, Time> getBeforeAndAfterTime(final int year, final int month, final int day, final int userId) {
+        final Map<String, Time> timeMap = new HashMap<>();
 
-
-        final Map<String, Time> times = new HashMap<>();
         final Time beforeTime = jpaQueryFactory.select(diary.time)
                 .from(diary)
-                .join(diary.images, image)
                 .where(diary.user.id.eq(userId),
                         diary.time.createTime
-                        .before(Time.getDateTime(year, month, day))
+                        .before(Time.getDateWithMinTime(year, month, day))
                         )
                 .orderBy(diary.time.createTime.desc())
                 .fetchFirst();
 
-        if (beforeTime != null) {
-            times.put("before", beforeTime);
-        }
+        timeMap.put("before", beforeTime);
 
-        //자기 자신을 포함한 후 + 이후의 시간을 가져온다.
-        final List<Time> AfterTime = jpaQueryFactory.select(diary.time).distinct()
+        final Time AfterTime = jpaQueryFactory.select(diary.time).distinct()
                 .from(diary)
-                .join(diary.images, image)
                 .where(diary.user.id.eq(userId),
                         diary.time.createTime
-                        .after(Time.getDateTime(year, month, day)))
+                                .after(Time.getDateWithMaxTime(year, month, day)))
                 .orderBy(diary.time.createTime.asc())
-                .limit(2)
-                .fetch();
+                .fetchFirst();
 
+        timeMap.put("after", AfterTime);
 
-        if (AfterTime.size() == 2) {
-            times.put("after", AfterTime.get(1));
-        }
-
-        return times;
-
+        return timeMap;
     }
 
     public boolean existByUserId(final int userId) {
