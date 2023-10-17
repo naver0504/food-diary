@@ -119,11 +119,10 @@ public class DiaryController {
      * @param month
      * @param day
      * @param user
-     * @return
-     * @throws IOException
+     * @return HomeDayResponseDTO 이전 일기 날짜,다음 일기 날짜가 포함된 오늘 날짜의 일기 데이터
      */
     @GetMapping("/home-day")
-    public ResponseEntity<List<HomeDayResponseDTO>> homeDay(final @RequestParam int year, final @RequestParam int month, final @RequestParam int day, final @AuthenticationPrincipal User user) {
+    public ResponseEntity<HomeDayResponseDTO> homeDay(final @RequestParam int year, final @RequestParam int month, final @RequestParam int day, final @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(diaryService.getHomeDay(year, month, day, user));
     }
 }

@@ -23,11 +23,16 @@ public class Time {
         this.createTime = dateTime;
     }
 
-    public static LocalDateTime getDateTime(final int year, final int month, final int day) {
+    public static LocalDateTime getDateWithMinTime(final int year, final int month, final int day) {
         return LocalDateTime.of(year, month, day, 0, 0);
     }
+
+    public static LocalDateTime getDateWithMaxTime(final int year, final int month, final int day) {
+        return LocalDateTime.of(year, month, day, 23, 59, 59, 999999999);
+    }
+
     public static String getDayOfWeek(final Time time) {
-        int dayOfWeek = Time.getDateTime(time.getYear(), time.getMonth(), time.getDay())
+        int dayOfWeek = Time.getDateWithMinTime(time.getYear(), time.getMonth(), time.getDay())
                 .getDayOfWeek().getValue();
 
         return switch (dayOfWeek) {
