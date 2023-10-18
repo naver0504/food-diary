@@ -102,27 +102,24 @@ public class DiaryController {
 
     /**
      * 홈화면 1달치 사진 보여주기
-     * @param year
-     * @param month
+     * @param yearMonth
      * @param user
      * @return HomeResponseDTO 썸네일 이미지를 보여줍니다. id는 일기 id입니다.
      * @throws IOException
      */
     @GetMapping("/home")
-    public ResponseEntity<List<HomeResponseDTO>> home(final @RequestParam int year, final @RequestParam int month, final @AuthenticationPrincipal User user) throws IOException {
-        return ResponseEntity.ok(diaryService.getHome(year, month, user));
+    public ResponseEntity<List<HomeResponseDTO>> home(final @RequestParam String yearMonth, final @AuthenticationPrincipal User user) throws IOException {
+        return ResponseEntity.ok(diaryService.getHome(yearMonth, user));
     }
 
     /**
      * 하루치 일기들을 보여주기
-     * @param year
-     * @param month
-     * @param day
+     * @param date
      * @param user
      * @return HomeDayResponseDTO 이전 일기 날짜,다음 일기 날짜가 포함된 오늘 날짜의 일기 데이터
      */
     @GetMapping("/home-day")
-    public ResponseEntity<HomeDayResponseDTO> homeDay(final @RequestParam int year, final @RequestParam int month, final @RequestParam int day, final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(diaryService.getHomeDay(year, month, day, user));
+    public ResponseEntity<HomeDayResponseDTO> homeDay(final @RequestParam String date, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.getHomeDay(date, user));
     }
 }

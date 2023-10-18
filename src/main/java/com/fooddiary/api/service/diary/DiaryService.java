@@ -3,6 +3,8 @@ package com.fooddiary.api.service.diary;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -184,9 +186,11 @@ public class DiaryService {
         diaryRepository.save(diary);
     }
 
-    public List<HomeResponseDTO> getHome(final int year, final int month, final User user) throws IOException {
+    public List<HomeResponseDTO> getHome(final String yearMonth, final User user) throws IOException {
         List<HomeResponseDTO> homeResponseDTOList = new LinkedList<>();
-        List<Diary> diaryList = diaryRepository.findByYearAndMonth(year, month, user.getId());
+        YearMonth.parse(yearMonth);
+        String[] yearMonthSplit = yearMonth.split("-");
+        List<Diary> diaryList = diaryRepository.findByYearAndMonth(Integer.parseInt(yearMonthSplit[0]), Integer.parseInt(yearMonthSplit[1]), user.getId());
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
                 Image image = diary.getImages().get(0);
@@ -200,9 +204,10 @@ public class DiaryService {
         return homeResponseDTOList;
     }
 
-    public HomeDayResponseDTO getHomeDay(final int year, final int month, final int day, final User user) {
+    public HomeDayResponseDTO getHomeDay(final String date, final User user) {
         List<HomeDayResponseDTO.HomeDay> homeDayList = new LinkedList<>();
-        List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(year, month, day, user.getId());
+        LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
+        List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(localDate.getYear(), localDate.getMonth().getValue(), localDate.getDayOfMonth(), user.getId());
 
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
@@ -220,7 +225,7 @@ public class DiaryService {
         HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
         homeDayResponseDTO.setHomeDayList(homeDayList);
 
-        Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(year, month, day, user.getId());
+        Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(localDate.getYear(), localDate.getMonth().getValue(), localDate.getDayOfMonth(), user.getId());
         if (timeMap.get("before") != null) {
             Time before = timeMap.get("before");
             homeDayResponseDTO.setBeforeDay(LocalDate.of(before.getYear(), before.getMonth(), before.getDay()));
