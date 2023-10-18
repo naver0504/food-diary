@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import com.fooddiary.api.FileStorageService;
-import com.fooddiary.api.common.utils.ImageUtils;
+import com.fooddiary.api.common.util.ImageUtils;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
@@ -114,10 +113,10 @@ public class DiaryService {
         DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
         diaryDetailResponseDTO.setImages(imageService.getImages(diary, user));
         diaryDetailResponseDTO.setTags(diary.getDiaryTags().stream().map(tag -> {
-            DiaryDetailResponseDTO.TagResponseDTO tagResponseDTO = new DiaryDetailResponseDTO.TagResponseDTO();
-            tagResponseDTO.setName(tag.getTag().getTagName());
-            tagResponseDTO.setId(tag.getId());
-            return tagResponseDTO;
+            DiaryDetailResponseDTO.TagResponse tagResponse = new DiaryDetailResponseDTO.TagResponse();
+            tagResponse.setName(tag.getTag().getTagName());
+            tagResponse.setId(tag.getId());
+            return tagResponse;
         }).collect(Collectors.toList()));
         diaryDetailResponseDTO.setDate(diary.getTime().getCreateTime().toLocalDate());
         diaryDetailResponseDTO.setMemo(diary.getMemo());
@@ -186,11 +185,9 @@ public class DiaryService {
         diaryRepository.save(diary);
     }
 
-    public List<HomeResponseDTO> getHome(final String yearMonth, final User user) throws IOException {
+    public List<HomeResponseDTO> getHome(final YearMonth yearMonth, final User user) throws IOException {
         List<HomeResponseDTO> homeResponseDTOList = new LinkedList<>();
-        YearMonth.parse(yearMonth);
-        String[] yearMonthSplit = yearMonth.split("-");
-        List<Diary> diaryList = diaryRepository.findByYearAndMonth(Integer.parseInt(yearMonthSplit[0]), Integer.parseInt(yearMonthSplit[1]), user.getId());
+        List<Diary> diaryList = diaryRepository.findByYearAndMonth(yearMonth.getYear(), yearMonth.getMonthValue(), user.getId());
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
                 Image image = diary.getImages().get(0);
@@ -204,10 +201,9 @@ public class DiaryService {
         return homeResponseDTOList;
     }
 
-    public HomeDayResponseDTO getHomeDay(final String date, final User user) {
+    public HomeDayResponseDTO getHomeDay(final LocalDate date, final User user) {
         List<HomeDayResponseDTO.HomeDay> homeDayList = new LinkedList<>();
-        LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
-        List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(localDate.getYear(), localDate.getMonth().getValue(), localDate.getDayOfMonth(), user.getId());
+        List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
 
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
@@ -225,7 +221,7 @@ public class DiaryService {
         HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
         homeDayResponseDTO.setHomeDayList(homeDayList);
 
-        Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(localDate.getYear(), localDate.getMonth().getValue(), localDate.getDayOfMonth(), user.getId());
+        Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
         if (timeMap.get("before") != null) {
             Time before = timeMap.get("before");
             homeDayResponseDTO.setBeforeDay(LocalDate.of(before.getYear(), before.getMonth(), before.getDay()));

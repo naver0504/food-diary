@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 
 @RestController
@@ -108,7 +110,7 @@ public class DiaryController {
      * @throws IOException
      */
     @GetMapping("/home")
-    public ResponseEntity<List<HomeResponseDTO>> home(final @RequestParam String yearMonth, final @AuthenticationPrincipal User user) throws IOException {
+    public ResponseEntity<List<HomeResponseDTO>> home(final @RequestParam YearMonth yearMonth, final @AuthenticationPrincipal User user) throws IOException {
         return ResponseEntity.ok(diaryService.getHome(yearMonth, user));
     }
 
@@ -119,7 +121,7 @@ public class DiaryController {
      * @return HomeDayResponseDTO 이전 일기 날짜,다음 일기 날짜가 포함된 오늘 날짜의 일기 데이터
      */
     @GetMapping("/home-day")
-    public ResponseEntity<HomeDayResponseDTO> homeDay(final @RequestParam String date, final @AuthenticationPrincipal User user) {
+    public ResponseEntity<HomeDayResponseDTO> homeDay(final @RequestParam LocalDate date, final @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(diaryService.getHomeDay(date, user));
     }
 }

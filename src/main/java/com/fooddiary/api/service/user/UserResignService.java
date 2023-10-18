@@ -1,7 +1,7 @@
 package com.fooddiary.api.service.user;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.fooddiary.api.common.utils.ImageUtils;
+import com.fooddiary.api.common.util.ImageUtils;
 import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.diary.Image;
 import com.fooddiary.api.entity.diary.DiaryTag;

@@ -1,4 +1,4 @@
-package com.fooddiary.api.common.utils;
+package com.fooddiary.api.common.util;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;

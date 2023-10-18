@@ -14,12 +14,12 @@ public class DiaryDetailResponseDTO {
     private String memo;
     private String diaryTime;
     private LocalDate date;
-    private List<TagResponseDTO> tags;
+    private List<TagResponse> tags;
     private List<ImageResponseDTO> images;
 
     @Getter
     @Setter
-    public static class TagResponseDTO {
+    public static class TagResponse {
         private long id;
         private String name;
     }
