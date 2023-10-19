@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -18,11 +19,14 @@ public class TimelineController {
     private final TimelineService timelineService;
 
     @GetMapping("/show")
-    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam int year, final @RequestParam int month,
-                                                                  final @RequestParam(defaultValue = "0") int startDay, final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(timelineService.getTimeline(year, month, startDay, user));
+    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam LocalDate date, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(timelineService.getTimeline(date, user));
     }
 
+    @GetMapping("/show/more-image")
+    public ResponseEntity<List<TimeLineResponseDTO>> showMoreImage(final @RequestParam LocalDate date, final @RequestParam int startId, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(timelineService.getMoreImage(date, startId, user));
+    }
 /*
     @GetMapping("/timeline")
     public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam int year, final @RequestParam int month,

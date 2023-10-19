@@ -27,8 +27,10 @@ public class Diary {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Embedded
-    private Time time;
+    @Column(nullable = false)
+    private LocalDateTime createTime; // 사용자가 선택한 식사일기 시간
+    //@Embedded
+    //private Time time;
 
     @Enumerated(EnumType.STRING)
     private DiaryTime diaryTime;
@@ -56,7 +58,7 @@ public class Diary {
 
     public static Diary createDiary(final LocalDateTime dateTime, final User user, final DiaryTime diaryTime, final PlaceInfoDTO placeInfo) {
         Diary diary = new Diary();
-        diary.setTime(new Time(dateTime));
+        diary.setCreateTime(setCreateTime(dateTime, diaryTime));
         diary.setCreateAt(LocalDateTime.now());
         diary.setDiaryTime(diaryTime);
         if (StringUtils.hasText(placeInfo.getPlace())) {
@@ -65,6 +67,35 @@ public class Diary {
         diary.setUser(user);
         diary.setGeography(placeInfo.getLongitude(), placeInfo.getLatitude());
         return diary;
+    }
+
+    private static LocalDateTime setCreateTime(final LocalDateTime dateTime, final DiaryTime diaryTime) {
+        switch (diaryTime) {
+            case BREAKFAST -> {
+                return dateTime.withHour(8);
+            }
+            case BRUNCH -> {
+                return dateTime.withHour(10);
+            }
+            case LUNCH -> {
+                return dateTime.withHour(12);
+            }
+            case SNACK -> {
+                return dateTime.withHour(14);
+            }
+            case LINNER -> {
+                return dateTime.withHour(16);
+            }
+            case DINNER -> {
+                return dateTime.withHour(18);
+            }
+            case LATESNACK -> {
+                return dateTime.withHour(21);
+            }
+            default -> {
+                return dateTime.withHour(0);
+            }
+        }
     }
 
     public void setGeography(final Double longitude, final Double latitude) {

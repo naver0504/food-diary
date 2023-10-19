@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @NoArgsConstructor
@@ -16,46 +17,11 @@ import java.util.List;
 @Builder
 @Getter
 public class TimeLineResponseDTO {
-
-    private TimeDetailDTO timeDetail;
-    private List<ImageResponseDTO> images;
-
-/*
-    @Builder
-    @AllArgsConstructor
-    @Getter
-    @NoArgsConstructor
-    public static class ImageResponseDTO {
-        private int imageId;
+    private LocalDate date;
+    private List<Diary> diaryList;
+    public static class Diary {
+        private Integer diaryId;
         private byte[] bytes;
-
-        public static ImageResponseDTO createImageResponseDTO(final int imageId, final byte[] bytes) {
-            return ImageResponseDTO.builder()
-                    .imageId(imageId)
-                    .bytes(bytes)
-                    .build();
-        }
-
     }
-
- */
-
-    public static TimeLineResponseDTO TimeLineResponse(final DayImage dayImage, final List<ImageResponseDTO> imageResponseDTOs,
-                                                       final int dayOfWeek) {
-
-        final TimeDetailDTO timeDetailDTO = TimeDetailDTO.builder()
-                .month(dayImage.getTime().getMonth())
-                .day(dayImage.getTime().getDay())
-                .dayOfWeek(Time.getDayOfWeek(dayImage.getTime()))
-                .build();
-
-        return TimeLineResponseDTO.builder()
-                .timeDetail(timeDetailDTO)
-                .images(imageResponseDTOs)
-                .build();
-    }
-
-
-
 
 }
