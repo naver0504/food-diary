@@ -2,7 +2,7 @@ package com.fooddiary.api.controller;
 
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
-import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
+import com.fooddiary.api.dto.request.diary.PlaceInfoDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
@@ -31,7 +31,7 @@ public class DiaryController {
     /**
      * 한 장의 사진을 받아서 일기를 등록합니다. 우선 사진만 등록됩니다.
      * @param images 사진들
-     * @param newDiaryRequestDTO 위치 정보를 선택적으로 받게 합니다. 사진에 다 넣어줘야 합니다. json array로 받습니다.
+     * @param placeInfoDTO 위치 정보를 선택적으로 받게 합니다.
      * @param user
      * @return void ok응답으로 처리
      */
@@ -39,12 +39,12 @@ public class DiaryController {
             MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Void> createDiary(final @RequestPart("images") List<MultipartFile> images,
                                                final @RequestParam("createTime") LocalDateTime createTime,
-                                               final @RequestPart(value = "imageInfo", required = false) List<NewDiaryRequestDTO> newDiaryRequestDTO,
+                                               final @RequestPart(value = "placeInfo") PlaceInfoDTO placeInfoDTO,
                                                          final @AuthenticationPrincipal User user) {
         if (images.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
-        diaryService.createDiary(images, createTime, newDiaryRequestDTO, user);
+        diaryService.createDiary(images, createTime, placeInfoDTO, user);
         return ResponseEntity.ok().build();
     }
 
@@ -52,18 +52,16 @@ public class DiaryController {
      * 일기에 사진을 추가합니다.
      * @param diaryId 일기 아이디
      * @param files 사진 파일들
-     * @param newDiaryRequestDTOList 위치를 저장하기 위한 추가 정보. 사진에 다 넣어줘야 합니다. json array로 받습니다.
      * @param user spring context에서 관리되는 사용자 정보
      * @return
      */
     @PostMapping(value = "/{diaryId}/images", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Void> addImages(@PathVariable("diaryId") Integer diaryId, final @RequestPart("files") List<MultipartFile> files,
-                                            final @RequestPart(value = "imageInfo", required = false) List<NewDiaryRequestDTO> newDiaryRequestDTOList,
                                             final @AuthenticationPrincipal User user) {
         if (files.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
-        diaryService.addImages(diaryId, files, newDiaryRequestDTOList, user);
+        diaryService.addImages(diaryId, files, user);
         return ResponseEntity.ok().build();
     }
 
@@ -76,9 +74,8 @@ public class DiaryController {
      */
     @PatchMapping("/image/{imageId}")
     public ResponseEntity<Void> updateImageFile(final @RequestPart MultipartFile file, final @PathVariable("imageId") int imageId,
-                                                final @RequestPart(value = "imageInfo", required = false) NewDiaryRequestDTO newDiaryRequestDTO,
                                                 final @AuthenticationPrincipal User user) {
-        diaryService.updateImage(imageId, file, user, newDiaryRequestDTO);
+        diaryService.updateImage(imageId, file, user);
         return ResponseEntity.ok().build();
     }
 

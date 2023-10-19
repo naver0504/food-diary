@@ -14,6 +14,10 @@ public class DiaryMemoRequestDTO {
     private DiaryTime diaryTime = DiaryTime.ETC;
     private List<TagRequestDTO> tags;
 
+    private String place;
+    private Double longitude = -200D;
+    private Double latitude = -200D;
+
 
     @Getter
     @Setter

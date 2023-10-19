@@ -7,8 +7,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.util.ImageUtils;
-import com.fooddiary.api.dto.request.SaveImageRequestDTO;
-import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
+import com.fooddiary.api.dto.request.diary.PlaceInfoDTO;
 import com.fooddiary.api.dto.response.*;
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import com.fooddiary.api.entity.diary.Diary;
@@ -51,7 +50,7 @@ public class ImageService {
     @Value("${cloud.aws.s3.dir}")
     private String basePath;
 
-    public List<Image> storeImage(final int diaryId, final List<MultipartFile> files, final User user, final SaveImageRequestDTO saveImageRequestDTO)  {
+    public List<Image> storeImage(final int diaryId, final List<MultipartFile> files, final User user)  {
 
         final List<Image> images = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(basePath, user);
@@ -87,7 +86,7 @@ public class ImageService {
         return images;
     }
 
-    public void storeImage(final Diary diary, final List<MultipartFile> files, final User user, final LocalDateTime createTime, final List<SaveImageRequestDTO> saveImageRequestDTO)  {
+    public void storeImage(final Diary diary, final List<MultipartFile> files, final User user, final LocalDateTime createTime)  {
 
         final String dirPath = ImageUtils.getDirPath(basePath, user);
 
@@ -191,7 +190,7 @@ public class ImageService {
                 .build();
     }
 
-    public void updateImage(final Image image, final MultipartFile file, final User user, final NewDiaryRequestDTO newDiaryRequestDTO) {
+    public void updateImage(final Image image, final MultipartFile file, final User user) {
 
         final String storeFilename = ImageUtils.createImageName(file.getOriginalFilename());
         final String dirPath = ImageUtils.getDirPath(basePath, user);

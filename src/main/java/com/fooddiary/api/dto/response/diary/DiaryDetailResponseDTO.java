@@ -15,6 +15,9 @@ public class DiaryDetailResponseDTO {
     private String diaryTime;
     private LocalDate date;
     private List<TagResponse> tags;
+    private String place;
+    private Double longitude = -200D;
+    private Double latitude = -200D;
     private List<ImageResponseDTO> images;
 
     @Getter

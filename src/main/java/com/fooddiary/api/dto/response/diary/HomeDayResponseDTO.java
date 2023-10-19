@@ -24,6 +24,11 @@ public class HomeDayResponseDTO {
         private String memo;
         private DiaryTime diaryTime;
         private List<String> tags;
+        private String place;
+        @Builder.Default
+        private Double longitude = -200D;
+        @Builder.Default
+        private Double latitude = -200D;
         private ImageResponseDTO image;
     }
 

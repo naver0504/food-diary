@@ -26,8 +26,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fooddiary.api.common.exception.BizException;
-import com.fooddiary.api.dto.request.SaveImageRequestDTO;
-import com.fooddiary.api.dto.request.diary.NewDiaryRequestDTO;
+import com.fooddiary.api.dto.request.diary.PlaceInfoDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;
 import com.fooddiary.api.repository.diary.DiaryRepository;
@@ -51,7 +50,7 @@ public class DiaryService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public void createDiary(final List<MultipartFile> files, final LocalDateTime createTime, final List<NewDiaryRequestDTO> newDiaryRequestDTOList,
+    public void createDiary(final List<MultipartFile> files, final LocalDateTime createTime, final PlaceInfoDTO placeInfoDTO,
                             final User user) {
         final int year = createTime.getYear();
         final int month = createTime.getMonthValue();
@@ -63,16 +62,12 @@ public class DiaryService {
             throw new BizException("register only 10 per day");
         }
 
-        final Diary newDiary = Diary.createDiaryImage(createTime, user, DiaryTime.ETC);
+        final Diary newDiary = Diary.createDiary(createTime, user, DiaryTime.ETC, placeInfoDTO);
         diaryRepository.save(newDiary);
-        List<SaveImageRequestDTO> saveImageRequestDTOList = new ArrayList<>();
-      //  newDiaryRequestDTOList.forEach(data -> saveImageRequestDTOList.add(SaveImageRequestDTO.builder()
-      //          .latitude(data.getLatitude())
-      //          .longitude(data.getLongitude()).build()));
-        imageService.storeImage(newDiary, files, user, createTime, saveImageRequestDTOList);
+        imageService.storeImage(newDiary, files, user, createTime);
     }
 
-    public void addImages(final int diaryId, final List<MultipartFile> files, final List<NewDiaryRequestDTO> newDiaryRequestDTOList, final User user) {
+    public void addImages(final int diaryId, final List<MultipartFile> files, final User user) {
         if (diaryRepository.getDiaryImagesCount(diaryId) + files.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
@@ -81,16 +76,11 @@ public class DiaryService {
             throw new BizException("invalid diary id");
         }
 
-        List<SaveImageRequestDTO> saveImageRequestDTOList = new ArrayList<>();
-     //   newDiaryRequestDTOList.forEach(data -> saveImageRequestDTOList.add(SaveImageRequestDTO.builder()
-     //           .latitude(data.getLatitude())
-     //           .longitude(data.getLongitude()).build()));
-
-        imageService.storeImage(diary, files, user, diary.getTime().getCreateTime(), saveImageRequestDTOList);
+        imageService.storeImage(diary, files, user, diary.getTime().getCreateTime());
         diaryRepository.save(diary);
     }
 
-    public void updateImage(final int imageId, final MultipartFile file, final User user, final NewDiaryRequestDTO newDiaryRequestDTO) {
+    public void updateImage(final int imageId, final MultipartFile file, final User user) {
         Image image = imageRepository.findById(imageId).orElse(null);
         if (image == null) {
             throw new BizException("invalid image id");
@@ -100,7 +90,7 @@ public class DiaryService {
         if (!diary.getUser().getId().equals(user.getId())) {
             throw new BizException("no permission user");
         }
-        imageService.updateImage(image, file, user, newDiaryRequestDTO);
+        imageService.updateImage(image.getId(), file, user);
         diary.setUpdateAt(LocalDateTime.now());
         diaryRepository.save(diary);
     }
@@ -120,6 +110,9 @@ public class DiaryService {
         }).collect(Collectors.toList()));
         diaryDetailResponseDTO.setDate(diary.getTime().getCreateTime().toLocalDate());
         diaryDetailResponseDTO.setMemo(diary.getMemo());
+        diaryDetailResponseDTO.setPlace(diary.getPlace());
+        diaryDetailResponseDTO.setLongitude(diary.getGeography().getX());
+        diaryDetailResponseDTO.setLatitude(diary.getGeography().getY());
         diaryDetailResponseDTO.setDiaryTime(diary.getDiaryTime().name());
 
         return diaryDetailResponseDTO;
@@ -182,6 +175,8 @@ public class DiaryService {
         diary.setDiaryTags(diaryTagList);
         diary.setDiaryTime(diaryMemoRequestDTO.getDiaryTime());
         diary.setUpdateAt(LocalDateTime.now());
+        diary.setPlace(diaryMemoRequestDTO.getPlace());
+        diary.setGeography(diaryMemoRequestDTO.getLongitude(), diaryMemoRequestDTO.getLatitude());
         diaryRepository.save(diary);
     }
 
@@ -208,13 +203,17 @@ public class DiaryService {
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
                 Image image = diary.getImages().get(0);
-                HomeDayResponseDTO.HomeDay imageDetailResponseDTO = HomeDayResponseDTO.HomeDay.builder()
-                        .id(diary.getId())
+                HomeDayResponseDTO.HomeDay.HomeDayBuilder homeDayBuilder = HomeDayResponseDTO.HomeDay.builder();
+                homeDayBuilder = homeDayBuilder.id(diary.getId())
                         .memo(diary.getMemo())
                         .diaryTime(diary.getDiaryTime())
                         .tags(diary.getDiaryTags().stream().map(diaryTag -> diaryTag.getTag().getTagName()).collect(Collectors.toList()))
-                        .image(imageService.getImage(image, user)).build();
-                homeDayList.add(imageDetailResponseDTO);
+                        .place(diary.getPlace());
+                if (diary.getGeography() != null) {
+                    homeDayBuilder = homeDayBuilder.longitude(diary.getGeography().getX())
+                                          .latitude(diary.getGeography().getY());
+                }
+                homeDayList.add(homeDayBuilder.image(imageService.getImage(image, user)).build());
             }
         }
 
