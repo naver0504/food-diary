@@ -1,5 +1,7 @@
 package com.fooddiary.api.dto.response.diary;
 
+import java.time.LocalDate;
+
 import com.fooddiary.api.entity.diary.Time;
 import lombok.*;
 
@@ -11,5 +13,5 @@ import lombok.*;
 public class HomeResponseDTO {
     private int id; // diary id
     private byte[] bytes;
-    private Time time;
+    private LocalDate time;
 }

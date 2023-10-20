@@ -86,7 +86,7 @@ public class ImageService {
         return images;
     }
 
-    public void storeImage(final Diary diary, final List<MultipartFile> files, final User user, final LocalDateTime createTime)  {
+    public void storeImage(final Diary diary, final List<MultipartFile> files, final User user)  {
 
         final String dirPath = ImageUtils.getDirPath(basePath, user);
 

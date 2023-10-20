@@ -2,26 +2,23 @@ package com.fooddiary.api.dto.response.timeline;
 
 import com.fooddiary.api.dto.response.TimeDetailDTO;
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
+import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.image.DayImage;
 import com.fooddiary.api.entity.diary.Time;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Setter
 @Getter
 public class TimeLineResponseDTO {
     private LocalDate date;
-    private List<Diary> diaryList;
-    public static class Diary {
-        private Integer diaryId;
-        private byte[] bytes;
-    }
-
+    private List<TimelineDiaryDTO> diaryList;
 }

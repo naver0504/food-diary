@@ -38,13 +38,13 @@ public class DiaryController {
     @PostMapping(value = "/new", consumes = {
             MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Void> createDiary(final @RequestPart("images") List<MultipartFile> images,
-                                               final @RequestParam("createTime") LocalDateTime createTime,
+                                               final @RequestParam("createTime") LocalDate createDate,
                                                final @RequestPart(value = "placeInfo") PlaceInfoDTO placeInfoDTO,
                                                          final @AuthenticationPrincipal User user) {
         if (images.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
-        diaryService.createDiary(images, createTime, placeInfoDTO, user);
+        diaryService.createDiary(images, createDate, placeInfoDTO, user);
         return ResponseEntity.ok().build();
     }
 

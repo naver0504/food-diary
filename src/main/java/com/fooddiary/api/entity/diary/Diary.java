@@ -7,7 +7,9 @@ import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,9 +58,9 @@ public class Diary {
     @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DiaryTag> diaryTags = new ArrayList<>();
 
-    public static Diary createDiary(final LocalDateTime dateTime, final User user, final DiaryTime diaryTime, final PlaceInfoDTO placeInfo) {
+    public static Diary createDiary(final LocalDate dateTime, final User user, final DiaryTime diaryTime, final PlaceInfoDTO placeInfo) {
         Diary diary = new Diary();
-        diary.setCreateTime(setCreateTime(dateTime, diaryTime));
+        diary.setCreateTime(makeCreateTime(dateTime, diaryTime));
         diary.setCreateAt(LocalDateTime.now());
         diary.setDiaryTime(diaryTime);
         if (StringUtils.hasText(placeInfo.getPlace())) {
@@ -69,31 +71,31 @@ public class Diary {
         return diary;
     }
 
-    private static LocalDateTime setCreateTime(final LocalDateTime dateTime, final DiaryTime diaryTime) {
+    public static LocalDateTime makeCreateTime(final LocalDate dateTime, final DiaryTime diaryTime) {
         switch (diaryTime) {
             case BREAKFAST -> {
-                return dateTime.withHour(8);
+                return dateTime.atTime(LocalTime.of(8, 0));
             }
             case BRUNCH -> {
-                return dateTime.withHour(10);
+                return dateTime.atTime(LocalTime.of(10, 0));
             }
             case LUNCH -> {
-                return dateTime.withHour(12);
+                return dateTime.atTime(LocalTime.of(12, 0));
             }
             case SNACK -> {
-                return dateTime.withHour(14);
+                return dateTime.atTime(LocalTime.of(14, 0));
             }
             case LINNER -> {
-                return dateTime.withHour(16);
+                return dateTime.atTime(LocalTime.of(16, 0));
             }
             case DINNER -> {
-                return dateTime.withHour(18);
+                return dateTime.atTime(LocalTime.of(18, 0));
             }
             case LATESNACK -> {
-                return dateTime.withHour(21);
+                return dateTime.atTime(LocalTime.of(21, 0));
             }
             default -> {
-                return dateTime.withHour(0);
+                return dateTime.atStartOfDay();
             }
         }
     }

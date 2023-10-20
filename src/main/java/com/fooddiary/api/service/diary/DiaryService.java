@@ -50,21 +50,20 @@ public class DiaryService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public void createDiary(final List<MultipartFile> files, final LocalDateTime createTime, final PlaceInfoDTO placeInfoDTO,
+    public void createDiary(final List<MultipartFile> files, final LocalDate createDate, final PlaceInfoDTO placeInfoDTO,
                             final User user) {
-        final int year = createTime.getYear();
-        final int month = createTime.getMonthValue();
-        final int day = createTime.getDayOfMonth();
-        final int todayDiaryCount = diaryRepository.getByYearAndMonthAndDayCount(year, month, day,
+        LocalDateTime startDate = createDate.atStartOfDay();
+        LocalDateTime endDate = createDate.plusDays(1L).atStartOfDay().minusNanos(1L);
+        final int todayDiaryCount = diaryRepository.getByYearAndMonthAndDayCount(startDate, endDate,
                                                                                  user.getId());
 
         if (todayDiaryCount >= 10) {
             throw new BizException("register only 10 per day");
         }
 
-        final Diary newDiary = Diary.createDiary(createTime, user, DiaryTime.ETC, placeInfoDTO);
+        final Diary newDiary = Diary.createDiary(createDate, user, DiaryTime.ETC, placeInfoDTO);
         diaryRepository.save(newDiary);
-        imageService.storeImage(newDiary, files, user, createTime);
+        imageService.storeImage(newDiary, files, user);
     }
 
     public void addImages(final int diaryId, final List<MultipartFile> files, final User user) {
@@ -76,7 +75,7 @@ public class DiaryService {
             throw new BizException("invalid diary id");
         }
 
-        imageService.storeImage(diary, files, user, diary.getTime().getCreateTime());
+        imageService.storeImage(diary, files, user);
         diaryRepository.save(diary);
     }
 
@@ -108,11 +107,13 @@ public class DiaryService {
             tagResponse.setId(tag.getId());
             return tagResponse;
         }).collect(Collectors.toList()));
-        diaryDetailResponseDTO.setDate(diary.getTime().getCreateTime().toLocalDate());
+        diaryDetailResponseDTO.setDate(diary.getCreateTime().toLocalDate());
         diaryDetailResponseDTO.setMemo(diary.getMemo());
         diaryDetailResponseDTO.setPlace(diary.getPlace());
-        diaryDetailResponseDTO.setLongitude(diary.getGeography().getX());
-        diaryDetailResponseDTO.setLatitude(diary.getGeography().getY());
+        if (diary.getGeography() != null) {
+            diaryDetailResponseDTO.setLongitude(diary.getGeography().getX());
+            diaryDetailResponseDTO.setLatitude(diary.getGeography().getY());
+        }
         diaryDetailResponseDTO.setDiaryTime(diary.getDiaryTime().name());
 
         return diaryDetailResponseDTO;
@@ -173,6 +174,7 @@ public class DiaryService {
 
         diary.setMemo(diaryMemoRequestDTO.getMemo());
         diary.setDiaryTags(diaryTagList);
+        diary.setCreateTime(Diary.makeCreateTime(diary.getCreateTime().toLocalDate(), diaryMemoRequestDTO.getDiaryTime()));
         diary.setDiaryTime(diaryMemoRequestDTO.getDiaryTime());
         diary.setUpdateAt(LocalDateTime.now());
         diary.setPlace(diaryMemoRequestDTO.getPlace());
@@ -182,13 +184,15 @@ public class DiaryService {
 
     public List<HomeResponseDTO> getHome(final YearMonth yearMonth, final User user) throws IOException {
         List<HomeResponseDTO> homeResponseDTOList = new LinkedList<>();
-        List<Diary> diaryList = diaryRepository.findByYearAndMonth(yearMonth.getYear(), yearMonth.getMonthValue(), user.getId());
+        LocalDateTime startDate = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime endDate = yearMonth.atEndOfMonth().plusDays(1L).atStartOfDay().minusNanos(1L);
+        List<Diary> diaryList = diaryRepository.findByYearAndMonth(startDate, endDate, user.getId());
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
                 Image image = diary.getImages().get(0);
                 HomeResponseDTO homeResponseDTO = new HomeResponseDTO();
                 homeResponseDTO.setId(diary.getId());
-                homeResponseDTO.setTime(diary.getTime());
+                homeResponseDTO.setTime(diary.getCreateTime().toLocalDate());
                 homeResponseDTO.setBytes(fileStorageService.getObject(ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName()));
                 homeResponseDTOList.add(homeResponseDTO);
             }
@@ -198,7 +202,9 @@ public class DiaryService {
 
     public HomeDayResponseDTO getHomeDay(final LocalDate date, final User user) {
         List<HomeDayResponseDTO.HomeDay> homeDayList = new LinkedList<>();
-        List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
+        LocalDateTime startDate = date.atStartOfDay();
+        LocalDateTime endDate = date.plusDays(1).atStartOfDay().minusNanos(1L);
+        List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(startDate, endDate, user.getId());
 
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
