@@ -1,5 +1,6 @@
 package com.fooddiary.api.dto.response.timeline;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fooddiary.api.dto.response.TimeDetailDTO;
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import com.fooddiary.api.entity.diary.Diary;
@@ -19,6 +20,7 @@ import java.util.List;
 @Setter
 @Getter
 public class TimeLineResponseDTO {
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
     private LocalDate date;
     private List<TimelineDiaryDTO> diaryList;
 }

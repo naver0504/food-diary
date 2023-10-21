@@ -1,9 +1,6 @@
 package com.fooddiary.api.common.util;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fooddiary.api.entity.user.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +21,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class ImageUtils {
-
 
     public static final int THUMBNAIL_WIDTH = 44;
     public static final int THUMBNAIL_HEIGHT = 44;

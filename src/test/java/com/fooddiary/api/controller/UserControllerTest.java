@@ -55,15 +55,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * 컨트롤러 계층에 대한 테스트 입니다. API 문서생성도 같이하고 있습니다.
  */
-@SpringBootTest
+@SpringBootTest(classes = {UserController.class})
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
 @ActiveProfiles(Profiles.TEST)
 public class UserControllerTest {
 
     @MockBean
     PasswordEncoder passwordEncoder;
-    @MockBean
-    private Interceptor interceptor;
     @MockBean
     private UserService userService;
     @Autowired
@@ -74,7 +72,6 @@ public class UserControllerTest {
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                                  .apply(documentationConfiguration(restDocumentation)).build();
-        given(interceptor.preHandle(any(), any(), any())).willReturn(true);
     }
 
     @Test
@@ -143,7 +140,7 @@ public class UserControllerTest {
 
         ArgumentCaptor<UserLoginRequestDTO> loginRequestDto = ArgumentCaptor.forClass(UserLoginRequestDTO.class);
 
-        then(userService).should(timeout(1)).loginUser(loginRequestDto.capture());
+        then(userService).should(times(1)).loginUser(loginRequestDto.capture());
 
         final List<UserLoginRequestDTO> servletLoginRequest = loginRequestDto.getAllValues();
 

@@ -17,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -37,7 +36,7 @@ public class DiaryController {
      */
     @PostMapping(value = "/new", consumes = {
             MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Void> createDiary(final @RequestPart("images") List<MultipartFile> images,
+    public ResponseEntity<Void> createDiary(final @RequestPart("files") List<MultipartFile> images,
                                                final @RequestParam("createTime") LocalDate createDate,
                                                final @RequestPart(value = "placeInfo") PlaceInfoDTO placeInfoDTO,
                                                          final @AuthenticationPrincipal User user) {
@@ -69,11 +68,11 @@ public class DiaryController {
      * 사진 수정
      * @param file 신규 사진
      * @param imageId 수정할 사진 id
-     * @param user
+     * @param user spring context에서 관리되는 사용자 정보
      * @return
      */
     @PatchMapping("/image/{imageId}")
-    public ResponseEntity<Void> updateImageFile(final @RequestPart MultipartFile file, final @PathVariable("imageId") int imageId,
+    public ResponseEntity<Void> updateImage(final @RequestPart MultipartFile file, final @PathVariable("imageId") int imageId,
                                                 final @AuthenticationPrincipal User user) {
         diaryService.updateImage(imageId, file, user);
         return ResponseEntity.ok().build();
@@ -81,8 +80,8 @@ public class DiaryController {
 
     /**
      * 일기 자세히 보기
-     * @param diaryId
-     * @param user
+     * @param diaryId 일기 id
+     * @param user spring context에서 관리되는 사용자 정보
      * @return
      */
     @GetMapping("/{diaryId}")

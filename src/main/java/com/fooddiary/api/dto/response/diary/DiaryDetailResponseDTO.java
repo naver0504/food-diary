@@ -1,5 +1,6 @@
 package com.fooddiary.api.dto.response.diary;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fooddiary.api.dto.response.TimeDetailDTO;
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import lombok.Getter;
@@ -13,6 +14,7 @@ import java.util.List;
 public class DiaryDetailResponseDTO {
     private String memo;
     private String diaryTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
     private LocalDate date;
     private List<TagResponse> tags;
     private String place;
