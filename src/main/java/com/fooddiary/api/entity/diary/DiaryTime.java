@@ -1,4 +1,4 @@
-package com.fooddiary.api.entity.image;
+package com.fooddiary.api.entity.diary;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;

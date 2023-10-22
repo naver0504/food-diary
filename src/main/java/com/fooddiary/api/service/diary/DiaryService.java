@@ -15,7 +15,7 @@ import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
 import com.fooddiary.api.entity.diary.*;
-import com.fooddiary.api.entity.image.DiaryTime;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.repository.ImageRepository;
 import com.fooddiary.api.repository.diary.DiaryTagRepository;
 import com.fooddiary.api.repository.diary.TagRepository;
@@ -104,7 +104,7 @@ public class DiaryService {
             throw new BizException("invalid diary id");
         }
         DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
-        diaryDetailResponseDTO.setImages(imageService.getImages(diary, user));
+        diaryDetailResponseDTO.setImages(imageService.getImages(diary.getImages(), user));
         diaryDetailResponseDTO.setTags(diary.getDiaryTags().stream().map(tag -> {
             DiaryDetailResponseDTO.TagResponse tagResponse = new DiaryDetailResponseDTO.TagResponse();
             tagResponse.setName(tag.getTag().getTagName());
@@ -198,20 +198,29 @@ public class DiaryService {
             amazonS3.deleteObject(bucket, ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName());
             imageRepository.delete(image);
         }
+
         List<DiaryTag> diaryTags = diary.getDiaryTags();
+        List<DiaryTag> deleteDiaryTagList = new ArrayList<>();
+        List<Tag> deletableTagIdList = new ArrayList<>();
         for (DiaryTag diaryTag : diaryTags) {
             Tag tag = diaryTag.getTag();
             tag.getDiaryTags().remove(diaryTag);
-            diary.getDiaryTags().remove(diaryTag);
-            diaryTagRepository.delete(diaryTag);
+            deleteDiaryTagList.add(diaryTag);
             if (tag.getDiaryTags().isEmpty()) {
-                try {
-                    tagRepository.delete(tag);
-                } catch (Exception e) {
-                    log.warn("can't delete tag, tag id: {}", tag.getId());
-                }
+                deletableTagIdList.add(tag);
             }
         }
+        diary.getDiaryTags().removeAll(deleteDiaryTagList);
+        diaryTagRepository.deleteAll(deleteDiaryTagList);
+
+        deletableTagIdList.forEach(tag -> {
+            try {
+                tagRepository.delete(tag);
+            } catch (Exception e) {
+                log.info("can't delete tag, tag id: {}", tag.getId());
+            }
+        });
+
         diaryRepository.delete(diary);
     }
 

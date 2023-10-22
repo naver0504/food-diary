@@ -1,7 +1,7 @@
 package com.fooddiary.api.dto.request.diary;
 
 
-import com.fooddiary.api.entity.image.DiaryTime;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import lombok.Getter;
 import lombok.Setter;
 

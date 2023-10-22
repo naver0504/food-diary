@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
@@ -63,13 +64,6 @@ public class Image {
                 .build();
         image.diary = parentImage.diary;
         return image;
-    }
-
-    public void setStoredFileName(String storeFilename) {
-        this.storedFileName = storeFilename;
-    }
-    public void setUpdateAt(LocalDateTime updateAt) {
-        this.updateAt = updateAt;
     }
 
 }

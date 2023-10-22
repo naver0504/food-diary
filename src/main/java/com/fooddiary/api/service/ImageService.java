@@ -129,10 +129,10 @@ public class ImageService {
         }
     }
 
-    public List<ImageResponseDTO> getImages(final Diary diary, final User user) {
+    public List<ImageResponseDTO> getImages(final List<Image> images, final User user) {
         List<ImageResponseDTO> imageResponseDTOList = new LinkedList<>();
         final String dirPath = ImageUtils.getDirPath(basePath, user);
-        for (Image image : diary.getImages()) {
+        for (Image image : images) {
             byte[] bytes;
             try {
                 bytes = fileStorageService.getObject(dirPath + image.getStoredFileName());

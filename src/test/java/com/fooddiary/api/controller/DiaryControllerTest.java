@@ -10,7 +10,7 @@ import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
-import com.fooddiary.api.entity.image.DiaryTime;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.diary.DiaryService;
 import org.junit.jupiter.api.Assertions;
@@ -58,7 +58,7 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles(Profiles.TEST)
+@ActiveProfiles(Profiles.LOCAL)
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
 public class DiaryControllerTest {
 
@@ -178,6 +178,7 @@ public class DiaryControllerTest {
                         .file(mockMultipartFile2)
                         .part(jsonPart)
                         .queryParam("createTime", LocalDate.now().toString())
+                        .headers(getHeader())
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk()).andDo(document("new diary"));
     }
@@ -191,7 +192,9 @@ public class DiaryControllerTest {
 
         mockMvc.perform(multipart("/diary/{diaryId}/images", 1)
                 .file(mockMultipartFile)
-                .file(mockMultipartFile2)).andExpect(status().isOk()).andDo(document("add images"));
+                .file(mockMultipartFile2)
+                .headers(getHeader()))
+                .andExpect(status().isOk()).andDo(document("add images"));
     }
 
     @Test
@@ -208,6 +211,7 @@ public class DiaryControllerTest {
                                 return request;
                             }
                         })
+                        .headers(getHeader())
                 )
                 .andExpect(status().isOk()).andDo(document("update image"));
     }
@@ -239,7 +243,8 @@ public class DiaryControllerTest {
 
         when(diaryService.getDiaryDetail(eq(1), any(User.class))).thenReturn(diaryDetailResponseDTO);
 
-        final MockHttpServletResponse mockHttpServletResponse =  mockMvc.perform(get("/diary/{diaryId}", 1))
+        final MockHttpServletResponse mockHttpServletResponse =  mockMvc.perform(get("/diary/{diaryId}", 1)
+                        .headers(getHeader()))
                 .andExpect(status().isOk())
                 .andDo(document("diary detail"))
                 .andReturn()
@@ -273,9 +278,18 @@ public class DiaryControllerTest {
         doNothing().when(diaryService).updateMemo(any(Integer.class), any(DiaryMemoRequestDTO.class), any(User.class));
 
         mockMvc.perform(put("/diary/{diaryId}/memo", 1)
-                .content(content))
+                        .headers(getHeader())
+                        .content(content))
                 .andExpect(status().isOk())
                 .andDo(document("update memo"));
+    }
+
+    @Test
+    void deleteDiary() throws Exception {
+        mockMvc.perform(delete("/diary/{diaryId}", 1)
+                        .headers(getHeader()))
+                .andExpect(status().isOk())
+                .andDo(document("delete diary"));
     }
 
     private  HttpHeaders getHeader() {

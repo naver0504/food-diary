@@ -32,10 +32,10 @@ public class TimelineQuerydslRepository {
         jpaQueryFactory = new JPAQueryFactory(entityManager);
     }
 
-    public List<Diary> getTimeLineDiary(final LocalDate date, final int userId) {
+    public List<TimelineDiaryDslQueryDTO> getTimeLineDate(final LocalDate date, final int userId) {
         DateTemplate dateFormat = Expressions.dateTemplate(String.class, "DATE_FORMAT({0},{1})", diary.createTime,
                                                            ConstantImpl.create("%Y-%m-%d"));
-        List<TimelineDiaryDslQueryDTO> dateList =  jpaQueryFactory.select(Projections.fields(TimelineDiaryDslQueryDTO.class, dateFormat.as("date")))
+        return jpaQueryFactory.select(Projections.fields(TimelineDiaryDslQueryDTO.class, dateFormat.as("date")))
                               .from(diary)
                               .where(
                         diary.user.id.eq(userId),
@@ -46,6 +46,7 @@ public class TimelineQuerydslRepository {
                               .limit(4)
                               .fetch();
 
+        /*
         return jpaQueryFactory.selectFrom(diary)
                               .innerJoin(image).fetchJoin()
                               .where(diary.user.id.eq(userId),
@@ -53,6 +54,8 @@ public class TimelineQuerydslRepository {
                                                               LocalDate.parse(dateList.get(dateList.size()-1).getDate(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().plusDays(1).minusNanos(1L)))
                               .orderBy(diary.createTime.asc(), image.updateAt.desc())
                               .fetch();
+
+         */
     }
 
     /**

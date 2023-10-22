@@ -3,29 +3,34 @@ package com.fooddiary.api.service.user;
 import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.common.util.ImageUtils;
 import com.fooddiary.api.entity.diary.Diary;
-import com.fooddiary.api.entity.diary.Image;
 import com.fooddiary.api.entity.diary.DiaryTag;
+import com.fooddiary.api.entity.diary.Image;
+import com.fooddiary.api.entity.diary.Tag;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.repository.diary.DiaryTagRepository;
 import com.fooddiary.api.repository.ImageRepository;
-import com.fooddiary.api.repository.user.UserRepository;
 import com.fooddiary.api.repository.diary.DiaryRepository;
-
+import com.fooddiary.api.repository.diary.DiaryTagRepository;
+import com.fooddiary.api.repository.diary.TagRepository;
+import com.fooddiary.api.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserResignService {
 
     private final DiaryRepository diaryRepository;
     private final DiaryTagRepository diaryTagRepository;
+    private final TagRepository tagRepository;
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
     private final AmazonS3 amazonS3;
@@ -60,9 +65,23 @@ public class UserResignService {
                     imageRepository.delete(image);
                 }
                 List<DiaryTag> diaryTags = diary.getDiaryTags();
-                diaryTags.forEach(diaryTag -> diaryTag.getTag().getDiaryTags().remove(diaryTag));
+                List<Tag> deletableTags = new ArrayList<>();
+                diaryTags.forEach(diaryTag -> {
+                    Tag tag = diaryTag.getTag();
+                    tag.getDiaryTags().remove(diaryTag);
+                    if (tag.getDiaryTags().isEmpty()) {
+                        deletableTags.add(tag);
+                    }
+                });
                 diary.setDiaryTags(null);
                 diaryTagRepository.deleteAll(diaryTags);
+                deletableTags.forEach(tag -> {
+                    try {
+                        tagRepository.delete(tag);
+                    } catch (Exception e) {
+                        log.info("can't delete tag, tag id: {}", tag.getId());
+                    }
+                });
                 diaryRepository.delete(diary);
             }
         }

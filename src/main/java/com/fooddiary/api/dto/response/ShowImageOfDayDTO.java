@@ -2,7 +2,7 @@ package com.fooddiary.api.dto.response;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fooddiary.api.entity.image.DiaryTime;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import lombok.*;
 
 import java.util.List;

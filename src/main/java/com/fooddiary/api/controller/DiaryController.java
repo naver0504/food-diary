@@ -98,6 +98,12 @@ public class DiaryController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 일기 삭제
+     * @param diaryId 해당 일기의 id
+     * @param user 스프링 thread-local SecurityContext에 저장된 사용자 정보
+     * @return 성공하면 ok
+     */
     @DeleteMapping("/{diaryId}")
     public ResponseEntity<Void> deleteDiary(@PathVariable("diaryId") final Integer diaryId, final @AuthenticationPrincipal User user) {
         diaryService.deleteDiary(diaryId, user);

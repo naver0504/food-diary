@@ -1,9 +1,5 @@
 package com.fooddiary.api.dto.request.diary;
 
-import java.time.LocalDateTime;
-
-import com.fooddiary.api.entity.image.DiaryTime;
-
 import lombok.Getter;
 import lombok.Setter;
 
