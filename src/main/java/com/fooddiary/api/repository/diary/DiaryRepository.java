@@ -37,4 +37,5 @@ public interface DiaryRepository extends JpaRepository<Diary, Integer> {
     @Query("select d from Diary d left join fetch d.images i where d.user.id = :userId and d.id > :id order by d.id asc")
     List<Diary> findByUserIdAndLimit(@Param("userId") int userId, @Param("id") int id, Pageable pageable);
 
+    Diary findByUserIdAndId(@Param("userId") int userId, @Param("id") int id);
 }

@@ -7,6 +7,7 @@ import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.util.ImageUtils;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
@@ -19,6 +20,7 @@ import com.fooddiary.api.repository.ImageRepository;
 import com.fooddiary.api.repository.diary.DiaryTagRepository;
 import com.fooddiary.api.repository.diary.TagRepository;
 import com.fooddiary.api.service.ImageService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ import com.fooddiary.api.repository.diary.DiaryRepository;
 
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DiaryService {
@@ -44,6 +47,7 @@ public class DiaryService {
     private final TagRepository tagRepository;
     private final FileStorageService fileStorageService;
     private final ImageService imageService;
+    private final AmazonS3 amazonS3;
     @Value("${cloud.aws.s3.dir}")
     private String basePath;
 
@@ -180,6 +184,35 @@ public class DiaryService {
         diary.setPlace(diaryMemoRequestDTO.getPlace());
         diary.setGeography(diaryMemoRequestDTO.getLongitude(), diaryMemoRequestDTO.getLatitude());
         diaryRepository.save(diary);
+    }
+
+    public void deleteDiary(final int diaryId, final User user) {
+        Diary diary = diaryRepository.findByUserIdAndId(user.getId(), diaryId);
+        if (diary == null) {
+            throw new BizException("invalid diary id");
+        }
+
+        List<Image> imageList = diary.getImages();
+        for (Image image : imageList) {
+            amazonS3.deleteObject(bucket, ImageUtils.getDirPath(basePath, user) + image.getStoredFileName());
+            amazonS3.deleteObject(bucket, ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName());
+            imageRepository.delete(image);
+        }
+        List<DiaryTag> diaryTags = diary.getDiaryTags();
+        for (DiaryTag diaryTag : diaryTags) {
+            Tag tag = diaryTag.getTag();
+            tag.getDiaryTags().remove(diaryTag);
+            diary.getDiaryTags().remove(diaryTag);
+            diaryTagRepository.delete(diaryTag);
+            if (tag.getDiaryTags().isEmpty()) {
+                try {
+                    tagRepository.delete(tag);
+                } catch (Exception e) {
+                    log.warn("can't delete tag, tag id: {}", tag.getId());
+                }
+            }
+        }
+        diaryRepository.delete(diary);
     }
 
     public List<HomeResponseDTO> getHome(final YearMonth yearMonth, final User user) throws IOException {

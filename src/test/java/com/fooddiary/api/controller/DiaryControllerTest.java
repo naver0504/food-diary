@@ -58,7 +58,7 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles(Profiles.LOCAL)
+@ActiveProfiles(Profiles.TEST)
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
 public class DiaryControllerTest {
 

@@ -60,7 +60,7 @@ public class UserResignService {
                     imageRepository.delete(image);
                 }
                 List<DiaryTag> diaryTags = diary.getDiaryTags();
-                diaryTags.forEach(tag -> tag.getTag().getDiaryTags().remove(tag));
+                diaryTags.forEach(diaryTag -> diaryTag.getTag().getDiaryTags().remove(diaryTag));
                 diary.setDiaryTags(null);
                 diaryTagRepository.deleteAll(diaryTags);
                 diaryRepository.delete(diary);

@@ -93,8 +93,14 @@ public class DiaryController {
      * 일기에 메모, 태그를 수정합니다.
      */
     @PutMapping("/{diaryId}/memo")
-    public ResponseEntity<Void> updateMemo(@PathVariable("diaryId") Integer diaryId, @RequestBody DiaryMemoRequestDTO diaryMemoRequestDTO, final @AuthenticationPrincipal User user) {
+    public ResponseEntity<Void> updateMemo(@PathVariable("diaryId") final Integer diaryId, @RequestBody DiaryMemoRequestDTO diaryMemoRequestDTO, final @AuthenticationPrincipal User user) {
         diaryService.updateMemo(diaryId, diaryMemoRequestDTO, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{diaryId}")
+    public ResponseEntity<Void> deleteDiary(@PathVariable("diaryId") final Integer diaryId, final @AuthenticationPrincipal User user) {
+        diaryService.deleteDiary(diaryId, user);
         return ResponseEntity.ok().build();
     }
 

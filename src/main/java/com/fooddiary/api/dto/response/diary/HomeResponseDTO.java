@@ -14,6 +14,6 @@ import lombok.*;
 public class HomeResponseDTO {
     private int id; // diary id
     private byte[] bytes;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate time;
 }
