@@ -26,7 +26,9 @@ CREATE TABLE `diary` (
   `id` int NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
   `diary_time` varchar(255) DEFAULT NULL,
+  `geography` geometry DEFAULT NULL,
   `memo` varchar(255) DEFAULT NULL,
+  `place` varchar(255) DEFAULT NULL,
   `create_time` datetime(6) DEFAULT NULL,
   `day` int NOT NULL,
   `month` int NOT NULL,
@@ -41,7 +43,6 @@ CREATE TABLE `diary` (
 CREATE TABLE `image` (
   `id` int NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
-  `geography` geometry DEFAULT NULL,
   `stored_file_name` varchar(255) NOT NULL,
   `thumbnail_file_name` varchar(255) NOT NULL,
   `diary_id` int DEFAULT NULL,
