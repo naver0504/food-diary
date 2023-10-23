@@ -14,8 +14,8 @@ import java.util.List;
 public class Tag {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    @Column(nullable = false, name = "tag_name", unique = true)
+    private Long id;
+    @Column(nullable = false, name = "tag_name", unique = true, length = 50)
     private String tagName;
     @OneToMany(mappedBy = "tag")
     private List<DiaryTag> diaryTags = new ArrayList<>();

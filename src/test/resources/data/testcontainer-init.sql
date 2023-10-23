@@ -27,7 +27,7 @@ CREATE TABLE `diary` (
   `create_at` datetime(6) NOT NULL,
   `diary_time` varchar(255) DEFAULT NULL,
   `geography` geometry DEFAULT NULL,
-  `memo` varchar(255) DEFAULT NULL,
+  `memo` varchar(500) DEFAULT NULL,
   `place` varchar(255) DEFAULT NULL,
   `create_time` datetime(6) DEFAULT NULL,
   `day` int NOT NULL,
@@ -65,9 +65,9 @@ CREATE TABLE `image` (
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `tag` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
-  `tag_name` varchar(255) NOT NULL,
+  `tag_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK_1r1tyf6uga9k6jwdqnoqwtk2a` (`tag_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -77,7 +77,7 @@ CREATE TABLE `diary_tag` (
   `create_at` datetime(6) NOT NULL,
   `update_at` datetime(6) DEFAULT NULL,
   `diary_id` int DEFAULT NULL,
-  `tag_id` int DEFAULT NULL,
+  `tag_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKfj71a53y08nd1aslcew09cf5w` (`diary_id`),
   KEY `FKoubxtedj8osbw8j4gksb3jy65` (`tag_id`),

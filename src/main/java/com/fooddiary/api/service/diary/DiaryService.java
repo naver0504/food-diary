@@ -133,9 +133,24 @@ public class DiaryService {
         Map<Long, DiaryTag> diaryTagMap = new HashMap<>();
         diary.getDiaryTags().forEach(obj -> diaryTagMap.put(obj.getId(), obj));
 
-        Set<String> tagNames = diaryMemoRequestDTO.getTags().stream().map(DiaryMemoRequestDTO.TagRequestDTO::getName).filter(StringUtils::hasText).collect(Collectors.toSet());
+        Set<String> tagNames = diaryMemoRequestDTO.getTags().stream()
+                                                  .map(tag -> {
+                                                      if (tag.getName().length() > 50) {
+                                                          throw new BizException("태그는 50자 이하로 입력부탁드립니다.");
+                                                      }
+                                                      return tag.getName();
+                                                  })
+                                                  .filter(StringUtils::hasText)
+                                                  .collect(Collectors.toSet());
+
         if (tagNames.size() != diaryMemoRequestDTO.getTags().size()) {
             throw new BizException("이름 있고 중복되지 않은 태그만 입력해주세요");
+        }
+        if (tagNames.size() > 20) {
+            throw new RuntimeException("태그는 20개까지만 가능합니다.");
+        }
+        if (StringUtils.hasLength(diaryMemoRequestDTO.getMemo()) && diaryMemoRequestDTO.getMemo().length() > 500) {
+            throw new BizException("메모는 500자까지 입니다.");
         }
 
         List<DiaryTag> diaryTagList = new ArrayList<>();

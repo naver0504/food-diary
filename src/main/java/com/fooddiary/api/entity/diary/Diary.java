@@ -52,6 +52,7 @@ public class Diary {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(length = 500)
     private String memo;
 
     @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
