@@ -1,6 +1,7 @@
 package com.fooddiary.api.controller;
 
 import com.fooddiary.api.dto.response.timeline.TimeLineResponseDTO;
+import com.fooddiary.api.dto.response.timeline.TimelineDiaryDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.timeline.TimelineService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -18,23 +20,20 @@ public class TimelineController {
     private final TimelineService timelineService;
 
     @GetMapping("/show")
-    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam int year, final @RequestParam int month,
-                                                                  final @RequestParam(defaultValue = "0") int startDay, final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(timelineService.getTimeline(year, month, startDay, user));
+    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam LocalDate date, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(timelineService.getTimeline(date, user));
     }
 
-/*
-    @GetMapping("/timeline")
-    public ResponseEntity<List<TimeLineResponseDTO>> showTimeLine(final @RequestParam int year, final @RequestParam int month,
-                                                                  final @RequestParam(defaultValue = "31") int startDay, final @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(dayImageService.getTimeLine(year, month, startDay, user));
+    /**
+     * 다임라인 화면에서 flicking할때 사용됩니다.
+     * @param date 선택날짜
+     * @param startId 시작 diary id
+     * @param user spring context에서 제공되는 사용자 정보
+     * @return TimelineDiaryDTO 리스트 형식
+     */
+    @GetMapping("/show/more-diary")
+    public ResponseEntity<List<TimelineDiaryDTO>> showMoreDiary(final @RequestParam LocalDate date, final @RequestParam int startId, final @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(timelineService.getMoreDiary(date, startId, user));
     }
 
-    @GetMapping("/timeline/{startImageId}")
-    public ResponseEntity<List<TimeLineResponseDTO.ImageResponseDTO>> showTimeLineWithStartImageId(final @RequestParam int year, final @RequestParam int month, final @RequestParam int day,
-                                                                                                   final @PathVariable int startImageId, final @AuthenticationPrincipal User user) {
-        // return ResponseEntity.ok(imageService.getTimeLineImagesWithStartImageId(year, month, day, startImageId, user)); todo
-        return ResponseEntity.ok(null);
-    }
-*/
 }

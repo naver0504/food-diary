@@ -17,8 +17,6 @@ import java.io.*;
 @ActiveProfiles(Profiles.TEST)
 class ImageServiceTest {
 
-    @Autowired
-    DayImageService dayImageService;
 
     @Autowired
     UserRepository userRepository;

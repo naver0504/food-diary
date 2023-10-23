@@ -1,6 +1,6 @@
 package com.fooddiary.api.repository;
 
-import com.fooddiary.api.entity.image.DiaryTime;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.diary.Image;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -61,9 +61,6 @@ public class ImageQuerydslRepository {
 
     private static BooleanBuilder getBuilderWithTime(int year, int month, int day) {
         BooleanBuilder booleanBuilder = new BooleanBuilder();
-        booleanBuilder.and(diary.time.year.eq(year));
-        booleanBuilder.and(diary.time.month.eq(month));
-        booleanBuilder.and(diary.time.day.eq(day));
         // booleanBuilder.and(image.parentImage.isNull()); todo
         return booleanBuilder;
     }

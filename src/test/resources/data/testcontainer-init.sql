@@ -26,7 +26,9 @@ CREATE TABLE `diary` (
   `id` int NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
   `diary_time` varchar(255) DEFAULT NULL,
+  `geography` geometry DEFAULT NULL,
   `memo` varchar(255) DEFAULT NULL,
+  `place` varchar(255) DEFAULT NULL,
   `create_time` datetime(6) DEFAULT NULL,
   `day` int NOT NULL,
   `month` int NOT NULL,
@@ -41,7 +43,6 @@ CREATE TABLE `diary` (
 CREATE TABLE `image` (
   `id` int NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
-  `geography` geometry DEFAULT NULL,
   `stored_file_name` varchar(255) NOT NULL,
   `thumbnail_file_name` varchar(255) NOT NULL,
   `diary_id` int DEFAULT NULL,
@@ -49,22 +50,6 @@ CREATE TABLE `image` (
   KEY `FKbdrqdeheur7qvwntqi42uhr2k` (`diary_id`),
   CONSTRAINT `FKbdrqdeheur7qvwntqi42uhr2k` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE `day_image` (
-  `day_image_id` int NOT NULL AUTO_INCREMENT,
-  `day` int NOT NULL,
-  `month` int NOT NULL,
-  `year` int NOT NULL,
-  `thumb_nail_image_id` int DEFAULT NULL,
-  `user_id` int DEFAULT NULL,
-  `thumb_nail_image_path` varchar(255) DEFAULT NULL,
-  `geography` geometry DEFAULT NULL,
-  `create_time` datetime DEFAULT NULL,
-  PRIMARY KEY (`day_image_id`),
-  KEY `FKtnk67ooq5j8cspg69r5ypyp` (`user_id`),
-  CONSTRAINT `FKtnk67ooq5j8cspg69r5ypyp` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 
  CREATE TABLE notice (
    id int NOT NULL AUTO_INCREMENT,

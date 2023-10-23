@@ -63,12 +63,12 @@ public class UserControllerTest {
     @MockBean
     PasswordEncoder passwordEncoder;
     @MockBean
-    private Interceptor interceptor;
+    Interceptor interceptor;
     @MockBean
-    private UserService userService;
+    UserService userService;
     @Autowired
-    private WebApplicationContext context;
-    private MockMvc mockMvc;
+    WebApplicationContext context;
+    MockMvc mockMvc;
 
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
@@ -143,7 +143,7 @@ public class UserControllerTest {
 
         ArgumentCaptor<UserLoginRequestDTO> loginRequestDto = ArgumentCaptor.forClass(UserLoginRequestDTO.class);
 
-        then(userService).should(timeout(1)).loginUser(loginRequestDto.capture());
+        then(userService).should(times(1)).loginUser(loginRequestDto.capture());
 
         final List<UserLoginRequestDTO> servletLoginRequest = loginRequestDto.getAllValues();
 

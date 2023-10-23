@@ -1,7 +1,6 @@
 package com.fooddiary.api.entity.diary;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fooddiary.api.dto.request.SaveImageRequestDTO;
 import com.fooddiary.api.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,7 +13,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
@@ -26,11 +26,9 @@ public class Image {
 
     @Column(nullable = false)
     private String storedFileName;
+
     @Column(nullable = false)
     private String thumbnailFileName;
-
-    @Column(columnDefinition = "GEOMETRY")
-    private Point geography;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createAt;
@@ -52,28 +50,11 @@ public class Image {
         this.thumbnailFileName = thumbnailFileName;
     }
 
-    public void setGeography(final Double longitude, final Double latitude) {
-        if(longitude == -200D && latitude == -200D) {
-            return;
-        }
-
-        String pointWKT = String.format("POINT(%s %s)", longitude, latitude);
-        Point point;
-        try {
-            point = (Point) new WKTReader().read(pointWKT);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-        this.geography = point;
-    }
-
-
     public static Image createImage(final Diary diary, final String fileName) {
         final Image image = Image.builder()
                 .storedFileName(fileName)
                 .diary(diary)
                 .build();
-      //  image.setGeography(saveImageRequestDTO.getLongitude(), saveImageRequestDTO.getLatitude());
         return image;
     }
 
@@ -82,15 +63,7 @@ public class Image {
                 .storedFileName(fileName)
                 .build();
         image.diary = parentImage.diary;
-        image.geography = parentImage.geography;
         return image;
-    }
-
-    public void setStoredFileName(String storeFilename) {
-        this.storedFileName = storeFilename;
-    }
-    public void setUpdateAt(LocalDateTime updateAt) {
-        this.updateAt = updateAt;
     }
 
 }

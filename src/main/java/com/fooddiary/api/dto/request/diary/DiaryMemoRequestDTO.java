@@ -1,7 +1,7 @@
 package com.fooddiary.api.dto.request.diary;
 
 
-import com.fooddiary.api.entity.image.DiaryTime;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,6 +13,10 @@ public class DiaryMemoRequestDTO {
     private String memo;
     private DiaryTime diaryTime = DiaryTime.ETC;
     private List<TagRequestDTO> tags;
+
+    private String place;
+    private Double longitude = -200D;
+    private Double latitude = -200D;
 
 
     @Getter

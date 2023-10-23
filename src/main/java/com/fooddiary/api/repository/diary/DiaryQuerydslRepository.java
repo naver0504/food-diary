@@ -28,12 +28,10 @@ public class DiaryQuerydslRepository {
     public List<Diary> getTimeLineDayImage(final int year, final int month, final int startDay, final int userId) {
         return jpaQueryFactory.selectFrom(diary)
                 .where(
-                        diary.user.id.eq(userId),
-                        diary.time.year.eq(year),
-                        diary.time.month.eq(month),
-                        diary.time.day.lt(startDay)
+                        diary.user.id.eq(userId)
+
                 )
-                .orderBy(diary.time.day.desc())
+             //   .orderBy(diary.time.day.desc())
                 .limit(4)
                 .fetch();
 
@@ -41,38 +39,13 @@ public class DiaryQuerydslRepository {
     }
 
     public Time getTime(final int imageId) {
-
-        return jpaQueryFactory.select(diary.time)
-                .from(diary)
-                .leftJoin(diary.images, image)
-                .where(image.id.eq(imageId))
-                .fetchOne();
+return null;
 
     }
 
     public Map<String, Time> getBeforeAndAfterTime(final int year, final int month, final int day, final int userId) {
         final Map<String, Time> timeMap = new HashMap<>();
 
-        final Time beforeTime = jpaQueryFactory.select(diary.time)
-                .from(diary)
-                .where(diary.user.id.eq(userId),
-                        diary.time.createTime
-                        .before(Time.getDateWithMinTime(year, month, day))
-                        )
-                .orderBy(diary.time.createTime.desc())
-                .fetchFirst();
-
-        timeMap.put("before", beforeTime);
-
-        final Time AfterTime = jpaQueryFactory.select(diary.time).distinct()
-                .from(diary)
-                .where(diary.user.id.eq(userId),
-                        diary.time.createTime
-                                .after(Time.getDateWithMaxTime(year, month, day)))
-                .orderBy(diary.time.createTime.asc())
-                .fetchFirst();
-
-        timeMap.put("after", AfterTime);
 
         return timeMap;
     }

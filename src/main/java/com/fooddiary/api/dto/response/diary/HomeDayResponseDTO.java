@@ -2,7 +2,7 @@ package com.fooddiary.api.dto.response.diary;
 
 
 import com.fooddiary.api.dto.response.image.ImageResponseDTO;
-import com.fooddiary.api.entity.image.DiaryTime;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -24,6 +24,11 @@ public class HomeDayResponseDTO {
         private String memo;
         private DiaryTime diaryTime;
         private List<String> tags;
+        private String place;
+        @Builder.Default
+        private Double longitude = -200D;
+        @Builder.Default
+        private Double latitude = -200D;
         private ImageResponseDTO image;
     }
 
