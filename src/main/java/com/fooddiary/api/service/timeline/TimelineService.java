@@ -12,6 +12,8 @@ import com.fooddiary.api.repository.timeline.TimelineQuerydslRepository;
 import com.fooddiary.api.repository.timeline.TimelineRepository;
 import com.fooddiary.api.service.ImageService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -33,44 +35,20 @@ public class TimelineService {
     public List<TimeLineResponseDTO> getTimeline(final LocalDate date, final User user) {
 
         List<TimelineDiaryDslQueryDTO> dateList = timelineQuerydslRepository.getTimeLineDate(date, user.getId());
-        List<TimelineDiaryImageSQLDTO> diaryList = timelineRepository.getTimeLineDiaryWithLatestImage(user.getId(),
-                LocalDate.parse(dateList.get(0).getDate(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay(),
-                LocalDate.parse(dateList.get(dateList.size()-1).getDate(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().plusDays(1).minusNanos(1L));
+        List<TimelineDiaryImageSQLDTO> diaryList = new ArrayList<>();
+
+        dateList.forEach(d -> diaryList.addAll(timelineRepository.getTimeLineDiaryWithLatestImage(user.getId(),
+                                                               LocalDate.parse(d.getDate(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay(),
+                                                               LocalDate.parse(d.getDate(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().plusDays(1).minusNanos(1L),
+                         PageRequest.of(0, 5))));
 
         List<TimeLineResponseDTO> timeLineResponseDTOList = new ArrayList<>();
         Map<LocalDate, TimeLineResponseDTO> timelineMap = new LinkedHashMap<>();
         diaryList.forEach(diary -> {
             // diary.setImages(diary.getImages().stream().limit(1).collect(Collectors.toList()));
             Image image = new Image();
-            image.setStoredFileName(diary.getStored_file_name());
-            image.setId(diary.getImage_id());
-
-            if (timelineMap.get(diary.getCreate_time().toLocalDate()) == null) {
-                TimeLineResponseDTO timeLineResponseDTO = new TimeLineResponseDTO();
-                timeLineResponseDTO.setDate(diary.getCreate_time().toLocalDate());
-
-                List<TimelineDiaryDTO> diaries = new ArrayList<>();
-                TimelineDiaryDTO innerDiary = new TimelineDiaryDTO();
-                innerDiary.setBytes(imageService.getImages(Arrays.asList(image), user).get(0).getBytes());
-                innerDiary.setDiaryId(diary.getId());
-
-                diaries.add(innerDiary);
-                timeLineResponseDTO.setDiaryList(diaries);
-                timelineMap.put(diary.getCreate_time().toLocalDate(), timeLineResponseDTO);
-            } else {
-                TimeLineResponseDTO timeLineResponseDTO = timelineMap.get(diary.getCreate_time().toLocalDate());
-
-                TimelineDiaryDTO innerDiary = new TimelineDiaryDTO();
-                innerDiary.setBytes(imageService.getImages(Arrays.asList(image), user).get(0).getBytes());
-                innerDiary.setDiaryId(diary.getId());
-
-                timeLineResponseDTO.getDiaryList().add(innerDiary);
-            }
-
-        });
-        /*
-        diaryList.forEach(diary -> {
-            diary.setImages(diary.getImages().stream().limit(1).collect(Collectors.toList()));
+            image.setStoredFileName(diary.getStoredFileName());
+            image.setId(diary.getImageId());
 
             if (timelineMap.get(diary.getCreateTime().toLocalDate()) == null) {
                 TimeLineResponseDTO timeLineResponseDTO = new TimeLineResponseDTO();
@@ -78,7 +56,7 @@ public class TimelineService {
 
                 List<TimelineDiaryDTO> diaries = new ArrayList<>();
                 TimelineDiaryDTO innerDiary = new TimelineDiaryDTO();
-                innerDiary.setBytes(imageService.getImages(diary.getImages(), user).get(0).getBytes());
+                innerDiary.setBytes(imageService.getImages(List.of(image), user).get(0).getBytes());
                 innerDiary.setDiaryId(diary.getId());
 
                 diaries.add(innerDiary);
@@ -88,15 +66,13 @@ public class TimelineService {
                 TimeLineResponseDTO timeLineResponseDTO = timelineMap.get(diary.getCreateTime().toLocalDate());
 
                 TimelineDiaryDTO innerDiary = new TimelineDiaryDTO();
-                innerDiary.setBytes(imageService.getImages(diary.getImages(), user).get(0).getBytes());
+                innerDiary.setBytes(imageService.getImages(List.of(image), user).get(0).getBytes());
                 innerDiary.setDiaryId(diary.getId());
 
                 timeLineResponseDTO.getDiaryList().add(innerDiary);
             }
 
         });
-
-         */
 
         for (LocalDate diaryDate : timelineMap.keySet()) {
             timeLineResponseDTOList.add(timelineMap.get(diaryDate));
@@ -105,15 +81,21 @@ public class TimelineService {
         return timeLineResponseDTOList;
     }
 
-    public List<TimelineDiaryDTO> getMoreDiary(final LocalDate date, final int startId, final User user) {
+    public List<TimelineDiaryDTO> getMoreDiary(final LocalDate date, final int offset, final User user) {
         List<TimelineDiaryDTO> timelineDiaryDTOList = new ArrayList<>();
-        List<Diary> diaryList = timelineQuerydslRepository.getMoreDiary(date, startId, user.getId());
+        List<TimelineDiaryImageSQLDTO> diaryList = timelineRepository.getTimeLineDiaryWithLatestImage(user.getId(),
+                                                           date.atStartOfDay(),
+                                                           date.atStartOfDay().plusDays(1).minusNanos(1L),
+                                                           PageRequest.of(offset, 5));
 
         diaryList.forEach(diary -> {
+            Image image = new Image();
+            image.setStoredFileName(diary.getStoredFileName());
+            image.setId(diary.getImageId());
+
             TimelineDiaryDTO timelineDiaryDTO = new TimelineDiaryDTO();
             timelineDiaryDTO.setDiaryId(diary.getId());
-            diary.setImages(diary.getImages().stream().limit(1).collect(Collectors.toList()));
-            timelineDiaryDTO.setBytes(imageService.getImages(diary.getImages(), user).get(0).getBytes());
+            timelineDiaryDTO.setBytes(imageService.getImages(List.of(image), user).get(0).getBytes());
             timelineDiaryDTOList.add(timelineDiaryDTO);
         });
 

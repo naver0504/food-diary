@@ -38,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.then;
@@ -124,7 +125,7 @@ public class TimelineControllerTest {
         when(timelineService.getMoreDiary(any(LocalDate.class), any(Integer.class), any(User.class))).thenReturn(timelineDiaryDTOList);
         MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
         multiValueMap.set("date", LocalDate.now().toString());
-        multiValueMap.set("startId", "1");
+        multiValueMap.set("offset", "1");
 
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/timeline/show/more-diary")
                         .params(multiValueMap))
@@ -137,8 +138,8 @@ public class TimelineControllerTest {
         ArgumentCaptor<Integer> requestStartId = ArgumentCaptor.forClass(Integer.class);
         then(timelineService).should(times(1)).getMoreDiary(requestDate.capture(), requestStartId.capture(), any(User.class));
 
-        Assertions.assertEquals(requestDate.getValue().toString(), multiValueMap.get("date").get(0));
-        Assertions.assertEquals(requestStartId.getValue().toString(), multiValueMap.get("startId").get(0));
+        Assertions.assertEquals(requestDate.getValue().toString(), Objects.requireNonNull(multiValueMap.get("date")).get(0));
+        Assertions.assertEquals(requestStartId.getValue().toString(), Objects.requireNonNull(multiValueMap.get("offset")).get(0));
 
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         Assertions.assertEquals(

@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public interface TimelineDiaryImageSQLDTO {
     Integer getId();
-    LocalDateTime getCreate_time();
-    String getStored_file_name();
-    Integer getImage_id();
+    LocalDateTime getCreateTime();
+    String getStoredFileName();
+    Integer getImageId();
 }

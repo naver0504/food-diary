@@ -19,7 +19,7 @@ import java.util.List;
 @Setter
 @Getter
 public class TimeLineResponseDTO {
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate date;
     private List<TimelineDiaryDTO> diaryList;
 }
