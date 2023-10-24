@@ -25,14 +25,11 @@ CREATE TABLE session (
 CREATE TABLE `diary` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
+  `create_time` datetime(6) DEFAULT NULL,
   `diary_time` varchar(255) DEFAULT NULL,
   `geography` geometry DEFAULT NULL,
   `memo` varchar(500) DEFAULT NULL,
   `place` varchar(255) DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `day` int NOT NULL,
-  `month` int NOT NULL,
-  `year` int NOT NULL,
   `update_at` datetime(6) DEFAULT NULL,
   `user_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -46,6 +43,7 @@ CREATE TABLE `image` (
   `stored_file_name` varchar(255) NOT NULL,
   `thumbnail_file_name` varchar(255) NOT NULL,
   `diary_id` bigint DEFAULT NULL,
+  `update_at` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   KEY `FKbdrqdeheur7qvwntqi42uhr2k` (`diary_id`),
   CONSTRAINT `FKbdrqdeheur7qvwntqi42uhr2k` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`)
