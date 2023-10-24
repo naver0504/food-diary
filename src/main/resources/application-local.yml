@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost/my_food_diarybook
+    url: jdbc:mysql://localhost/my_food_diarybook?serverTimezone=Asia/Seoul
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
