@@ -38,14 +38,14 @@ CREATE TABLE `diary` (
   PRIMARY KEY (`id`),
   KEY `FKf0xms46ulxc36096k9gg6j9ip` (`user_id`),
   CONSTRAINT `FKf0xms46ulxc36096k9gg6j9ip` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `image` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
   `stored_file_name` varchar(255) NOT NULL,
   `thumbnail_file_name` varchar(255) NOT NULL,
-  `diary_id` int DEFAULT NULL,
+  `diary_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKbdrqdeheur7qvwntqi42uhr2k` (`diary_id`),
   CONSTRAINT `FKbdrqdeheur7qvwntqi42uhr2k` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`)
@@ -76,7 +76,7 @@ CREATE TABLE `diary_tag` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
   `update_at` datetime(6) DEFAULT NULL,
-  `diary_id` int DEFAULT NULL,
+  `diary_id` bigint DEFAULT NULL,
   `tag_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKfj71a53y08nd1aslcew09cf5w` (`diary_id`),
