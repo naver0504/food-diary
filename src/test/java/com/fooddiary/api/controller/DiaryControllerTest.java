@@ -17,13 +17,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockPart;
@@ -36,7 +34,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
@@ -79,8 +76,8 @@ public class DiaryControllerTest {
         principal.setPw("1234");
         principal.setId(1);
 
-        Authentication authentication = mock(RememberMeAuthenticationToken.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
+        final Authentication authentication = mock(RememberMeAuthenticationToken.class);
+        final SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(principal);
         SecurityContextHolder.setContext(securityContext);
@@ -95,14 +92,14 @@ public class DiaryControllerTest {
     void getHome() throws Exception {
         final String param = YearMonth.now().toString();
 
-        List<HomeResponseDTO> responseDTOList = new LinkedList<>();
-        HomeResponseDTO responseDTO = new HomeResponseDTO();
+        final List<HomeResponseDTO> responseDTOList = new LinkedList<>();
+        final HomeResponseDTO responseDTO = new HomeResponseDTO();
         responseDTO.setId(1);
         responseDTO.setBytes(new byte[]{'a','c','d','e'});
         responseDTO.setTime(LocalDate.now());
         responseDTOList.add(responseDTO);
 
-        Mockito.when(diaryService.getHome(any(YearMonth.class), any(User.class))).thenReturn(responseDTOList);
+        when(diaryService.getHome(any(YearMonth.class), any(User.class))).thenReturn(responseDTOList);
 
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/diary/home?yearMonth=" + param)
                         .contentType(
@@ -123,14 +120,14 @@ public class DiaryControllerTest {
     void homeDay() throws Exception {
         final String param = LocalDate.now().toString();
 
-        HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
-        List<HomeDayResponseDTO.HomeDay> homeDayList = new ArrayList<>();
-        ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
+        final HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
+        final List<HomeDayResponseDTO.HomeDay> homeDayList = new ArrayList<>();
+        final ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
         imageResponseDTO.setImageId(2);
         imageResponseDTO.setBytes(new byte[]{'a','c','f'});
-        HomeDayResponseDTO.HomeDay homeDay = HomeDayResponseDTO.HomeDay.builder()
+        final HomeDayResponseDTO.HomeDay homeDay = HomeDayResponseDTO.HomeDay.builder()
                 .diaryTime(DiaryTime.BRUNCH)
-                .id(1)
+                .id(1L)
                 .image(imageResponseDTO)
                 .memo("메모닷")
                 .place("서울역")
@@ -161,14 +158,14 @@ public class DiaryControllerTest {
     @Test
     void newDiary() throws Exception {
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        MockMultipartFile mockMultipartFile = new MockMultipartFile("files", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
-        MockMultipartFile mockMultipartFile2 = new MockMultipartFile("files", "t2.jpg", "image/jpeg", new byte[]{'i','m','a','g','e','2'});
-        PlaceInfoDTO placeInfoDTO = new PlaceInfoDTO();
+        final MockMultipartFile mockMultipartFile = new MockMultipartFile("files", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
+        final MockMultipartFile mockMultipartFile2 = new MockMultipartFile("files", "t2.jpg", "image/jpeg", new byte[]{'i','m','a','g','e','2'});
+        final PlaceInfoDTO placeInfoDTO = new PlaceInfoDTO();
         placeInfoDTO.setPlace("부산시 노포동");
         placeInfoDTO.setLongitude(-200D);
         placeInfoDTO.setLatitude(-200D);
-        byte[] requestPlaceInfo = objectMapper.writeValueAsString(placeInfoDTO).getBytes(StandardCharsets.UTF_8);;
-        MockPart jsonPart = new MockPart("placeInfo", "json", requestPlaceInfo);
+        final byte[] requestPlaceInfo = objectMapper.writeValueAsString(placeInfoDTO).getBytes(StandardCharsets.UTF_8);
+        final MockPart jsonPart = new MockPart("placeInfo", "json", requestPlaceInfo);
         jsonPart.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
         doNothing().when(diaryService).createDiary(any(List.class), any(LocalDate.class), any(PlaceInfoDTO.class), any(User.class));
@@ -185,8 +182,8 @@ public class DiaryControllerTest {
 
     @Test
     void addImages() throws Exception {
-        MockMultipartFile mockMultipartFile = new MockMultipartFile("files", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
-        MockMultipartFile mockMultipartFile2 = new MockMultipartFile("files", "t2.jpg", "image/jpeg", new byte[]{'i','m','a','g','e','2'});
+        final MockMultipartFile mockMultipartFile = new MockMultipartFile("files", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
+        final MockMultipartFile mockMultipartFile2 = new MockMultipartFile("files", "t2.jpg", "image/jpeg", new byte[]{'i','m','a','g','e','2'});
 
         doNothing().when(diaryService).addImages(any(Integer.class), any(List.class), any(User.class));
 
@@ -199,17 +196,14 @@ public class DiaryControllerTest {
 
     @Test
     void updateImage() throws Exception {
-        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
+        final MockMultipartFile mockMultipartFile = new MockMultipartFile("file", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
 
         doNothing().when(diaryService).updateImage(any(Integer.class), any(MultipartFile.class), any(User.class));
 
         mockMvc.perform(multipart("/diary/image/{imageId}", 1).file(mockMultipartFile)
-                        .with(new RequestPostProcessor() {
-                            @Override
-                            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest request) {
-                                request.setMethod("PATCH");
-                                return request;
-                            }
+                        .with(request -> {
+                            request.setMethod("PATCH");
+                            return request;
                         })
                         .headers(getHeader())
                 )
@@ -218,20 +212,20 @@ public class DiaryControllerTest {
 
     @Test
     void getDiaryDetail() throws Exception {
-        DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
+        final DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
         diaryDetailResponseDTO.setDiaryTime(DiaryTime.SNACK.name());
         diaryDetailResponseDTO.setDate(LocalDate.now());
         diaryDetailResponseDTO.setMemo("간식");
 
-        List<DiaryDetailResponseDTO.TagResponse> tagResponseList = new ArrayList<>();
-        DiaryDetailResponseDTO.TagResponse tagResponse = new DiaryDetailResponseDTO.TagResponse();
+        final List<DiaryDetailResponseDTO.TagResponse> tagResponseList = new ArrayList<>();
+        final DiaryDetailResponseDTO.TagResponse tagResponse = new DiaryDetailResponseDTO.TagResponse();
         tagResponse.setId(1L);
         tagResponse.setName("과자");
         tagResponseList.add(tagResponse);
         diaryDetailResponseDTO.setTags(tagResponseList);
 
-        List<ImageResponseDTO> imageResponseDTOList = new ArrayList<>();
-        ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
+        final List<ImageResponseDTO> imageResponseDTOList = new ArrayList<>();
+        final ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
         imageResponseDTO.setImageId(1);
         imageResponseDTO.setBytes(new byte[]{'s','n','a','c','k'});
         imageResponseDTOList.add(imageResponseDTO);
@@ -258,24 +252,24 @@ public class DiaryControllerTest {
 
     @Test
     void updateMemo() throws Exception {
-        DiaryMemoRequestDTO diaryMemoRequestDTO = new DiaryMemoRequestDTO();
+        final DiaryMemoRequestDTO diaryMemoRequestDTO = new DiaryMemoRequestDTO();
         diaryMemoRequestDTO.setMemo("궁금");
         diaryMemoRequestDTO.setDiaryTime(DiaryTime.DINNER);
         diaryMemoRequestDTO.setLatitude(-200D);
         diaryMemoRequestDTO.setLongitude(-200D);
         diaryMemoRequestDTO.setPlace("경복궁 앞");
 
-        List<DiaryMemoRequestDTO.TagRequestDTO> tagRequestDTOList = new ArrayList<>();
-        DiaryMemoRequestDTO.TagRequestDTO tagRequestDTO = new DiaryMemoRequestDTO.TagRequestDTO();
+        final List<DiaryMemoRequestDTO.TagRequestDTO> tagRequestDTOList = new ArrayList<>();
+        final DiaryMemoRequestDTO.TagRequestDTO tagRequestDTO = new DiaryMemoRequestDTO.TagRequestDTO();
         tagRequestDTO.setId(1L);
         tagRequestDTO.setName("과자");
         tagRequestDTOList.add(tagRequestDTO);
         diaryMemoRequestDTO.setTags(tagRequestDTOList);
 
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        String content = objectMapper.writeValueAsString(diaryMemoRequestDTO);
+        final String content = objectMapper.writeValueAsString(diaryMemoRequestDTO);
 
-        doNothing().when(diaryService).updateMemo(any(Integer.class), any(DiaryMemoRequestDTO.class), any(User.class));
+        doNothing().when(diaryService).updateMemo(any(Integer.class), any(DiaryMemoRequestDTO.class));
 
         mockMvc.perform(put("/diary/{diaryId}/memo", 1)
                         .headers(getHeader())
@@ -292,7 +286,7 @@ public class DiaryControllerTest {
                 .andDo(document("delete diary"));
     }
 
-    private  HttpHeaders getHeader() {
+    private static HttpHeaders getHeader() {
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("login-from", "none");
         httpHeaders.add("token", "asdf");

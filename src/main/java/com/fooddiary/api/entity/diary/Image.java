@@ -1,14 +1,24 @@
 package com.fooddiary.api.entity.diary;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fooddiary.api.entity.user.User;
-import jakarta.persistence.*;
-import lombok.*;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.WKTReader;
-
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 
 @Entity
@@ -22,7 +32,7 @@ public class Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false)
     private String storedFileName;
@@ -51,15 +61,15 @@ public class Image {
     }
 
     public static Image createImage(final Diary diary, final String fileName) {
-        final Image image = Image.builder()
+        final Image image = builder()
                 .storedFileName(fileName)
                 .diary(diary)
                 .build();
         return image;
     }
 
-    public static Image createImage(final Image parentImage, final String fileName, final User user) {
-        final Image image = Image.builder()
+    public static Image createImage(final Image parentImage, final String fileName) {
+        final Image image = builder()
                 .storedFileName(fileName)
                 .build();
         image.diary = parentImage.diary;

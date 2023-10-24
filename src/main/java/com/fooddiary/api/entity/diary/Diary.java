@@ -26,7 +26,7 @@ public class Diary {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false)
     private LocalDateTime createTime; // 사용자가 선택한 식사일기 시간
@@ -59,7 +59,7 @@ public class Diary {
     private List<DiaryTag> diaryTags = new ArrayList<>();
 
     public static Diary createDiary(final LocalDate dateTime, final User user, final DiaryTime diaryTime, final PlaceInfoDTO placeInfo) {
-        Diary diary = new Diary();
+        final Diary diary = new Diary();
         diary.setCreateTime(makeCreateTime(dateTime, diaryTime));
         diary.setCreateAt(LocalDateTime.now());
         diary.setDiaryTime(diaryTime);
@@ -101,18 +101,18 @@ public class Diary {
     }
 
     public void setGeography(final Double longitude, final Double latitude) {
-        if(longitude == -200D && latitude == -200D) {
+        if(longitude.equals(-200D) && latitude.equals(-200D)) {
             return;
         }
 
-        String pointWKT = String.format("POINT(%s %s)", longitude, latitude);
-        Point point;
+        final String pointWKT = String.format("POINT(%s %s)", longitude, latitude);
+        final Point point;
         try {
             point = (Point) new WKTReader().read(pointWKT);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-        this.geography = point;
+        geography = point;
     }
 }
 

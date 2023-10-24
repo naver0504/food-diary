@@ -56,8 +56,8 @@ public class DiaryService {
 
     public void createDiary(final List<MultipartFile> files, final LocalDate createDate, final PlaceInfoDTO placeInfoDTO,
                             final User user) {
-        LocalDateTime startDate = createDate.atStartOfDay();
-        LocalDateTime endDate = createDate.plusDays(1L).atStartOfDay().minusNanos(1L);
+        final LocalDateTime startDate = createDate.atStartOfDay();
+        final LocalDateTime endDate = createDate.plusDays(1L).atStartOfDay().minusNanos(1L);
         final int todayDiaryCount = diaryRepository.getByYearAndMonthAndDayCount(startDate, endDate,
                                                                                  user.getId());
 
@@ -74,7 +74,7 @@ public class DiaryService {
         if (diaryRepository.getDiaryImagesCount(diaryId) + files.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
-        Diary diary = diaryRepository.findById(diaryId).orElse(null);
+        final Diary diary = diaryRepository.findById(diaryId).orElse(null);
         if (diary == null) {
             throw new BizException("invalid diary id");
         }
@@ -84,11 +84,11 @@ public class DiaryService {
     }
 
     public void updateImage(final int imageId, final MultipartFile file, final User user) {
-        Image image = imageRepository.findById(imageId).orElse(null);
+        final Image image = imageRepository.findById(imageId).orElse(null);
         if (image == null) {
             throw new BizException("invalid image id");
         }
-        Diary diary = image.getDiary();
+        final Diary diary = image.getDiary();
 
         if (!diary.getUser().getId().equals(user.getId())) {
             throw new BizException("no permission user");
@@ -99,14 +99,14 @@ public class DiaryService {
     }
 
     public DiaryDetailResponseDTO getDiaryDetail(final int id, final User user) {
-        Diary diary = diaryRepository.findDiaryAndImagesById(id).orElse(null);
+        final Diary diary = diaryRepository.findDiaryAndImagesById(id).orElse(null);
         if (diary == null) {
             throw new BizException("invalid diary id");
         }
         DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
         diaryDetailResponseDTO.setImages(imageService.getImages(diary.getImages(), user));
         diaryDetailResponseDTO.setTags(diary.getDiaryTags().stream().map(tag -> {
-            DiaryDetailResponseDTO.TagResponse tagResponse = new DiaryDetailResponseDTO.TagResponse();
+            final DiaryDetailResponseDTO.TagResponse tagResponse = new DiaryDetailResponseDTO.TagResponse();
             tagResponse.setName(tag.getTag().getTagName());
             tagResponse.setId(tag.getId());
             return tagResponse;
@@ -124,16 +124,16 @@ public class DiaryService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateMemo(final Integer diaryId, final DiaryMemoRequestDTO diaryMemoRequestDTO, final User user) {
-        Diary diary = diaryRepository.findById(diaryId).orElse(null);
+    public void updateMemo(final Integer diaryId, final DiaryMemoRequestDTO diaryMemoRequestDTO) {
+        final Diary diary = diaryRepository.findById(diaryId).orElse(null);
         if (diary == null) {
             throw new BizException("invalid diary id");
         }
 
-        Map<Long, DiaryTag> diaryTagMap = new HashMap<>();
+        final Map<Long, DiaryTag> diaryTagMap = new HashMap<>();
         diary.getDiaryTags().forEach(obj -> diaryTagMap.put(obj.getId(), obj));
 
-        Set<String> tagNames = diaryMemoRequestDTO.getTags().stream()
+        final Set<String> tagNames = diaryMemoRequestDTO.getTags().stream()
                                                   .map(tag -> {
                                                       if (tag.getName().length() > 50) {
                                                           throw new BizException("태그는 50자 이하로 입력부탁드립니다.");
@@ -153,7 +153,7 @@ public class DiaryService {
             throw new BizException("메모는 500자까지 입니다.");
         }
 
-        List<DiaryTag> diaryTagList = new ArrayList<>();
+        final List<DiaryTag> diaryTagList = new ArrayList<>();
         diaryMemoRequestDTO.getTags().forEach(tagRequestDTO -> {
             if (diaryTagMap.get(tagRequestDTO.getId()) == null) { // 신규
                 Tag tag = tagRepository.findTagByTagName(tagRequestDTO.getName());
@@ -163,18 +163,21 @@ public class DiaryService {
                     tag.setCreateAt(LocalDateTime.now());
                     tagRepository.save(tag);
                 }
-                DiaryTag diaryTag = new DiaryTag();
+                final DiaryTag diaryTag = new DiaryTag();
                 diaryTag.setDiary(diary);
                 diaryTag.setTag(tag);
                 diaryTag.setCreateAt(LocalDateTime.now());
                 diaryTagList.add(diaryTag);
             } else { // 수정
-                DiaryTag diaryTag = diaryTagMap.get(tagRequestDTO.getId());
+                final DiaryTag diaryTag = diaryTagMap.get(tagRequestDTO.getId());
                 if (!diaryTag.getTag().getTagName().equals(tagRequestDTO.getName())) {
-                    Tag tag = new Tag();
-                    tag.setTagName(tagRequestDTO.getName());
-                    tag.setCreateAt(LocalDateTime.now());
-                    tagRepository.save(tag);
+                    Tag tag = tagRepository.findTagByTagName(tagRequestDTO.getName());
+                    if (tag == null) {
+                        tag = new Tag();
+                        tag.setTagName(tagRequestDTO.getName());
+                        tag.setCreateAt(LocalDateTime.now());
+                        tagRepository.save(tag);
+                    }
                     diaryTag.setTag(tag);
                     diaryTag.setUpdateAt(LocalDateTime.now());
                     diaryTagRepository.save(diaryTag);
@@ -202,23 +205,23 @@ public class DiaryService {
     }
 
     public void deleteDiary(final int diaryId, final User user) {
-        Diary diary = diaryRepository.findByUserIdAndId(user.getId(), diaryId);
+        final Diary diary = diaryRepository.findByUserIdAndId(user.getId(), diaryId);
         if (diary == null) {
             throw new BizException("invalid diary id");
         }
 
-        List<Image> imageList = diary.getImages();
+        final List<Image> imageList = diary.getImages();
         for (Image image : imageList) {
             amazonS3.deleteObject(bucket, ImageUtils.getDirPath(basePath, user) + image.getStoredFileName());
             amazonS3.deleteObject(bucket, ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName());
             imageRepository.delete(image);
         }
 
-        List<DiaryTag> diaryTags = diary.getDiaryTags();
-        List<DiaryTag> deleteDiaryTagList = new ArrayList<>();
-        List<Tag> deletableTagIdList = new ArrayList<>();
+        final List<DiaryTag> diaryTags = diary.getDiaryTags();
+        final List<DiaryTag> deleteDiaryTagList = new ArrayList<>();
+        final List<Tag> deletableTagIdList = new ArrayList<>();
         for (DiaryTag diaryTag : diaryTags) {
-            Tag tag = diaryTag.getTag();
+            final Tag tag = diaryTag.getTag();
             tag.getDiaryTags().remove(diaryTag);
             deleteDiaryTagList.add(diaryTag);
             if (tag.getDiaryTags().isEmpty()) {
@@ -240,14 +243,14 @@ public class DiaryService {
     }
 
     public List<HomeResponseDTO> getHome(final YearMonth yearMonth, final User user) throws IOException {
-        List<HomeResponseDTO> homeResponseDTOList = new LinkedList<>();
-        LocalDateTime startDate = yearMonth.atDay(1).atStartOfDay();
-        LocalDateTime endDate = yearMonth.atEndOfMonth().plusDays(1L).atStartOfDay().minusNanos(1L);
-        List<Diary> diaryList = diaryRepository.findByYearAndMonth(startDate, endDate, user.getId());
+        final List<HomeResponseDTO> homeResponseDTOList = new LinkedList<>();
+        final LocalDateTime startDate = yearMonth.atDay(1).atStartOfDay();
+        final LocalDateTime endDate = yearMonth.atEndOfMonth().plusDays(1L).atStartOfDay().minusNanos(1L);
+        final List<Diary> diaryList = diaryRepository.findByYearAndMonth(startDate, endDate, user.getId());
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
-                Image image = diary.getImages().get(0);
-                HomeResponseDTO homeResponseDTO = new HomeResponseDTO();
+                final Image image = diary.getImages().get(0);
+                final HomeResponseDTO homeResponseDTO = new HomeResponseDTO();
                 homeResponseDTO.setId(diary.getId());
                 homeResponseDTO.setTime(diary.getCreateTime().toLocalDate());
                 homeResponseDTO.setBytes(fileStorageService.getObject(ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName()));
@@ -258,14 +261,14 @@ public class DiaryService {
     }
 
     public HomeDayResponseDTO getHomeDay(final LocalDate date, final User user) {
-        List<HomeDayResponseDTO.HomeDay> homeDayList = new LinkedList<>();
-        LocalDateTime startDate = date.atStartOfDay();
-        LocalDateTime endDate = date.plusDays(1).atStartOfDay().minusNanos(1L);
-        List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(startDate, endDate, user.getId());
+        final List<HomeDayResponseDTO.HomeDay> homeDayList = new LinkedList<>();
+        final LocalDateTime startDate = date.atStartOfDay();
+        final LocalDateTime endDate = date.plusDays(1).atStartOfDay().minusNanos(1L);
+        final List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(startDate, endDate, user.getId());
 
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
-                Image image = diary.getImages().get(0);
+                final Image image = diary.getImages().get(0);
                 HomeDayResponseDTO.HomeDay.HomeDayBuilder homeDayBuilder = HomeDayResponseDTO.HomeDay.builder();
                 homeDayBuilder = homeDayBuilder.id(diary.getId())
                         .memo(diary.getMemo())
@@ -280,16 +283,16 @@ public class DiaryService {
             }
         }
 
-        HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
+        final HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
         homeDayResponseDTO.setHomeDayList(homeDayList);
 
-        Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
+        final Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
         if (timeMap.get("before") != null) {
-            Time before = timeMap.get("before");
+            final Time before = timeMap.get("before");
             homeDayResponseDTO.setBeforeDay(LocalDate.of(before.getYear(), before.getMonth(), before.getDay()));
         }
         if (timeMap.get("after") != null) {
-            Time after = timeMap.get("after");
+            final Time after = timeMap.get("after");
             homeDayResponseDTO.setAfterDay(LocalDate.of(after.getYear(), after.getMonth(), after.getDay()));
         }
 

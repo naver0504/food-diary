@@ -34,12 +34,11 @@ public class DiaryController {
      * @param user
      * @return void ok응답으로 처리
      */
-    @PostMapping(value = "/new", consumes = {
-            MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Void> createDiary(final @RequestPart("files") List<MultipartFile> images,
-                                               final @RequestParam("createTime") LocalDate createDate,
-                                               final @RequestPart(value = "placeInfo") PlaceInfoDTO placeInfoDTO,
-                                                         final @AuthenticationPrincipal User user) {
+    @PostMapping(value = "/new", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> createDiary(@RequestPart("files") final List<MultipartFile> images,
+                                            @RequestParam("createTime") final LocalDate createDate,
+                                            @RequestPart("placeInfo") final PlaceInfoDTO placeInfoDTO,
+                                            @AuthenticationPrincipal final User user) {
         if (images.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
@@ -54,9 +53,9 @@ public class DiaryController {
      * @param user spring context에서 관리되는 사용자 정보
      * @return
      */
-    @PostMapping(value = "/{diaryId}/images", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Void> addImages(@PathVariable("diaryId") Integer diaryId, final @RequestPart("files") List<MultipartFile> files,
-                                            final @AuthenticationPrincipal User user) {
+    @PostMapping(value = "/{diaryId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> addImages(@PathVariable("diaryId") Integer diaryId, @RequestPart("files")
+    final List<MultipartFile> files, @AuthenticationPrincipal final User user) {
         if (files.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
@@ -72,8 +71,8 @@ public class DiaryController {
      * @return
      */
     @PatchMapping("/image/{imageId}")
-    public ResponseEntity<Void> updateImage(final @RequestPart MultipartFile file, final @PathVariable("imageId") int imageId,
-                                                final @AuthenticationPrincipal User user) {
+    public ResponseEntity<Void> updateImage(@RequestPart final MultipartFile file, @PathVariable("imageId")
+    final int imageId, @AuthenticationPrincipal final User user) {
         diaryService.updateImage(imageId, file, user);
         return ResponseEntity.ok().build();
     }
@@ -85,7 +84,8 @@ public class DiaryController {
      * @return
      */
     @GetMapping("/{diaryId}")
-    public ResponseEntity<DiaryDetailResponseDTO> getDiaryDetail(@PathVariable("diaryId") final int diaryId, final @AuthenticationPrincipal User user) {
+    public ResponseEntity<DiaryDetailResponseDTO> getDiaryDetail(@PathVariable("diaryId") final int diaryId,
+                                                                 @AuthenticationPrincipal final User user) {
         return ResponseEntity.ok(diaryService.getDiaryDetail(diaryId, user));
     }
 
@@ -93,8 +93,8 @@ public class DiaryController {
      * 일기에 메모, 태그를 수정합니다.
      */
     @PutMapping("/{diaryId}/memo")
-    public ResponseEntity<Void> updateMemo(@PathVariable("diaryId") final Integer diaryId, @RequestBody DiaryMemoRequestDTO diaryMemoRequestDTO, final @AuthenticationPrincipal User user) {
-        diaryService.updateMemo(diaryId, diaryMemoRequestDTO, user);
+    public ResponseEntity<Void> updateMemo(@PathVariable("diaryId") final Integer diaryId, @RequestBody DiaryMemoRequestDTO diaryMemoRequestDTO) {
+        diaryService.updateMemo(diaryId, diaryMemoRequestDTO);
         return ResponseEntity.ok().build();
     }
 
@@ -118,7 +118,8 @@ public class DiaryController {
      * @throws IOException
      */
     @GetMapping("/home")
-    public ResponseEntity<List<HomeResponseDTO>> home(final @RequestParam YearMonth yearMonth, final @AuthenticationPrincipal User user) throws IOException {
+    public ResponseEntity<List<HomeResponseDTO>> home(@RequestParam final YearMonth yearMonth,
+                                                      @AuthenticationPrincipal final User user) throws IOException {
         return ResponseEntity.ok(diaryService.getHome(yearMonth, user));
     }
 
@@ -129,7 +130,8 @@ public class DiaryController {
      * @return HomeDayResponseDTO 이전 일기 날짜,다음 일기 날짜가 포함된 오늘 날짜의 일기 데이터
      */
     @GetMapping("/home-day")
-    public ResponseEntity<HomeDayResponseDTO> homeDay(final @RequestParam LocalDate date, final @AuthenticationPrincipal User user) {
+    public ResponseEntity<HomeDayResponseDTO> homeDay(@RequestParam final LocalDate date,
+                                                      @AuthenticationPrincipal final User user) {
         return ResponseEntity.ok(diaryService.getHomeDay(date, user));
     }
 }

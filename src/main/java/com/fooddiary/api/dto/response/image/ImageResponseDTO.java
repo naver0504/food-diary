@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ImageResponseDTO {
-    private int imageId;
+    private long imageId;
     private byte[] bytes;
 }
