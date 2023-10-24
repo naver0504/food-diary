@@ -23,7 +23,7 @@ CREATE TABLE session (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `diary` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
   `diary_time` varchar(255) DEFAULT NULL,
   `geography` geometry DEFAULT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE `diary` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `image` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `create_at` datetime(6) NOT NULL,
   `stored_file_name` varchar(255) NOT NULL,
   `thumbnail_file_name` varchar(255) NOT NULL,

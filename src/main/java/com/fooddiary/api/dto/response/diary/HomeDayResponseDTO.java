@@ -20,7 +20,7 @@ public class HomeDayResponseDTO {
     @Builder
     @Getter
     public static class HomeDay {
-        private Integer id; // diary id
+        private Long id; // diary id
         private String memo;
         private DiaryTime diaryTime;
         private List<String> tags;

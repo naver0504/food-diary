@@ -48,26 +48,26 @@ public class UserResignService {
     }
 
     public void deleteAllImages(final User user) {
-        Integer id = -1;
+        Long id = -1L;
 
         while(true) {
-            List<Diary> diaryList = diaryRepository.findByUserIdAndLimit(user.getId(), id, PageRequest.of(0, 10));
+            final List<Diary> diaryList = diaryRepository.findByUserIdAndLimit(user.getId(), id, PageRequest.of(0, 10));
             if (diaryList.isEmpty()) {
                 break;
             }
             id = diaryList.get(diaryList.size() - 1).getId();
 
             for (Diary diary : diaryList) {
-                List<Image> imageList = diary.getImages();
+                final List<Image> imageList = diary.getImages();
                 for (Image image : imageList) {
                     amazonS3.deleteObject(bucket, ImageUtils.getDirPath(basePath, user) + image.getStoredFileName());
                     amazonS3.deleteObject(bucket, ImageUtils.getDirPath(basePath, user) + image.getThumbnailFileName());
                     imageRepository.delete(image);
                 }
-                List<DiaryTag> diaryTags = diary.getDiaryTags();
-                List<Tag> deletableTags = new ArrayList<>();
+                final List<DiaryTag> diaryTags = diary.getDiaryTags();
+                final List<Tag> deletableTags = new ArrayList<>();
                 diaryTags.forEach(diaryTag -> {
-                    Tag tag = diaryTag.getTag();
+                    final Tag tag = diaryTag.getTag();
                     tag.getDiaryTags().remove(diaryTag);
                     if (tag.getDiaryTags().isEmpty()) {
                         deletableTags.add(tag);

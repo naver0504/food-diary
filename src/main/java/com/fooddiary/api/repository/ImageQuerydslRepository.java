@@ -20,7 +20,7 @@ public class ImageQuerydslRepository {
         jpaQueryFactory = new JPAQueryFactory(entityManager);
     }
 
-    public List<Image> findByDayImageId(final int dayImageId) {
+    public List<Image> findByDayImageId(final long dayImageId) {
 
 
         return jpaQueryFactory.selectFrom(image)
@@ -48,7 +48,7 @@ public class ImageQuerydslRepository {
     }
 
     public List<Image> findByYearAndMonthAndDayAndStartId(final int year, final int month, final int day, final int startId) {
-        BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day);
+        final BooleanBuilder booleanBuilder = getBuilderWithTime(year, month, day);
         booleanBuilder.and(image.id.lt(startId));
         return jpaQueryFactory.selectFrom(image)
                 .leftJoin(image.diary, diary)

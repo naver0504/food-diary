@@ -6,5 +6,5 @@ public interface TimelineDiaryImageSQLDTO {
     Integer getId();
     LocalDateTime getCreateTime();
     String getStoredFileName();
-    Integer getImageId();
+    Long getImageId();
 }
