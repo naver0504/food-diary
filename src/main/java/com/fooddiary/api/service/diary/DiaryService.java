@@ -70,13 +70,16 @@ public class DiaryService {
         imageService.storeImage(newDiary, files, user);
     }
 
-    public void addImages(final int diaryId, final List<MultipartFile> files, final User user) {
+    public void addImages(final long diaryId, final List<MultipartFile> files, final User user) {
         if (diaryRepository.getDiaryImagesCount(diaryId) + files.size() > 5) {
             throw new BizException("we allow max 5 images");
         }
         final Diary diary = diaryRepository.findById(diaryId).orElse(null);
         if (diary == null) {
             throw new BizException("invalid diary id");
+        }
+        if (!diary.getUser().getId().equals(user.getId())) {
+            throw new BizException("no permission user");
         }
 
         imageService.storeImage(diary, files, user);
@@ -98,7 +101,7 @@ public class DiaryService {
         diaryRepository.save(diary);
     }
 
-    public DiaryDetailResponseDTO getDiaryDetail(final int id, final User user) {
+    public DiaryDetailResponseDTO getDiaryDetail(final long id, final User user) {
         final Diary diary = diaryRepository.findDiaryAndImagesById(id).orElse(null);
         if (diary == null) {
             throw new BizException("invalid diary id");
@@ -124,7 +127,7 @@ public class DiaryService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateMemo(final Integer diaryId, final DiaryMemoRequestDTO diaryMemoRequestDTO) {
+    public void updateMemo(final long diaryId, final DiaryMemoRequestDTO diaryMemoRequestDTO) {
         final Diary diary = diaryRepository.findById(diaryId).orElse(null);
         if (diary == null) {
             throw new BizException("invalid diary id");
@@ -204,7 +207,7 @@ public class DiaryService {
         diaryRepository.save(diary);
     }
 
-    public void deleteDiary(final int diaryId, final User user) {
+    public void deleteDiary(final long diaryId, final User user) {
         final Diary diary = diaryRepository.findByUserIdAndId(user.getId(), diaryId);
         if (diary == null) {
             throw new BizException("invalid diary id");

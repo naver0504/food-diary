@@ -50,7 +50,7 @@ public class ImageService {
     @Value("${cloud.aws.s3.dir}")
     private String basePath;
 
-    public List<Image> storeImage(final int diaryId, final List<MultipartFile> files, final User user)  {
+    public List<Image> storeImage(final long diaryId, final List<MultipartFile> files, final User user)  {
 
         final List<Image> images = new ArrayList<>();
         final String dirPath = ImageUtils.getDirPath(basePath, user);
@@ -164,7 +164,7 @@ public class ImageService {
         return imageResponseDTO;
     }
 
-    public StatusResponseDTO updateImage(final long imageId, final MultipartFile file, final User user) {
+    public void updateImage(final long imageId, final MultipartFile file, final User user) {
         final Image image = imageRepository.findByImageIdAndUserId(imageId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
         final String storeFilename = ImageUtils.createImageName(
@@ -186,10 +186,6 @@ public class ImageService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        return StatusResponseDTO.builder()
-                .status(StatusResponseDTO.Status.SUCCESS)
-                .build();
     }
 
     public void updateImage(final Image image, final MultipartFile file, final User user) {

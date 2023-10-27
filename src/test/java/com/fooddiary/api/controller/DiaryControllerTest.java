@@ -235,7 +235,7 @@ public class DiaryControllerTest {
         diaryDetailResponseDTO.setLatitude(-200D);
         diaryDetailResponseDTO.setLatitude(-200D);
 
-        when(diaryService.getDiaryDetail(eq(1), any(User.class))).thenReturn(diaryDetailResponseDTO);
+        when(diaryService.getDiaryDetail(eq(1L), any(User.class))).thenReturn(diaryDetailResponseDTO);
 
         final MockHttpServletResponse mockHttpServletResponse =  mockMvc.perform(get("/diary/{diaryId}", 1)
                         .headers(getHeader()))
@@ -269,7 +269,7 @@ public class DiaryControllerTest {
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         final String content = objectMapper.writeValueAsString(diaryMemoRequestDTO);
 
-        doNothing().when(diaryService).updateMemo(any(Integer.class), any(DiaryMemoRequestDTO.class));
+        doNothing().when(diaryService).updateMemo(any(long.class), any(DiaryMemoRequestDTO.class));
 
         mockMvc.perform(put("/diary/{diaryId}/memo", 1)
                         .headers(getHeader())
