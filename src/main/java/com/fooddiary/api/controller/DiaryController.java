@@ -37,7 +37,7 @@ public class DiaryController {
     @PostMapping(value = "/new", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createDiary(@RequestPart("files") final List<MultipartFile> images,
                                             @RequestParam("createTime") final LocalDate createDate,
-                                            @RequestPart("placeInfo") final PlaceInfoDTO placeInfoDTO,
+                                            @RequestPart(value = "placeInfo", required = false) final PlaceInfoDTO placeInfoDTO,
                                             @AuthenticationPrincipal final User user) {
         if (images.size() > 5) {
             throw new BizException("we allow max 5 images");
@@ -105,7 +105,7 @@ public class DiaryController {
      * @return 성공하면 ok
      */
     @DeleteMapping("/{diaryId}")
-    public ResponseEntity<Void> deleteDiary(@PathVariable("diaryId") final long diaryId, final @AuthenticationPrincipal User user) {
+    public ResponseEntity<Void> deleteDiary(@PathVariable("diaryId") final long diaryId, @AuthenticationPrincipal final User user) {
         diaryService.deleteDiary(diaryId, user);
         return ResponseEntity.ok().build();
     }

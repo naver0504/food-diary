@@ -63,11 +63,13 @@ public class Diary {
         diary.setCreateTime(makeCreateTime(dateTime, diaryTime));
         diary.setCreateAt(LocalDateTime.now());
         diary.setDiaryTime(diaryTime);
-        if (StringUtils.hasText(placeInfo.getPlace())) {
-            diary.setPlace(placeInfo.getPlace());
-        }
         diary.setUser(user);
-        diary.setGeography(placeInfo.getLongitude(), placeInfo.getLatitude());
+        if (placeInfo != null) {
+            if (StringUtils.hasText(placeInfo.getPlace())) {
+                diary.setPlace(placeInfo.getPlace());
+            }
+            diary.setGeography(placeInfo.getLongitude(), placeInfo.getLatitude());
+        }
         return diary;
     }
 
