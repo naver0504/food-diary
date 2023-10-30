@@ -1,4 +1,4 @@
-package com.fooddiary.api.dto.response.image;
+package com.fooddiary.api.dto.response.diary;
 
 import lombok.Getter;
 import lombok.Setter;

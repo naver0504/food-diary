@@ -7,9 +7,10 @@ import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.request.diary.PlaceInfoDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
+import com.fooddiary.api.dto.response.diary.DiaryMemoResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
-import com.fooddiary.api.dto.response.image.ImageResponseDTO;
+import com.fooddiary.api.dto.response.diary.ImageResponseDTO;
 import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.diary.DiaryService;
@@ -213,16 +214,7 @@ public class DiaryControllerTest {
     @Test
     void getDiaryDetail() throws Exception {
         final DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
-        diaryDetailResponseDTO.setDiaryTime(DiaryTime.SNACK.name());
-        diaryDetailResponseDTO.setDate(LocalDate.now());
-        diaryDetailResponseDTO.setMemo("간식");
-
-        final List<DiaryDetailResponseDTO.TagResponse> tagResponseList = new ArrayList<>();
-        final DiaryDetailResponseDTO.TagResponse tagResponse = new DiaryDetailResponseDTO.TagResponse();
-        tagResponse.setId(1L);
-        tagResponse.setName("과자");
-        tagResponseList.add(tagResponse);
-        diaryDetailResponseDTO.setTags(tagResponseList);
+        setMemo(diaryDetailResponseDTO);
 
         final List<ImageResponseDTO> imageResponseDTOList = new ArrayList<>();
         final ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
@@ -230,10 +222,6 @@ public class DiaryControllerTest {
         imageResponseDTO.setBytes(new byte[]{'s','n','a','c','k'});
         imageResponseDTOList.add(imageResponseDTO);
         diaryDetailResponseDTO.setImages(imageResponseDTOList);
-
-        diaryDetailResponseDTO.setPlace("종로구");
-        diaryDetailResponseDTO.setLatitude(-200D);
-        diaryDetailResponseDTO.setLatitude(-200D);
 
         when(diaryService.getDiaryDetail(eq(1L), any(User.class))).thenReturn(diaryDetailResponseDTO);
 
@@ -248,6 +236,27 @@ public class DiaryControllerTest {
         Assertions.assertEquals(
                 mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
                 objectMapper.writeValueAsString(diaryDetailResponseDTO));
+    }
+
+    @Test
+    void getDiaryMemo() throws Exception {
+        final DiaryMemoResponseDTO diaryMemoResponseDTO = new DiaryMemoResponseDTO();
+        setMemo(diaryMemoResponseDTO);
+        diaryMemoResponseDTO.setLatitude(-200D);
+
+        when(diaryService.getDiaryMemo(eq(1L), any(User.class))).thenReturn(diaryMemoResponseDTO);
+
+        final MockHttpServletResponse mockHttpServletResponse =  mockMvc.perform(get("/diary/{diaryId}/memo", 1)
+                        .headers(makeHeader()))
+                .andExpect(status().isOk())
+                .andDo(document("diary memo"))
+                .andReturn()
+                .getResponse();
+
+        final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        Assertions.assertEquals(
+                mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
+                objectMapper.writeValueAsString(diaryMemoResponseDTO));
     }
 
     @Test
@@ -284,6 +293,23 @@ public class DiaryControllerTest {
                         .headers(makeHeader()))
                 .andExpect(status().isOk())
                 .andDo(document("delete diary"));
+    }
+
+    private void setMemo(DiaryMemoResponseDTO diaryMemoResponseDTO) {
+        diaryMemoResponseDTO.setDiaryTime(DiaryTime.SNACK.name());
+        diaryMemoResponseDTO.setDate(LocalDate.now());
+        diaryMemoResponseDTO.setMemo("간식");
+
+        final List<DiaryMemoResponseDTO.TagResponse> tagResponseList = new ArrayList<>();
+        final DiaryMemoResponseDTO.TagResponse tagResponse = new DiaryMemoResponseDTO.TagResponse();
+        tagResponse.setId(1L);
+        tagResponse.setName("과자");
+        tagResponseList.add(tagResponse);
+        diaryMemoResponseDTO.setTags(tagResponseList);
+
+        diaryMemoResponseDTO.setPlace("종로구");
+        diaryMemoResponseDTO.setLatitude(-200D);
+        diaryMemoResponseDTO.setLatitude(-200D);
     }
 
 }
