@@ -1,5 +1,6 @@
 package com.fooddiary.api.controller;
 
+import static com.fooddiary.api.common.util.HttpUtil.makeHeader;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -27,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.restdocs.RestDocumentationContextProvider;
@@ -202,10 +202,4 @@ class NoticeControllerTest {
         return noticeResponseDTO;
     }
 
-    private static HttpHeaders makeHeader() {
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("login-from", "none");
-        httpHeaders.add("token", "asdf");
-        return httpHeaders;
-    }
 }

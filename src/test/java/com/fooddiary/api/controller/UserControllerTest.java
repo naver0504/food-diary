@@ -20,7 +20,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -40,6 +39,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.fooddiary.api.common.util.HttpUtil.makeHeader;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -80,13 +80,10 @@ public class UserControllerTest {
     @Test
     void is_login() throws Exception {
         given(userService.getValidUser(anyString(), anyString())).willReturn(new User());
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("login-from", "none");
-        httpHeaders.add("token", "asdf");
 
         mockMvc.perform(get("/user/is-login")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .headers(httpHeaders))
+                                .headers(makeHeader()))
                .andExpect(status().isOk())
                .andDo(document("is login"));
     }
@@ -141,7 +138,7 @@ public class UserControllerTest {
 
 
 
-        ArgumentCaptor<UserLoginRequestDTO> loginRequestDto = ArgumentCaptor.forClass(UserLoginRequestDTO.class);
+        final ArgumentCaptor<UserLoginRequestDTO> loginRequestDto = ArgumentCaptor.forClass(UserLoginRequestDTO.class);
 
         then(userService).should(times(1)).loginUser(loginRequestDto.capture());
 
@@ -189,7 +186,7 @@ public class UserControllerTest {
         given(userService.resetPw(email)).willReturn(userResponseDto);
         final ObjectMapper objectMapper = new ObjectMapper();
 
-        UserResetPasswordRequestDTO userResetPasswordRequestDTO = new UserResetPasswordRequestDTO();
+        final UserResetPasswordRequestDTO userResetPasswordRequestDTO = new UserResetPasswordRequestDTO();
         userResetPasswordRequestDTO.setEmail(email);
 
         mockMvc.perform(post("/user/reset-password")
@@ -208,7 +205,7 @@ public class UserControllerTest {
         final UserNewPasswordRequestDTO userNewPasswordRequestDTO = new UserNewPasswordRequestDTO();
         userNewPasswordRequestDTO.setPassword(password);
         userNewPasswordRequestDTO.setNewPassword(newPassword);
-        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        final SecurityContext securityContext = mock(SecurityContext.class);
         User user = new User();
         user.setPw(password);
         final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
@@ -225,17 +222,13 @@ public class UserControllerTest {
         when(userService.updatePassword(any(UserNewPasswordRequestDTO.class))).thenReturn(userNewPasswordResponseDTO);
         when(passwordEncoder.encode(password)).thenReturn(password);
         when(passwordEncoder.encode(newPassword)).thenReturn(newPassword);
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("email", "jasuil@daum.net");
-        httpHeaders.add("token", "asdf");
         final ObjectMapper objectMapper = new ObjectMapper();
 
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(post("/user/new-password").content(
                                                                                                             objectMapper.writeValueAsString(userNewPasswordRequestDTO))
                                                                                                     .contentType(
                                                                                                             MediaType.APPLICATION_JSON)
-                                                                                                    .headers(
-                                                                                                            httpHeaders))
+                                                                                                    .headers(makeHeader()))
                                                                        .andExpect(status().isOk())
                                                                        .andDo(document("new password"))
                                                                        .andReturn().getResponse();
