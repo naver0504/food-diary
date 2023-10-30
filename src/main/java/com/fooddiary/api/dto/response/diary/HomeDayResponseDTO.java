@@ -1,7 +1,6 @@
 package com.fooddiary.api.dto.response.diary;
 
 
-import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import com.fooddiary.api.entity.diary.DiaryTime;
 import lombok.*;
 
