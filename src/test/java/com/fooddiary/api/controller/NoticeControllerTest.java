@@ -1,16 +1,17 @@
 package com.fooddiary.api.controller;
 
+import static com.fooddiary.api.common.util.HttpUtil.makeHeader;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.charset.StandardCharsets;
@@ -27,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.restdocs.RestDocumentationContextProvider;
@@ -71,14 +71,11 @@ class NoticeControllerTest {
     void getMoreNoticeList() throws Exception {
         final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
         when(noticeService.getMoreNoticeList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeResponseDTO);
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("login-from", "none");
-        httpHeaders.add("token", "asdf");
         final String param = "?startId=0&size=10";
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/more" + param)
                                                                                         .contentType(
                                                                                                 MediaType.APPLICATION_JSON)
-                                                                                        .headers(httpHeaders))
+                                                                                        .headers(makeHeader()))
                                                                        .andExpect(status().isOk())
                                                                        .andDo(document("get more notice"))
                                                                        .andReturn()
@@ -99,14 +96,11 @@ class NoticeControllerTest {
         noticeNewRequestDTO.setNoticeAt(LocalDate.now());
 
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("login-from", "none");
-        httpHeaders.add("token", "asdf");
 
         mockMvc.perform(post("/notice/new")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(noticeNewRequestDTO))
-                                .headers(httpHeaders))
+                                .headers(makeHeader()))
                .andExpect(status().isOk())
                .andDo(document("new notice"));
 
@@ -130,14 +124,11 @@ class NoticeControllerTest {
         noticeModifyRequestDTO.setNoticeAt(LocalDate.now());
 
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("login-from", "none");
-        httpHeaders.add("token", "asdf");
 
         mockMvc.perform(put("/notice/modify")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(noticeModifyRequestDTO))
-                                .headers(httpHeaders))
+                                .headers(makeHeader()))
                .andExpect(status().isOk())
                .andDo(document("modify notice"));
 
@@ -155,19 +146,16 @@ class NoticeControllerTest {
     }
 
     @Test
-    void getPagingNoticeList() throws Exception {
+    void getPagingNotice() throws Exception {
         final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
         final String title = noticeResponseDTO.getList().get(0).getTitle().substring(0, 2);
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("login-from", "none");
-        httpHeaders.add("token", "asdf");
         final String param = "?page=0&size=10&title=" + title;
         when(noticeService.getPagingNoticeList(anyString(), any(), any(), any(), any(),
                                                any(Pageable.class))).thenReturn(noticeResponseDTO);
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/notice/paging" + param)
                                                                                         .contentType(
                                                                                                 MediaType.APPLICATION_JSON)
-                                                                                        .headers(httpHeaders))
+                                                                                        .headers(makeHeader()))
                                                                        .andExpect(status().isOk())
                                                                        .andDo(document("get paging notice"))
                                                                        .andReturn()
@@ -182,6 +170,15 @@ class NoticeControllerTest {
         verify(noticeService, times(1)).getPagingNoticeList(noticeNewRequestDTOArgumentCaptor.capture(), any(),
                                                             any(), any(), any(), any(Pageable.class));
         Assertions.assertEquals(title, noticeNewRequestDTOArgumentCaptor.getValue());
+    }
+
+    @Test
+    void deleteNotice() throws Exception {
+        willDoNothing().given(noticeService).deleteNotice(eq(1));
+        mockMvc.perform(delete("/notice/{noticeId}", 1)
+                .contentType(MediaType.APPLICATION_JSON).headers(makeHeader()))
+                .andExpect(status().isOk())
+                .andDo(document("delete notice"));
     }
 
     private static NoticeResponseDTO makeNoticeList() {
@@ -204,4 +201,5 @@ class NoticeControllerTest {
 
         return noticeResponseDTO;
     }
+
 }

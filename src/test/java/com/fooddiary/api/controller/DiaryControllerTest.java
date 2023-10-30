@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -46,6 +45,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.fooddiary.api.common.util.HttpUtil.makeHeader;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -104,7 +104,7 @@ public class DiaryControllerTest {
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/diary/home?yearMonth=" + param)
                         .contentType(
                                 MediaType.APPLICATION_JSON)
-                        .headers(getHeader()))
+                        .headers(makeHeader()))
                 .andExpect(status().isOk())
                 .andDo(document("get home"))
                 .andReturn()
@@ -143,7 +143,7 @@ public class DiaryControllerTest {
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/diary/home-day?date=" + param)
                         .contentType(
                                 MediaType.APPLICATION_JSON)
-                        .headers(getHeader()))
+                        .headers(makeHeader()))
                 .andExpect(status().isOk())
                 .andDo(document("get home day"))
                 .andReturn()
@@ -175,7 +175,7 @@ public class DiaryControllerTest {
                         .file(mockMultipartFile2)
                         .part(jsonPart)
                         .queryParam("createTime", LocalDate.now().toString())
-                        .headers(getHeader())
+                        .headers(makeHeader())
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk()).andDo(document("new diary"));
     }
@@ -190,7 +190,7 @@ public class DiaryControllerTest {
         mockMvc.perform(multipart("/diary/{diaryId}/images", 1)
                 .file(mockMultipartFile)
                 .file(mockMultipartFile2)
-                .headers(getHeader()))
+                .headers(makeHeader()))
                 .andExpect(status().isOk()).andDo(document("add images"));
     }
 
@@ -205,7 +205,7 @@ public class DiaryControllerTest {
                             request.setMethod("PATCH");
                             return request;
                         })
-                        .headers(getHeader())
+                        .headers(makeHeader())
                 )
                 .andExpect(status().isOk()).andDo(document("update image"));
     }
@@ -238,7 +238,7 @@ public class DiaryControllerTest {
         when(diaryService.getDiaryDetail(eq(1L), any(User.class))).thenReturn(diaryDetailResponseDTO);
 
         final MockHttpServletResponse mockHttpServletResponse =  mockMvc.perform(get("/diary/{diaryId}", 1)
-                        .headers(getHeader()))
+                        .headers(makeHeader()))
                 .andExpect(status().isOk())
                 .andDo(document("diary detail"))
                 .andReturn()
@@ -272,7 +272,7 @@ public class DiaryControllerTest {
         doNothing().when(diaryService).updateMemo(any(long.class), any(DiaryMemoRequestDTO.class));
 
         mockMvc.perform(put("/diary/{diaryId}/memo", 1)
-                        .headers(getHeader())
+                        .headers(makeHeader())
                         .content(content))
                 .andExpect(status().isOk())
                 .andDo(document("update memo"));
@@ -281,16 +281,9 @@ public class DiaryControllerTest {
     @Test
     void deleteDiary() throws Exception {
         mockMvc.perform(delete("/diary/{diaryId}", 1)
-                        .headers(getHeader()))
+                        .headers(makeHeader()))
                 .andExpect(status().isOk())
                 .andDo(document("delete diary"));
-    }
-
-    private static HttpHeaders getHeader() {
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("login-from", "none");
-        httpHeaders.add("token", "asdf");
-        return httpHeaders;
     }
 
 }

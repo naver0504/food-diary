@@ -94,14 +94,21 @@ public class NoticeService {
         if (user.getRole() != Role.ADMIN) {
             throw new BizException("not admin");
         }
-        final Notice notice = noticeRepository.findById(noticeModifyRequestDTO.getId()).orElse(new Notice());
-        if (notice.getId() == null) {
-            throw new BizException("invalid id");
-        }
+        final Notice notice = noticeRepository.findById(noticeModifyRequestDTO.getId())
+                .orElseThrow(() -> new BizException("invalid id"));
         BeanUtils.copyProperties(noticeModifyRequestDTO, notice);
         notice.setUpdateAt(LocalDateTime.now());
         notice.setUpdateUserId(user.getId());
         noticeRepository.save(notice);
+    }
+
+    public void deleteNotice(int id) {
+        final User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (user.getRole() != Role.ADMIN) {
+            throw new BizException("not admin");
+        }
+        noticeRepository.findById(id).orElseThrow(() -> new BizException("invalid id"));
+        noticeRepository.deleteById(id);
     }
 
 }
