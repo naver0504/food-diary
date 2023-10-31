@@ -1,11 +1,9 @@
 package com.fooddiary.api.service.timeline;
 
-import com.fooddiary.api.dto.response.image.ImageResponseDTO;
 import com.fooddiary.api.dto.response.timeline.TimeLineResponseDTO;
 import com.fooddiary.api.dto.response.timeline.TimelineDiaryDTO;
 import com.fooddiary.api.dto.response.timeline.TimelineDiaryDslQueryDTO;
 import com.fooddiary.api.dto.response.timeline.TimelineDiaryImageSQLDTO;
-import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.diary.Image;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.timeline.TimelineQuerydslRepository;
@@ -19,11 +17,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

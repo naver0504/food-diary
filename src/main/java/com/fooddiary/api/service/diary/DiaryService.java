@@ -11,6 +11,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.util.ImageUtils;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
+import com.fooddiary.api.dto.response.diary.DiaryMemoResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
@@ -22,9 +23,8 @@ import com.fooddiary.api.repository.diary.TagRepository;
 import com.fooddiary.api.service.ImageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fooddiary.api.common.exception.BizException;
@@ -40,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DiaryService {
 
+    private final DiaryTransactionService diaryTransactionService;
     private final DiaryRepository diaryRepository;
     private final DiaryQuerydslRepository diaryQuerydslRepository;
     private final DiaryTagRepository diaryTagRepository;
@@ -107,104 +108,52 @@ public class DiaryService {
             throw new BizException("invalid diary id");
         }
         DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
+        getMemo(diary, diaryDetailResponseDTO);
         diaryDetailResponseDTO.setImages(imageService.getImages(diary.getImages(), user));
-        diaryDetailResponseDTO.setTags(diary.getDiaryTags().stream().map(tag -> {
+        return diaryDetailResponseDTO;
+    }
+
+    public DiaryMemoResponseDTO getDiaryMemo(final long id, final User user) {
+        final Diary diary = diaryRepository.findDiaryAndImagesById(id).orElse(null);
+        if (diary == null) {
+            throw new BizException("invalid diary id");
+        }
+        DiaryMemoResponseDTO diaryMemoResponseDTO = new DiaryMemoResponseDTO();
+        getMemo(diary, diaryMemoResponseDTO);
+        return diaryMemoResponseDTO;
+    }
+
+    private void getMemo(Diary diary, DiaryMemoResponseDTO diaryMemoResponseDTO) {
+        diaryMemoResponseDTO.setTags(diary.getDiaryTags().stream().map(tag -> {
             final DiaryDetailResponseDTO.TagResponse tagResponse = new DiaryDetailResponseDTO.TagResponse();
             tagResponse.setName(tag.getTag().getTagName());
             tagResponse.setId(tag.getId());
             return tagResponse;
         }).collect(Collectors.toList()));
-        diaryDetailResponseDTO.setDate(diary.getCreateTime().toLocalDate());
-        diaryDetailResponseDTO.setMemo(diary.getMemo());
-        diaryDetailResponseDTO.setPlace(diary.getPlace());
+        diaryMemoResponseDTO.setDate(diary.getCreateTime().toLocalDate());
+        diaryMemoResponseDTO.setMemo(diary.getMemo());
+        diaryMemoResponseDTO.setPlace(diary.getPlace());
         if (diary.getGeography() != null) {
-            diaryDetailResponseDTO.setLongitude(diary.getGeography().getX());
-            diaryDetailResponseDTO.setLatitude(diary.getGeography().getY());
+            diaryMemoResponseDTO.setLongitude(diary.getGeography().getX());
+            diaryMemoResponseDTO.setLatitude(diary.getGeography().getY());
         }
-        diaryDetailResponseDTO.setDiaryTime(diary.getDiaryTime().name());
-
-        return diaryDetailResponseDTO;
+        diaryMemoResponseDTO.setDiaryTime(diary.getDiaryTime().name());
     }
 
-    @Transactional(rollbackFor = Exception.class)
     public void updateMemo(final long diaryId, final DiaryMemoRequestDTO diaryMemoRequestDTO) {
-        final Diary diary = diaryRepository.findById(diaryId).orElse(null);
-        if (diary == null) {
-            throw new BizException("invalid diary id");
-        }
+        final Map<String, Tag> deleteTagMap = new HashMap<>(); // 기존에 있었으나 더이상 쓰지 않는 태그
+        diaryTransactionService.updateMemo(diaryId, diaryMemoRequestDTO, deleteTagMap);
 
-        final Map<Long, DiaryTag> diaryTagMap = new HashMap<>();
-        diary.getDiaryTags().forEach(obj -> diaryTagMap.put(obj.getId(), obj));
-
-        final Set<String> tagNames = diaryMemoRequestDTO.getTags().stream()
-                                                  .map(tag -> {
-                                                      if (tag.getName().length() > 50) {
-                                                          throw new BizException("태그는 50자 이하로 입력부탁드립니다.");
-                                                      }
-                                                      return tag.getName();
-                                                  })
-                                                  .filter(StringUtils::hasText)
-                                                  .collect(Collectors.toSet());
-
-        if (tagNames.size() != diaryMemoRequestDTO.getTags().size()) {
-            throw new BizException("이름 있고 중복되지 않은 태그만 입력해주세요");
-        }
-        if (tagNames.size() > 20) {
-            throw new RuntimeException("태그는 20개까지만 가능합니다.");
-        }
-        if (StringUtils.hasLength(diaryMemoRequestDTO.getMemo()) && diaryMemoRequestDTO.getMemo().length() > 500) {
-            throw new BizException("메모는 500자까지 입니다.");
-        }
-
-        final List<DiaryTag> diaryTagList = new ArrayList<>();
-        diaryMemoRequestDTO.getTags().forEach(tagRequestDTO -> {
-            if (diaryTagMap.get(tagRequestDTO.getId()) == null) { // 신규
-                Tag tag = tagRepository.findTagByTagName(tagRequestDTO.getName());
-                if (tag == null) {
-                    tag = new Tag();
-                    tag.setTagName(tagRequestDTO.getName());
-                    tag.setCreateAt(LocalDateTime.now());
-                    tagRepository.save(tag);
+        deleteTagMap.keySet().forEach(tagName -> {
+            final Tag tag = tagRepository.findTagByTagName(tagName);
+            try {
+                if (tag != null && tag.getDiaryTags().size() < 2) {
+                    tagRepository.delete(tag);
                 }
-                final DiaryTag diaryTag = new DiaryTag();
-                diaryTag.setDiary(diary);
-                diaryTag.setTag(tag);
-                diaryTag.setCreateAt(LocalDateTime.now());
-                diaryTagList.add(diaryTag);
-            } else { // 수정
-                final DiaryTag diaryTag = diaryTagMap.get(tagRequestDTO.getId());
-                if (!diaryTag.getTag().getTagName().equals(tagRequestDTO.getName())) {
-                    Tag tag = tagRepository.findTagByTagName(tagRequestDTO.getName());
-                    if (tag == null) {
-                        tag = new Tag();
-                        tag.setTagName(tagRequestDTO.getName());
-                        tag.setCreateAt(LocalDateTime.now());
-                        tagRepository.save(tag);
-                    }
-                    diaryTag.setTag(tag);
-                    diaryTag.setUpdateAt(LocalDateTime.now());
-                    diaryTagRepository.save(diaryTag);
-                }
-                diaryTagMap.remove(tagRequestDTO.getId());
+            } catch (DataIntegrityViolationException e) {
+                log.info("can't delete tag, tag id: {}", tag.getId());
             }
         });
-        diaryTagRepository.saveAll(diaryTagList);
-
-        // 삭제
-        for (DiaryTag diaryTag : diaryTagMap.values()) {
-            diaryTag.getDiary().getDiaryTags().remove(diaryTag);
-            diaryTag.getTag().getDiaryTags().remove(diaryTag);
-        }
-        diaryTagRepository.deleteAll(diaryTagMap.values());
-
-        diary.setMemo(diaryMemoRequestDTO.getMemo());
-        diary.setDiaryTags(diaryTagList);
-        diary.setCreateTime(Diary.makeCreateTime(diary.getCreateTime().toLocalDate(), diaryMemoRequestDTO.getDiaryTime()));
-        diary.setDiaryTime(diaryMemoRequestDTO.getDiaryTime());
-        diary.setUpdateAt(LocalDateTime.now());
-        diary.setPlace(diaryMemoRequestDTO.getPlace());
-        diary.setGeography(diaryMemoRequestDTO.getLongitude(), diaryMemoRequestDTO.getLatitude());
-        diaryRepository.save(diary);
     }
 
     public void deleteDiary(final long diaryId, final User user) {
@@ -222,22 +171,22 @@ public class DiaryService {
 
         final List<DiaryTag> diaryTags = diary.getDiaryTags();
         final List<DiaryTag> deleteDiaryTagList = new ArrayList<>();
-        final List<Tag> deletableTagIdList = new ArrayList<>();
+        final List<Tag> deletableTagList = new ArrayList<>();
         for (DiaryTag diaryTag : diaryTags) {
             final Tag tag = diaryTag.getTag();
             tag.getDiaryTags().remove(diaryTag);
             deleteDiaryTagList.add(diaryTag);
             if (tag.getDiaryTags().isEmpty()) {
-                deletableTagIdList.add(tag);
+                deletableTagList.add(tag);
             }
         }
         diary.getDiaryTags().removeAll(deleteDiaryTagList);
         diaryTagRepository.deleteAll(deleteDiaryTagList);
 
-        deletableTagIdList.forEach(tag -> {
+        deletableTagList.forEach(tag -> {
             try {
                 tagRepository.delete(tag);
-            } catch (Exception e) {
+            } catch (DataIntegrityViolationException e) {
                 log.info("can't delete tag, tag id: {}", tag.getId());
             }
         });

@@ -3,6 +3,7 @@ package com.fooddiary.api.controller;
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.request.diary.PlaceInfoDTO;
+import com.fooddiary.api.dto.response.diary.DiaryMemoResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
@@ -81,12 +82,23 @@ public class DiaryController {
      * 일기 자세히 보기
      * @param diaryId 일기 id
      * @param user spring context에서 관리되는 사용자 정보
-     * @return status 200
+     * @return 일기 정보 전달
      */
     @GetMapping("/{diaryId}")
     public ResponseEntity<DiaryDetailResponseDTO> getDiaryDetail(@PathVariable("diaryId") final long diaryId,
                                                                  @AuthenticationPrincipal final User user) {
         return ResponseEntity.ok(diaryService.getDiaryDetail(diaryId, user));
+    }
+
+    /**
+     * 일기에 사진을 제외한 정보를 전달합니다.
+     * @param diaryId 일기 id
+     * @param user spring context에서 관리되는 사용자 정보
+     * @return 일기의 사진을 제외한 정보 전달
+     */
+    @GetMapping("/{diaryId}/memo")
+    public ResponseEntity<DiaryMemoResponseDTO> getDiaryMemo(@PathVariable("diaryId") final long diaryId, @AuthenticationPrincipal final User user) {
+        return ResponseEntity.ok(diaryService.getDiaryMemo(diaryId, user));
     }
 
     /**
