@@ -163,6 +163,16 @@ public class ImageService {
         return imageResponseDTO;
     }
 
+    public byte[] getImage(final String fileName, final User user) {
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+        try {
+            return fileStorageService.getObject(dirPath + fileName);
+        } catch (IOException e) {
+            log.error("IOException ", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public void updateImage(final long imageId, final MultipartFile file, final User user) {
         final Image image = imageRepository.findByImageIdAndUserId(imageId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 이미지입니다."));
