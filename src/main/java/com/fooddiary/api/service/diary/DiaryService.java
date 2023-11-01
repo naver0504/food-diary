@@ -292,7 +292,7 @@ public class DiaryService {
                         final TimelineDiaryDTO timelineDiaryDTO = new TimelineDiaryDTO();
                         timelineDiaryDTO.setDiaryId(diary.getId());
                         timelineDiaryDTO.setBytes(imageService.getImage(diary.getThumbnailFileName(), user));
-                        updateDiaryListMap(diaryListMap, diary.getTagName(), timelineDiaryDTO);
+                        updateDiaryListMap(diaryListMap, "#"+ diary.getTagName(), timelineDiaryDTO);
                         if(!Objects.isNull(diary.getPlace())) {
                             updateDiaryListMap(diaryListMap, diary.getPlace(), timelineDiaryDTO);
                         }
