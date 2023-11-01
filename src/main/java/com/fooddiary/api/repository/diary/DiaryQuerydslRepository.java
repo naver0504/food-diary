@@ -2,7 +2,6 @@ package com.fooddiary.api.repository.diary;
 
 import com.fooddiary.api.entity.diary.Diary;
 import com.fooddiary.api.entity.diary.Time;
-import com.fooddiary.api.entity.user.QUser;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.fooddiary.api.entity.diary.QDiary.diary;
-import static com.fooddiary.api.entity.diary.QImage.image;
+
 
 @Repository
 @Slf4j
@@ -54,9 +53,10 @@ return null;
         Integer fetchFirst = jpaQueryFactory
                 .selectOne()
                 .from(diary)
-                .join(diary.user, QUser.user)
+                .where(diary.user.id.eq(userId))
                 .fetchFirst();
 
         return fetchFirst != null;
     }
+
 }
