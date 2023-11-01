@@ -7,6 +7,7 @@ import com.fooddiary.api.dto.response.diary.DiaryMemoResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
+import com.fooddiary.api.dto.response.search.DiarySearchResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.diary.DiaryService;
 import lombok.RequiredArgsConstructor;
@@ -145,5 +146,11 @@ public class DiaryController {
     public ResponseEntity<HomeDayResponseDTO> homeDay(@RequestParam final LocalDate date,
                                                       @AuthenticationPrincipal final User user) {
         return ResponseEntity.ok(diaryService.getHomeDay(date, user));
+    }
+
+
+    @GetMapping("/search")
+    public ResponseEntity<List<DiarySearchResponseDTO>> searchWithoutCondition(@AuthenticationPrincipal final User user)  {
+        return ResponseEntity.ok(diaryService.getSearchResultWithoutCondition(user));
     }
 }
