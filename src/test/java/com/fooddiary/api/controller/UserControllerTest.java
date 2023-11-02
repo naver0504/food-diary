@@ -7,8 +7,11 @@ import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
 import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.user.UserResponseDTO;
+import com.fooddiary.api.entity.user.Role;
+import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.user.UserService;
 import org.junit.jupiter.api.Assertions;
@@ -16,7 +19,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -26,6 +28,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -69,12 +72,42 @@ public class UserControllerTest {
     @Autowired
     WebApplicationContext context;
     MockMvc mockMvc;
+    static User principal;
 
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                                  .apply(documentationConfiguration(restDocumentation)).build();
         given(interceptor.preHandle(any(), any(), any())).willReturn(true);
+
+        principal = new User();
+        principal.setEmail("test@test.com");
+        principal.setPw("1234");
+        principal.setId(1);
+
+        final Authentication authentication = mock(RememberMeAuthenticationToken.class);
+        final SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(principal);
+        SecurityContextHolder.setContext(securityContext);
+    }
+
+    @Test
+    void user_info() throws Exception {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        UserInfoResponseDTO userInfoResponseDTO = new UserInfoResponseDTO();
+        userInfoResponseDTO.setRole(Role.ADMIN);
+        userInfoResponseDTO.setStatus(Status.ACTIVE);
+
+        when(userService.getUserInfo(any(User.class))).thenReturn(userInfoResponseDTO);
+
+        String servletResponse = mockMvc.perform(get("/user/info")
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(makeHeader()))
+                .andDo(document("user info"))
+                .andReturn().getResponse().getContentAsString();
+
+        Assertions.assertEquals(servletResponse, objectMapper.writeValueAsString(userInfoResponseDTO));
     }
 
     @Test
