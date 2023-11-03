@@ -7,11 +7,8 @@ import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
-import com.fooddiary.api.dto.response.user.KakaoUnlink;
-import com.fooddiary.api.dto.response.user.KakaoUserInfo;
+import com.fooddiary.api.dto.response.user.*;
 import com.fooddiary.api.dto.response.user.KakaoUserInfo.KakaoAccount;
-import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
-import com.fooddiary.api.dto.response.user.UserResponseDTO;
 import com.fooddiary.api.entity.user.Session;
 import com.fooddiary.api.entity.user.CreatePath;
 import com.fooddiary.api.entity.user.Role;
@@ -99,6 +96,13 @@ public class UserService {
         }
         userResponseDto.setPasswordStatus(userNewPasswordResponseDTO.getStatus());
         return userResponseDto;
+    }
+
+    public UserInfoResponseDTO getUserInfo(User user) {
+        final UserInfoResponseDTO userInfoResponseDTO = new UserInfoResponseDTO();
+        userInfoResponseDTO.setRole(user.getRole());
+        userInfoResponseDTO.setStatus(user.getStatus());
+        return userInfoResponseDTO;
     }
 
     public UserResponseDTO loginUser(UserLoginRequestDTO userDto) {

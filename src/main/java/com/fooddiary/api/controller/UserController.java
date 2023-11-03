@@ -8,6 +8,7 @@ import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
 import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
+import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.user.UserResponseDTO;
 import com.fooddiary.api.entity.user.User;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +30,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
     private final UserResignService userResignService;
+
+    @GetMapping("/info")
+    public ResponseEntity<UserInfoResponseDTO> userInfo(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(userService.getUserInfo(user));
+    }
 
     @GetMapping("/is-login")
     public ResponseEntity<HttpStatus> isLogin(HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
