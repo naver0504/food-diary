@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 import com.fooddiary.api.common.constants.UserConstants;
+import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
@@ -23,6 +24,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import static com.fooddiary.api.common.constants.UserConstants.LOGIN_REQUEST_KEY;
+
 @Slf4j
 @RestController
 @RequestMapping("/user")
@@ -38,8 +41,16 @@ public class UserController {
 
     @GetMapping("/is-login")
     public ResponseEntity<HttpStatus> isLogin(HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
-        final User user = userService.getValidUser(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY));
-        return user == null ? ResponseEntity.badRequest().build() : ResponseEntity.ok().build();
+        final User user = null;
+        try {
+            userService.getValidUser(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY));
+        } catch (IllegalArgumentException e) { // 잘못된 구글 토큰값이 들어올때
+            throw new BizException(LOGIN_REQUEST_KEY);
+        }
+        if (user == null) {
+            throw new BizException(LOGIN_REQUEST_KEY);
+        }
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/new")
