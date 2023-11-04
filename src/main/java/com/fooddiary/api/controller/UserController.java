@@ -41,7 +41,7 @@ public class UserController {
 
     @GetMapping("/is-login")
     public ResponseEntity<HttpStatus> isLogin(HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
-        User user = null;
+        User user;
         try {
             user = userService.getValidUser(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY));
         } catch (IllegalArgumentException e) { // 잘못된 구글 토큰값이 들어올때
