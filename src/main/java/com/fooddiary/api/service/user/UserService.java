@@ -212,10 +212,8 @@ public class UserService {
                         .header("Authorization", "Bearer " + token)
                         .build();
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() == HttpServletResponse.SC_BAD_REQUEST) {
+                if (response.statusCode() != HttpServletResponse.SC_OK) {
                     return null;
-                } else if (response.statusCode() != HttpServletResponse.SC_OK) {
-                    throw new BizException("KAKAO_API_ERROR");
                 }
                 ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 KakaoUserInfo kakaoUserInfo = objectMapper.readValue(response.body(), KakaoUserInfo.class);
