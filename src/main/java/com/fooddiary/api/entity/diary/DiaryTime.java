@@ -41,6 +41,28 @@ public enum DiaryTime {
         }
     }
 
+    public static DiaryTime getTime(final String searchCond) {
+        if (searchCond.equals("아침")) {
+            return DiaryTime.BREAKFAST;
+        } else if (searchCond.equals("아점")) {
+            return DiaryTime.BRUNCH;
+        } else if (searchCond.equals("점심")) {
+            return DiaryTime.LUNCH;
+        } else if (searchCond.equals("간식")) {
+            return DiaryTime.SNACK;
+        } else if (searchCond.equals("점저")) {
+            return DiaryTime.LINNER;
+        } else if (searchCond.equals("저녁")) {
+            return DiaryTime.DINNER;
+        } else if (searchCond.equals("야식")) {
+            return DiaryTime.LATESNACK;
+        } else if (searchCond.equals("기타")) {
+            return DiaryTime.ETC;
+        } else {
+            return null;
+        }
+    }
+
     public String getCode() {
         return code;
     }
