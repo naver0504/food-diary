@@ -149,8 +149,4 @@ public class DiaryController {
     }
 
 
-    @GetMapping("/search")
-    public ResponseEntity<List<DiarySearchResponseDTO>> searchWithoutCondition(@AuthenticationPrincipal final User user)  {
-        return ResponseEntity.ok(diaryService.getSearchResultWithoutCondition(user));
-    }
 }
