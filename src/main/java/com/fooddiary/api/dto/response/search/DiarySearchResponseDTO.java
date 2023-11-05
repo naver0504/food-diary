@@ -13,5 +13,6 @@ import java.util.List;
 public class DiarySearchResponseDTO {
 
     private String categoryName;
+    private int count;
     private List<TimelineDiaryDTO> diaryList;
 }
