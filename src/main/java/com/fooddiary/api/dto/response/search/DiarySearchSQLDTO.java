@@ -6,13 +6,16 @@ public interface DiarySearchSQLDTO {
 
     Integer getId();
     String getThumbnailFileName();
-    String getPlace();
 
-    interface DiarySearchNoTagSQLDTO extends DiarySearchSQLDTO {
+    interface DiarySearchWithDiaryTimeSQLDTO extends DiarySearchSQLDTO {
         DiaryTime getDiaryTime();
     }
 
     interface DiarySearchWithTagSQLDTO extends DiarySearchSQLDTO {
         String getTagName();
+    }
+
+    interface DiarySearchWithPlaceSQLDTO extends DiarySearchSQLDTO {
+        String getPlace();
     }
 }
