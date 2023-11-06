@@ -7,7 +7,6 @@ import com.fooddiary.api.dto.response.diary.DiaryMemoResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
 import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
 import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
-import com.fooddiary.api.dto.response.search.DiarySearchResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.diary.DiaryService;
 import lombok.RequiredArgsConstructor;
