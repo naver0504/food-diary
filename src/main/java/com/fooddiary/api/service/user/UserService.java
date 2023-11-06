@@ -53,6 +53,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+import static com.fooddiary.api.common.constants.UserConstants.NOT_ACTIVE_USER_KEY;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -211,17 +213,17 @@ public class UserService {
                         .build();
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() != HttpServletResponse.SC_OK) {
-                    throw new BizException("kakao user info api error");
+                    return null;
                 }
                 ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 KakaoUserInfo kakaoUserInfo = objectMapper.readValue(response.body(), KakaoUserInfo.class);
 
                 if (kakaoUserInfo.getKakao_account() == null) {
-                    throw new BizException("fail finding user info");
+                    throw new BizException("FAIL_FINDING_USER_INFO");
                 }
                 KakaoAccount kakaoAccount = kakaoUserInfo.getKakao_account();
                 if (!kakaoAccount.getIs_email_valid() || !kakaoAccount.getIs_email_verified()) {
-                    throw new BizException("invalid kakao email");
+                    throw new BizException("INVALID_KAKAO_EMAIL");
                 }
 
                 User user = userRepository.findByEmailAndCreatePathAndStatus(kakaoUserInfo.getKakao_account().getEmail(), CreatePath.KAKAO, Status.ACTIVE)
@@ -244,7 +246,7 @@ public class UserService {
                 final Session session = sessionService.getSession(token);
                 if (session != null) {
                     if (session.getUser().getStatus() != Status.ACTIVE) {
-                        return null;
+                        throw new BizException(NOT_ACTIVE_USER_KEY);
                     }
                     User user = session.getUser();
                     user.setLastAccessAt(LocalDateTime.now());
