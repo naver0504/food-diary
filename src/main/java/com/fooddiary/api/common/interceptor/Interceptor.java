@@ -46,8 +46,12 @@ public class Interceptor implements HandlerInterceptor {
 
         if (bypassUri.contains(request.getRequestURI())) {return true;}
 
-        final User user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
-
+        User user;
+        try {
+            user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
+        } catch (IllegalArgumentException e) {
+            throw new BizException(LOGIN_REQUEST_KEY);
+        }
         if (user == null) {
             throw new BizException(LOGIN_REQUEST_KEY);
         }
