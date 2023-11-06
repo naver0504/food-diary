@@ -63,6 +63,12 @@ public enum DiaryTime {
         }
     }
 
+    public static boolean isDiaryTime(final String time) {
+        return Arrays.stream(values())
+                .filter(diaryTime -> diaryTime.name().equals(time))
+                .findFirst()
+                .isPresent();
+    }
     public String getCode() {
         return code;
     }
