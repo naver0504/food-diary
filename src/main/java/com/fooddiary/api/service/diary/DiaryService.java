@@ -43,7 +43,6 @@ public class DiaryService {
     private final FileStorageService fileStorageService;
     private final ImageService imageService;
     private final AmazonS3 amazonS3;
-    private final DiaryTagQuerydslRepository diaryTagQuerydslRepository;
     @Value("${cloud.aws.s3.dir}")
     private String basePath;
 
