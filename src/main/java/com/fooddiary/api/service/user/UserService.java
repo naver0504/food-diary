@@ -15,8 +15,10 @@ import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.user.UserRepository;
+import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -63,6 +65,7 @@ public class UserService {
     private static final String GOOGLE = "google";
     private static final String KAKAO = "kakao";
     private static final String GOOGLE_AUTH_WEB_CLIENT_ID = "496603773945-n4ksng46582k26b3tk6k3k5tvaal9444.apps.googleusercontent.com"; // todo - ssl인증필요
+    private static final String GOOGLE_AUTH_WEB_CLIENT_SECRET = "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";
     private static final String KAKAO_SERVICE_APP_KEY = "217748336456a750c01563ee2749086f";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -392,6 +395,57 @@ public class UserService {
         return userNewPasswordResponseDTO;
     }
 
+    public RefreshTokenResponseDTO getAccessToken(String refreshToken, String accessToken, String loginFrom) throws IOException, InterruptedException {
+        RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
+        switch (loginFrom) {
+            case GOOGLE -> {
+                TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
+                response.setRefreshToken(response.getRefreshToken());
+                response.setAccessToken(response.getAccessToken());
+                response.setExpiresInSeconds(response.getExpiresInSeconds());
+            }
+            case KAKAO -> {
+                HttpClient client = HttpClient.newBuilder()
+                        .version(HttpClient.Version.HTTP_1_1)
+                        .connectTimeout(Duration.ofSeconds(5))
+                        .proxy(ProxySelector.getDefault())
+                        .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://kapi.kakao.com/v1/user/access_token_info"))
+                        .header("Authorization", "Bearer " + accessToken)
+                        .build();
+                ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                boolean isRefresh = false;
+                if (response.statusCode() == HttpServletResponse.SC_BAD_REQUEST) {
+                    KakaoKapiErrorResponseDTO kakaoKapiErrorResponseDTO = objectMapper.readValue(response.body(), KakaoKapiErrorResponseDTO.class);
+                    if (kakaoKapiErrorResponseDTO.getCode() == -1) {
+                        throw new IOException("KAKAO_SEVER_ERROR");
+                    } else {
+                        throw new BizException("INVALID_FORMAT");
+                    }
+                } else if (response.statusCode() == HttpServletResponse.SC_UNAUTHORIZED) {
+                    isRefresh = true;
+                }
+                objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                KakaoTokenInfoResponseDTO kakaoTokenInfoResponseDTO = objectMapper.readValue(response.body(), KakaoTokenInfoResponseDTO.class);
+                if (kakaoTokenInfoResponseDTO.getExpires_in() <= 1) {
+                    isRefresh = true;
+                } else {
+                    request = HttpRequest.newBuilder()
+                            .uri(URI.create("https://kauth.kakao.com/oauth/token"))
+                            .header("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
+                            .POST(HttpRequest.BodyPublishers.ofString())
+                            .build();
+
+                    refreshTokenResponseDTO.setAccessToken();
+
+                }
+            }
+        }
+        return refreshTokenResponseDTO;
+    }
     public void resign(String loginFrom, String token)
             throws IOException, InterruptedException, GeneralSecurityException {
         switch (loginFrom) {
