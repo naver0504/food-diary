@@ -43,17 +43,22 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ProxySelector;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.fooddiary.api.common.constants.UserConstants.NOT_ACTIVE_USER_KEY;
 
@@ -157,6 +162,7 @@ public class UserService {
         // todo
         if (!StringUtils.hasText(loginFrom) || !StringUtils.hasText(token)) {return null;}
         switch (loginFrom) {
+            // todo- https://developers.google.com/identity/openid-connect/openid-connect?hl=ko#appsetup
             case GOOGLE -> {
                 HttpTransport transport = new NetHttpTransport();
                 JsonFactory jsonFactory = new GsonFactory();
@@ -432,15 +438,33 @@ public class UserService {
                 KakaoTokenInfoResponseDTO kakaoTokenInfoResponseDTO = objectMapper.readValue(response.body(), KakaoTokenInfoResponseDTO.class);
                 if (kakaoTokenInfoResponseDTO.getExpires_in() <= 1) {
                     isRefresh = true;
-                } else {
+                }
+
+                if (isRefresh) {
+                    Map<String, String> parameters = new HashMap<>();
+                    parameters.put("grant_type", "refresh_token");
+                    parameters.put("client_id", KAKAO_SERVICE_APP_KEY);
+                    parameters.put("refresh_token", refreshToken);
+
+                    String form = parameters.entrySet()
+                                            .stream()
+                                            .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
+                                            .collect(Collectors.joining("&"));
+
                     request = HttpRequest.newBuilder()
                             .uri(URI.create("https://kauth.kakao.com/oauth/token"))
                             .header("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
-                            .POST(HttpRequest.BodyPublishers.ofString())
+                            .POST(HttpRequest.BodyPublishers.ofString(form))
                             .build();
+                    response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                    refreshTokenResponseDTO.setAccessToken();
-
+                    KakaoTokenResponseDTO kakaoTokenResponseDTO = objectMapper.readValue(response.body(), KakaoTokenResponseDTO.class);
+                    refreshTokenResponseDTO.setAccessToken(kakaoTokenResponseDTO.getAccess_token());
+                    refreshTokenResponseDTO.setAccessTokenExpireAt((long) kakaoTokenResponseDTO.getExpires_in()); // 참고용 정보임
+                    refreshTokenResponseDTO.setRefreshToken(kakaoTokenResponseDTO.getRefresh_token());
+                } else {
+                    refreshTokenResponseDTO.setAccessToken(accessToken);
+                    refreshTokenResponseDTO.setRefreshToken(refreshToken);
                 }
             }
         }
