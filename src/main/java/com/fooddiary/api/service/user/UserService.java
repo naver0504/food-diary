@@ -162,7 +162,8 @@ public class UserService {
         // todo
         if (!StringUtils.hasText(loginFrom) || !StringUtils.hasText(token)) {return null;}
         switch (loginFrom) {
-            // todo- https://developers.google.com/identity/openid-connect/openid-connect?hl=ko#appsetup
+            // todo- htt
+            //  ps://developers.google.com/identity/openid-connect/openid-connect?hl=ko#appsetup
             case GOOGLE -> {
                 HttpTransport transport = new NetHttpTransport();
                 JsonFactory jsonFactory = new GsonFactory();
