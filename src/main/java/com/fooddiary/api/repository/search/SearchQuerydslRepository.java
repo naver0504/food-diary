@@ -1,18 +1,14 @@
 package com.fooddiary.api.repository.search;
 
 import com.fooddiary.api.entity.user.User;
-import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 
-import java.util.List;
 
 import static com.fooddiary.api.entity.diary.QDiary.*;
-import static com.fooddiary.api.entity.diary.QDiaryTag.diaryTag;
-import static com.fooddiary.api.entity.diary.QTag.*;
 
 @Repository
 @Slf4j
@@ -35,20 +31,6 @@ public class SearchQuerydslRepository {
                 .fetchFirst();
 
         return result != null;
-    }
-
-    public List<String> getTagNameListContainSearchCond(final User user, final String searchCond) {
-        return queryFactory.select(tag.tagName)
-                .from(diaryTag)
-                .innerJoin(diaryTag.diary, diary)
-                .innerJoin(diaryTag.tag, tag)
-                .where(
-                        diary.user.id.eq(user.getId()),
-                        tag.tagName.contains(searchCond)
-                )
-                .groupBy(tag.tagName)
-                .orderBy(tag.tagName.count().desc())
-                .fetch();
     }
 
 }
