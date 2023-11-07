@@ -32,6 +32,7 @@ public class DiaryTagQuerydslRepository {
         return result != null;
     }
 
+
     public boolean existByUserIdAndTagName(final int userId, final String tagName) {
         Integer result = jpaQueryFactory.selectOne()
                 .from(diaryTag)
