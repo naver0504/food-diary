@@ -1,6 +1,7 @@
 package com.fooddiary.api.controller;
 
 import com.fooddiary.api.dto.response.search.DiarySearchResponseDTO;
+import com.fooddiary.api.dto.response.timeline.TimelineDiaryDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.search.SearchService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,13 @@ public class SearchController {
     public ResponseEntity<List<DiarySearchResponseDTO>> getSearchResult(final @AuthenticationPrincipal User user,
                                                                         final @RequestParam(value = "offset", defaultValue = "0") int offset) {
         return ResponseEntity.ok(searchService.getSearchResultWithoutCondition(user, offset));
+    }
+
+    @GetMapping("/more-diary")
+    public ResponseEntity<List<TimelineDiaryDTO>> getMoreSearchResult(final @AuthenticationPrincipal User user,
+                                                                      final @RequestParam String searchCond,
+                                                                      final @RequestParam(value = "offset", defaultValue = "1") int offset) {
+        return ResponseEntity.ok(searchService.getMoreSearchResult(user, searchCond ,offset));
     }
 
     @GetMapping("/statistics")
