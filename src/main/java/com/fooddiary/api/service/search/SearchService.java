@@ -15,12 +15,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
 
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+
 public class SearchService {
 
     private final ImageService imageService;
@@ -40,21 +42,10 @@ public class SearchService {
                         final String categoryName = searchSQLDTO.getCategory();
                         final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
                         if (DiaryTime.isDiaryTime(categoryName)) {
-                            searchRepository.getSearchResultWithDiaryTime(user.getId(), DiaryTime.valueOf(categoryName), PageRequest.of(0, 3))
-                                    .forEach(
-                                    diary -> {
-                                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                                        diaryList.add(timelineDiaryDTO);
-                                    }
-                            );
+                            setDiaryList(user, diaryList, searchRepository.getSearchResultWithDiaryTime(user.getId(), DiaryTime.valueOf(categoryName), PageRequest.of(0, 3)));
+
                         } else {
-                            searchRepository.getSearchResultWithPlace(user.getId(), categoryName, PageRequest.of(0, 3))
-                                    .forEach(
-                                    diary -> {
-                                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                                        diaryList.add(timelineDiaryDTO);
-                                    }
-                            );
+                            setDiaryList(user, diaryList, searchRepository.getSearchResultWithPlace(user.getId(), categoryName, PageRequest.of(0, 3)));
                         }
                         addDiarySearchResponseDTO(diarySearchResponseDTOList, categoryName, diaryList, searchSQLDTO.getCountNum());
                     }
@@ -65,23 +56,14 @@ public class SearchService {
                     searchSQLDTO -> {
                         final String categoryName = searchSQLDTO.getCategory();
                         final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
+                        /***
+                         * 태그와 장소를 구분하기 위해서 태그를 가져올 때 앞에 #을 붙여서 가져온다.
+                         */
                         if (searchSQLDTO.getCategory().startsWith("#")) {
                             final String tagName = getTagName(searchSQLDTO);
-                            searchRepository.getSearchResultWithTag(user.getId(), tagName, PageRequest.of(0, 3))
-                                    .forEach(
-                                    diary -> {
-                                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                                        diaryList.add(timelineDiaryDTO);
-                                    }
-                            );
+                            setDiaryList(user, diaryList, searchRepository.getSearchResultWithTag(user.getId(), tagName, PageRequest.of(0, 3)));
                         } else {
-                            searchRepository.getSearchResultWithPlace(user.getId(), categoryName, PageRequest.of(0, 3))
-                                    .forEach(
-                                    diary -> {
-                                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                                        diaryList.add(timelineDiaryDTO);
-                                    }
-                            );
+                            setDiaryList(user, diaryList, searchRepository.getSearchResultWithPlace(user.getId(), categoryName, PageRequest.of(0, 3)));
                         }
                         addDiarySearchResponseDTO(diarySearchResponseDTOList, categoryName, diaryList, searchSQLDTO.getCountNum());
                     }
@@ -90,10 +72,32 @@ public class SearchService {
         return diarySearchResponseDTOList;
     }
 
-    @NotNull
-    private static String getTagName(SearchSQLDTO searchSQLDTO) {
-        return searchSQLDTO.getCategory().substring(1);
+    public List<TimelineDiaryDTO> getMoreSearchResult(final User user, final String searchCond, final int offset) {
+        final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
+        if (!diaryTagQuerydslRepository.existByUserId(user.getId())) {
+            final DiaryTime diaryTime = DiaryTime.getTime(searchCond);
+            if (diaryTime != null) {
+                setDiaryList(user, diaryList, searchRepository.getSearchResultWithDiaryTime(user.getId(), diaryTime, PageRequest.of(offset, 3)));
+            } else {
+                setDiaryList(user, diaryList, searchRepository.getSearchResultWithPlace(user.getId(), searchCond, PageRequest.of(offset, 3)));
+            }
+        } else {
+            /***
+             *
+             * 해당 카테고리가 태그인지 아닌 지 확인 후 태그면 태그로 검색, 아니면 장소로 검색
+             */
+            if (diaryTagQuerydslRepository.existByUserIdAndTagName(user.getId(), searchCond)) {
+                setDiaryList(user, diaryList, searchRepository.getSearchResultWithTag(user.getId(), searchCond, PageRequest.of(offset, 3)));
+            } else {
+                setDiaryList(user, diaryList, searchRepository.getSearchResultWithPlace(user.getId(), searchCond, PageRequest.of(offset, 3)));
+            }
+        }
+        return diaryList;
     }
+
+
+
+
 
     /***
      * 검색 조건을 포함하는 태그 목록을 반환한다.
@@ -101,29 +105,64 @@ public class SearchService {
      */
     public List<DiarySearchResponseDTO> getSearchResultWithCondition(final User user, final String searchCond) {
         final List<DiarySearchResponseDTO> diarySearchResponseDTOList = new ArrayList<>();
-        searchQuerydslRepository.getTagNameListContainSearchCond(user, searchCond).forEach(
-                tagName -> {
-                    final List<DiarySearchSQLDTO.DiarySearchWithTagSQLDTO> resultList = searchRepository.getSearchResultWithTagNoLimit(user.getId(), tagName);
-                    final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
-                    resultList.forEach(
+        final LinkedMultiValueMap<String, TimelineDiaryDTO> diarySearchResponseDTOMap = new LinkedMultiValueMap<>();
+        if (DiaryTime.getTime(searchCond) != null) {
+            final DiaryTime diaryTime = DiaryTime.getTime(searchCond);
+            searchRepository.getStatisticsSearchResultWithDiaryTimeNoLimit(user.getId(), diaryTime)
+                    .forEach(
                             diary -> {
                                 final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                                diaryList.add(timelineDiaryDTO);
+                                addDiarySearchResponseMap(diarySearchResponseDTOMap, diaryTime.name(), timelineDiaryDTO);
                             }
                     );
-                    addDiarySearchResponseDTO(diarySearchResponseDTOList, tagName, diaryList, diaryList.size());
+        }
+        /**
+         * 해당 검색어 조건을 포함하는 장소를 추가
+         *
+         */
+        searchRepository.getSearchResultContainPlace(user.getId(), "%" +searchCond + "%").forEach(
+                diary -> {
+                    final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
+                    addDiarySearchResponseMap(diarySearchResponseDTOMap, diary.getPlace(), timelineDiaryDTO);
+
                 }
         );
-        return diarySearchResponseDTOList;    }
+        /***
+         * 해당 검색어 조건을 포함하는 태그를 추가
+         */
+        searchRepository.getSearchResultContainTagName(user.getId(), "%" +searchCond + "%").forEach(
+                diary -> {
+                    final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
+                    addDiarySearchResponseMap(diarySearchResponseDTOMap, diary.getTagName(), timelineDiaryDTO);
+                }
+        );
 
-    private void addDiarySearchResponseDTO(final List<DiarySearchResponseDTO> diarySearchResponseDTOList, final String tagName, final List<TimelineDiaryDTO> diaryList, final int size) {
-        final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
-                .diaryList(diaryList)
-                .count(diaryList.size())
-                .categoryName(tagName)
-                .build();
-        diarySearchResponseDTOList.add(diarySearchResponseDTO);
+        diarySearchResponseDTOMap.forEach(
+                (key, value) -> {
+                    final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
+                            .diaryList(value)
+                            .count(value.size())
+                            .categoryName(key)
+                            .build();
+                    diarySearchResponseDTOList.add(diarySearchResponseDTO);
+                }
+        );
+
+        diarySearchResponseDTOList.sort(new Comparator<DiarySearchResponseDTO>() {
+                                            @Override
+                                            public int compare(DiarySearchResponseDTO o1, DiarySearchResponseDTO o2) {
+                                                if (o1.getCount() == o2.getCount()) {
+                                                    return o1.getCategoryName().compareTo(o2.getCategoryName());
+                                                } else {
+                                                    return o2.getCount() - o1.getCount();
+                                                }
+                                            }
+                                        }
+        );
+
+        return diarySearchResponseDTOList;
     }
+
 
     public DiarySearchResponseDTO getStatisticSearchResultWithCondition(final User user, String searchCond) {
         final DiarySearchResponseDTO diarySearchResponseDTO = new DiarySearchResponseDTO();
@@ -131,49 +170,32 @@ public class SearchService {
         /***
          * DiaryTime 으로 통계 검색 시
          */
-
         if(DiaryTime.getTime(searchCond) != null) {
             final DiaryTime diaryTime = DiaryTime.getTime(searchCond);
-            final List<DiarySearchSQLDTO.DiarySearchWithDiaryTimeSQLDTO> resultList = searchRepository.getSearchResultWithDiaryTimeNoLimit(user.getId(), diaryTime);
-            resultList.forEach(
-                    diary -> {
-                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                        diaryList.add(timelineDiaryDTO);
-                    }
-            );
+            setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithDiaryTimeNoLimit(user.getId(), diaryTime));
             searchCond = diaryTime.name();
         }
         /***
          * 장소로 통계 검색 시
          */
         else if(searchQuerydslRepository.existByPlace(user, searchCond)) {
-            final List<DiarySearchSQLDTO.DiarySearchWithPlaceSQLDTO> resultList = searchRepository.getSearchResultWithPlaceNoLimit(user.getId(), searchCond);
-            resultList.forEach(
-                    diary -> {
-                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                        diaryList.add(timelineDiaryDTO);
-                    }
-            );
+            setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithPlaceNoLimit(user.getId(), searchCond));
         }
         /***
          * 태그로 통계 검색 시
          */
         else {
-            final List<DiarySearchSQLDTO.DiarySearchWithTagSQLDTO> resultList = searchRepository.getSearchResultWithTagNoLimit(user.getId(), searchCond);
-            resultList.forEach(
-                    diary -> {
-                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                        diaryList.add(timelineDiaryDTO);
-                    }
-            );
+            setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithTagNoLimit(user.getId(), searchCond));
         }
+        setDiarySearchResponseDTO(searchCond, diarySearchResponseDTO, diaryList);
+
+        return diarySearchResponseDTO;
+    }
+
+    private static void setDiarySearchResponseDTO(final String searchCond, final DiarySearchResponseDTO diarySearchResponseDTO, final List<TimelineDiaryDTO> diaryList) {
         diarySearchResponseDTO.setCategoryName(searchCond);
         diarySearchResponseDTO.setDiaryList(diaryList);
         diarySearchResponseDTO.setCount(diaryList.size());
-
-        return diarySearchResponseDTO;
-
-
     }
 
     @NotNull
@@ -184,101 +206,33 @@ public class SearchService {
         return timelineDiaryDTO;
     }
 
-//
-//    public List<DiarySearchResponseDTO> getSearchResultWithoutCondition(final User user)  {
-//
-//        List<DiarySearchResponseDTO> diarySearchResponseDTOList = new ArrayList<>();
-//        /***
-//         * 사용자의 Diary가 없을 시
-//         * @return Null List
-//         */
-//        if(diaryQuerydslRepository.existByUserId(user.getId()) == false) {
-//            return diarySearchResponseDTOList;
-//        }
-//
-//        final Map<String, List<TimelineDiaryDTO>> diaryListMap = new LinkedHashMap<>();
-//        /***
-//         * 사용자의 DiaryTag가 없을 시
-//         */
-//        if (diaryTagQuerydslRepository.existByUserId(user.getId()) == false) {
-//            final List<DiarySearchSQLDTO.DiarySearchWithDiaryTimeSQLDTO> diaryList = diaryRepository.getSearchResultWithLatestImageAndNoTag(user.getId());
-//
-//            diaryList.forEach(
-//                    diary -> {
-//                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-//                        updateDiaryListMap(diaryListMap, diary.getDiaryTime().getCode(), timelineDiaryDTO);
-//                        if(!Objects.isNull(diary.getPlace())) {
-//                            updateDiaryListMap(diaryListMap, diary.getPlace(), timelineDiaryDTO);
-//                        }
-//                    }
-//            );
-//
-//            toDTOList(diarySearchResponseDTOList, diaryListMap);
-//
-//        }
-//        /***
-//         * 태그가 있을 시
-//         */
-//        else {
-//            final List<DiarySearchSQLDTO.DiarySearchWithTagSQLDTO> diaryList = diaryRepository.getSearchResultWithLatestImageAndTag(user.getId());
-//            final List<Long> diaryIdList = new ArrayList<>();
-//            diaryList.forEach(
-//                    diary -> {
-//                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-//                        updateDiaryListMap(diaryListMap, "#"+ diary.getTagName(), timelineDiaryDTO);
-//                        if(!Objects.isNull(diary.getPlace())) {
-//                            diaryIdList.add(Long.valueOf(diary.getId()));
-//                            updateDiaryListMap(diaryListMap, diary.getPlace(), timelineDiaryDTO);
-//                        }
-//                    }
-//            );
-//            diaryRepository.getSearchResultWithLatestImageWherePlaceIsNotNull(user.getId(), diaryIdList).forEach(
-//                    diary -> {
-//                        final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-//                        updateDiaryListMap(diaryListMap, diary.getPlace(), timelineDiaryDTO);
-//                    });
-//
-//            toDTOList(diarySearchResponseDTOList, diaryListMap);
-//        }
-//
-//        diarySearchResponseDTOList.sort(new Comparator<DiarySearchResponseDTO>() {
-//            @Override
-//            public int compare(DiarySearchResponseDTO o1, DiarySearchResponseDTO o2) {
-//                if(o1.getDiaryList().size() == o2.getDiaryList().size()) {
-//                    return o1.getCategoryName().compareTo(o2.getCategoryName());
-//                } else {
-//                    return o2.getDiaryList().size() - o1.getDiaryList().size();
-//                }
-//            }
-//        });
-//
-//        return diarySearchResponseDTOList;
-//
-//
-//    }
-//
+    @NotNull
+    private String getTagName(final SearchSQLDTO searchSQLDTO) {
+        return searchSQLDTO.getCategory().substring(1);
+    }
 
-//
-//    private static void toDTOList(final List<DiarySearchResponseDTO> diarySearchResponseDTOList, final Map<String, List<TimelineDiaryDTO>> diaryListMap) {
-//        diaryListMap.forEach(
-//                (key, value) -> {
-//                    final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
-//                            .categoryName(key)
-//                            .diaryList(value)
-//                            .build();
-//                    diarySearchResponseDTOList.add(diarySearchResponseDTO);
-//                }
-//        );
-//    }
-//
-//    private static void updateDiaryListMap(final Map<String, List<TimelineDiaryDTO>> diaryTimeListMap, final String categoryName, final TimelineDiaryDTO timelineDiaryDTO) {
-//        if(diaryTimeListMap.containsKey(categoryName)) {
-//            diaryTimeListMap.get(categoryName).add(timelineDiaryDTO);
-//        } else {
-//            final List<TimelineDiaryDTO> timelineDiaryDTOList = new ArrayList<>();
-//            timelineDiaryDTOList.add(timelineDiaryDTO);
-//            diaryTimeListMap.put(categoryName, timelineDiaryDTOList);
-//        }
-//    }
+    private void setDiaryList(final User user, final List<TimelineDiaryDTO> diaryList, final List<DiarySearchSQLDTO> diarySearchSQLDTOList) {
+        diarySearchSQLDTOList.forEach(
+                diary -> {
+                    final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
+                    diaryList.add(timelineDiaryDTO);
+                }
+        );
+    }
+    private void addDiarySearchResponseDTO(final List<DiarySearchResponseDTO> diarySearchResponseDTOList, final String tagName, final List<TimelineDiaryDTO> diaryList, final int size) {
+        final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
+                .diaryList(diaryList)
+                .count(diaryList.size())
+                .categoryName(tagName)
+                .build();
+        diarySearchResponseDTOList.add(diarySearchResponseDTO);
+    }
 
+    private void addDiarySearchResponseMap(final LinkedMultiValueMap<String, TimelineDiaryDTO> map, final String categoryName, final TimelineDiaryDTO timelineDiaryDTO) {
+        if (!map.containsKey(categoryName)) {
+            map.add(categoryName, timelineDiaryDTO);
+        } else {
+            map.get(categoryName).add(timelineDiaryDTO);
+        }
+    }
 }
