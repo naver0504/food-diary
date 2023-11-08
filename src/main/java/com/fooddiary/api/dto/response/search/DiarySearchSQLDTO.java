@@ -7,10 +7,6 @@ public interface DiarySearchSQLDTO {
     Integer getId();
     String getThumbnailFileName();
 
-    interface DiarySearchWithDiaryTimeSQLDTO extends DiarySearchSQLDTO {
-        DiaryTime getDiaryTime();
-    }
-
     interface DiarySearchWithTagSQLDTO extends DiarySearchSQLDTO {
         String getTagName();
     }
