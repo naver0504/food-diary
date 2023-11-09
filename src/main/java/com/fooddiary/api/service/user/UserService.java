@@ -29,14 +29,23 @@ import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -162,8 +171,7 @@ public class UserService {
         // todo
         if (!StringUtils.hasText(loginFrom) || !StringUtils.hasText(token)) {return null;}
         switch (loginFrom) {
-            // todo- htt
-            //  ps://developers.google.com/identity/openid-connect/openid-connect?hl=ko#appsetup
+            // todo- https://developers.google.com/identity/openid-connect/openid-connect?hl=ko#appsetup
             case GOOGLE -> {
                 HttpTransport transport = new NetHttpTransport();
                 JsonFactory jsonFactory = new GsonFactory();
@@ -578,5 +586,43 @@ public class UserService {
         }
 
         return kakaoAccount.getEmail();
+    }
+
+    /**
+     * 로그인할때 id token이 아닌 access token을 가져오는 방법
+     * https://idlecomputer.tistory.com/310
+     * https://developers.google.com/identity/protocols/oauth2/web-server?hl=ko#obtainingaccesstokens
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    public void googleSignCallback(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        // TODO Auto-generated method stub
+        String code = request.getParameter("code");
+        HttpHeaders headers = new HttpHeaders();
+        RestTemplate restTemplate = new RestTemplate();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        parameters.add("code", code);
+        parameters.add("client_id", GOOGLE_AUTH_WEB_CLIENT_ID);
+        parameters.add("client_secret", GOOGLE_AUTH_WEB_CLIENT_SECRET);
+        parameters.add("grant_type", "authorization_code");
+        parameters.add("redirect_uri", "http://localhost:8080/user/google-callback"); // 현재 서버의 uri
+
+        HttpEntity<MultiValueMap<String,String>> rest_request = new HttpEntity<>(parameters, headers);
+
+        URI uri = URI.create("https://oauth2.googleapis.com/token");
+
+        ResponseEntity<Map> rest_reponse;
+        rest_reponse = restTemplate.postForEntity(uri, rest_request, Map.class);
+        log.info("response body: {}",rest_reponse.getBody());
+
+        // 로그인할때만 refresh 토큰이 부여된다.
+        Cookie cookie = new Cookie("refresh-token", request.getParameter("refreshToken"));
+        response.addCookie(cookie);
+        response.sendRedirect("http://localhost:5000");
+
+        return ;
     }
 }

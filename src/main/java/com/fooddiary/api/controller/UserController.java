@@ -16,6 +16,7 @@ import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.user.UserResignService;
 import com.fooddiary.api.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
@@ -86,5 +87,20 @@ public class UserController {
     public ResponseEntity<Void> deleteAllImage(HttpServletRequest request) {
         userResignService.deleteAllImages((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(null);
+    }
+
+    @GetMapping("/session")
+    public void getToken() {
+
+    }
+
+    @RequestMapping(value = "/google-callback", method = RequestMethod.GET)
+    public void GoogleSignCallback(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            userService.googleSignCallback(request, response);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }
