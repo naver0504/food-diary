@@ -1,6 +1,7 @@
 package com.fooddiary.api.service.user;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.util.Random;
@@ -412,12 +413,29 @@ public class UserService {
 
     public RefreshTokenResponseDTO getAccessToken(String refreshToken, String accessToken, String loginFrom) throws IOException, InterruptedException {
         RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
+        boolean isRefresh = false;
+        refreshTokenResponseDTO.setAccessToken(accessToken);
+        refreshTokenResponseDTO.setRefreshToken(refreshToken);
+
         switch (loginFrom) {
             case GOOGLE -> {
-                TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
-                response.setRefreshToken(response.getRefreshToken());
-                response.setAccessToken(response.getAccessToken());
-                response.setExpiresInSeconds(response.getExpiresInSeconds());
+                HttpClient client = HttpClient.newBuilder()
+                                              .version(HttpClient.Version.HTTP_1_1)
+                                              .connectTimeout(Duration.ofSeconds(5))
+                                              .proxy(ProxySelector.getDefault())
+                                              .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                                                 .uri(URI.create("https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + accessToken))
+                                                 .build();
+
+                HttpResponse<String> tokenResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (tokenResponse.statusCode() != HttpServletResponse.SC_OK) {
+                    TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
+                    refreshTokenResponseDTO.setRefreshToken(response.getRefreshToken());
+                    refreshTokenResponseDTO.setAccessToken(response.getAccessToken());
+                    refreshTokenResponseDTO.setAccessTokenExpireAt(response.getExpiresInSeconds());
+                }
             }
             case KAKAO -> {
                 HttpClient client = HttpClient.newBuilder()
@@ -432,7 +450,6 @@ public class UserService {
                 ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                boolean isRefresh = false;
                 if (response.statusCode() == HttpServletResponse.SC_BAD_REQUEST) {
                     KakaoKapiErrorResponseDTO kakaoKapiErrorResponseDTO = objectMapper.readValue(response.body(), KakaoKapiErrorResponseDTO.class);
                     if (kakaoKapiErrorResponseDTO.getCode() == -1) {
@@ -471,9 +488,6 @@ public class UserService {
                     refreshTokenResponseDTO.setAccessToken(kakaoTokenResponseDTO.getAccess_token());
                     refreshTokenResponseDTO.setAccessTokenExpireAt((long) kakaoTokenResponseDTO.getExpires_in()); // 참고용 정보임
                     refreshTokenResponseDTO.setRefreshToken(kakaoTokenResponseDTO.getRefresh_token());
-                } else {
-                    refreshTokenResponseDTO.setAccessToken(accessToken);
-                    refreshTokenResponseDTO.setRefreshToken(refreshToken);
                 }
             }
         }
@@ -613,7 +627,6 @@ public class UserService {
         HttpEntity<MultiValueMap<String,String>> rest_request = new HttpEntity<>(parameters, headers);
 
         URI uri = URI.create("https://oauth2.googleapis.com/token");
-
         ResponseEntity<Map> rest_reponse;
         rest_reponse = restTemplate.postForEntity(uri, rest_request, Map.class);
         log.info("response body: {}",rest_reponse.getBody());
@@ -621,8 +634,15 @@ public class UserService {
         // 로그인할때만 refresh 토큰이 부여된다.
         Cookie cookie = new Cookie("refresh-token", request.getParameter("refreshToken"));
         response.addCookie(cookie);
-        response.sendRedirect("http://localhost:5000");
+        StringBuilder sb = new StringBuilder();
+        if (rest_reponse.getBody().get("refreshToken") != null) {
+            sb.append("&refresh-token=").append(rest_reponse.getBody().get("refreshToken"));
+        }
+        // access token입니다.
+        sb.append("&token=").append(rest_reponse.getBody().get("access_token"));
 
-        return ;
+        String param = sb.toString();
+        param = param.replaceFirst("&", "?");
+        response.sendRedirect(request.getRequestURL().toString().replaceFirst(request.getRequestURI(), "") + param);
     }
 }

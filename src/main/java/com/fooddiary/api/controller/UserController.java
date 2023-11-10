@@ -9,6 +9,7 @@ import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
 import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
+import com.fooddiary.api.dto.response.user.RefreshTokenResponseDTO;
 import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.user.UserResponseDTO;
@@ -90,8 +91,9 @@ public class UserController {
     }
 
     @GetMapping("/session")
-    public void getToken() {
-
+    public ResponseEntity<RefreshTokenResponseDTO> getToken(String refreshToken, String accessToken, HttpServletRequest request)
+            throws IOException, InterruptedException {
+        return ResponseEntity.ok(userService.getAccessToken(refreshToken, accessToken, request.getHeader(UserConstants.LOGIN_FROM_KEY)));
     }
 
     @RequestMapping(value = "/google-callback", method = RequestMethod.GET)

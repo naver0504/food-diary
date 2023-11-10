@@ -33,11 +33,13 @@ public class Interceptor implements HandlerInterceptor {
         {
             add("/");
             add("/index.html"); // 두 path /, /index.html 는 상태확인용으로 넣었습니다.
+            add("/access-token-test.html");
             add("/user/new");
             add("/user/login");
             add("/user/is-login");
             add("/user/reset-password");
             add("/user/google-callback");
+            add("/user/session");
         }
     };
 
