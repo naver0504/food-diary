@@ -15,11 +15,16 @@ CREATE TABLE user (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE session (
-  token varchar(500) NOT NULL,
-  create_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  terminate_at datetime NOT NULL,
-  user_id int DEFAULT NULL,
-  PRIMARY KEY (token)
+  `token` varchar(500) NOT NULL,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `token_terminate_at` datetime NOT NULL,
+  `user_email` varchar(1000) DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  `refresh_token` varchar(500) DEFAULT NULL,
+  `refresh_token_terminate_at` datetime DEFAULT NULL,
+  PRIMARY KEY (token),
+  UNIQUE KEY `refresh_token_UNIQUE` (`refresh_token`),
+  CONSTRAINT `FK1bi1pmqjgipw7dx3j6bl37dja` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `diary` (

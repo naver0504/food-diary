@@ -20,13 +20,15 @@ public class SessionService {
         final Session session = new Session();
         session.setUser(user);
         session.setToken(passwordEncoder.encode(user.getEmail() + now));
-        session.setTerminateAt(now.plusDays(1));
+        session.setTokenTerminateAt(now.plusDays(1));
+        session.setRefreshToken(passwordEncoder.encode(user.getEmail() + now.plusMonths(1L)));
+        session.setRefreshTokenTerminateAt(now.plusMonths(1L));
 
         return sessionRepository.save(session);
     }
 
     public Session getSession(String token) {
-        return sessionRepository.findByTokenAndTerminateAtGreaterThanEqual(token, LocalDateTime.now());
+        return sessionRepository.findByTokenAndTokenTerminateAtGreaterThanEqual(token, LocalDateTime.now());
     }
 
     public void deleteSession(Session session) {
