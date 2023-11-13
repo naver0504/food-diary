@@ -523,6 +523,13 @@ public class UserService {
         }
     }
 
+    /**
+     * 내 계정에 앱이 로그아웃, 이용해제 되었는지 확인
+     * https://support.google.com/accounts/answer/3466521?hl=ko#remove-access
+     * @param token
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private static void unlinkGoogle(String token) throws IOException, InterruptedException {
         /*
         HttpClient client = HttpClient.newBuilder()
