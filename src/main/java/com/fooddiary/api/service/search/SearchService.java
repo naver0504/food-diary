@@ -43,7 +43,6 @@ public class SearchService {
                         final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
                         if (DiaryTime.isDiaryTime(categoryName)) {
                             setDiaryList(user, diaryList, searchRepository.getSearchResultWithDiaryTime(user.getId(), DiaryTime.valueOf(categoryName), PageRequest.of(0, 3)));
-
                         } else {
                             setDiaryList(user, diaryList, searchRepository.getSearchResultWithPlace(user.getId(), categoryName, PageRequest.of(0, 3)));
                         }
@@ -95,10 +94,6 @@ public class SearchService {
         return diaryList;
     }
 
-
-
-
-
     /***
      * 검색 조건을 포함하는 태그 목록을 반환한다.
      *
@@ -106,8 +101,8 @@ public class SearchService {
     public List<DiarySearchResponseDTO> getSearchResultWithCondition(final User user, final String searchCond) {
         final List<DiarySearchResponseDTO> diarySearchResponseDTOList = new ArrayList<>();
         final LinkedMultiValueMap<String, TimelineDiaryDTO> diarySearchResponseDTOMap = new LinkedMultiValueMap<>();
-        if (DiaryTime.getTime(searchCond) != null) {
-            final DiaryTime diaryTime = DiaryTime.getTime(searchCond);
+        final DiaryTime diaryTime = DiaryTime.getTime(searchCond);
+        if (diaryTime != null) {
             searchRepository.getStatisticsSearchResultWithDiaryTimeNoLimit(user.getId(), diaryTime)
                     .forEach(
                             diary -> {
@@ -127,6 +122,7 @@ public class SearchService {
 
                 }
         );
+
         /***
          * 해당 검색어 조건을 포함하는 태그를 추가
          */
@@ -164,7 +160,7 @@ public class SearchService {
     }
 
 
-    public DiarySearchResponseDTO getStatisticSearchResultWithCondition(final User user, String searchCond) {
+    public DiarySearchResponseDTO getStatisticSearchResult(final User user, String searchCond) {
         final DiarySearchResponseDTO diarySearchResponseDTO = new DiarySearchResponseDTO();
         final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
         /***

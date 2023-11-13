@@ -31,16 +31,16 @@ public class SearchController {
     public ResponseEntity<List<TimelineDiaryDTO>> getMoreSearchResult(final @AuthenticationPrincipal User user,
                                                                       final @RequestParam String searchCond,
                                                                       final @RequestParam(value = "offset", defaultValue = "1") int offset) {
-        return ResponseEntity.ok(searchService.getMoreSearchResult(user, searchCond ,offset));
+        return ResponseEntity.ok(searchService.getMoreSearchResult(user, searchCond,offset));
     }
 
     @GetMapping("/statistics")
     public ResponseEntity<DiarySearchResponseDTO> getStatisticsSearchResult(final @AuthenticationPrincipal User user, final @RequestParam("searchCond") String searchCond) {
-        return ResponseEntity.ok(searchService.getStatisticSearchResultWithCondition(user, searchCond));
+        return ResponseEntity.ok(searchService.getStatisticSearchResult(user, searchCond));
     }
 
     @GetMapping("/condition")
     public ResponseEntity<List<DiarySearchResponseDTO>> getSearchResultWithCondition(final @AuthenticationPrincipal User user, final @RequestParam("searchCond") String searchCond) {
-        return ResponseEntity.ok(searchService.getSearchResultWithCondition(user, searchCond));
+        return ResponseEntity.ok(searchService.getSearchResultWithCondition(user, searchCond.trim()));
     }
 }
