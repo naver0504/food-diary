@@ -405,7 +405,7 @@ public class UserService {
         return userNewPasswordResponseDTO;
     }
 
-    public RefreshTokenResponseDTO getAccessToken(String loginFrom, String refreshToken, String accessToken) throws IOException, InterruptedException {
+    public RefreshTokenResponseDTO getAccessToken(String loginFrom, String accessToken, String refreshToken) throws IOException, InterruptedException {
         RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
         switch (loginFrom) {
             case GOOGLE -> {

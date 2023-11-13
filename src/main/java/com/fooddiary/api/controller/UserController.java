@@ -33,6 +33,7 @@ import static com.fooddiary.api.common.constants.UserConstants.LOGIN_REQUEST_KEY
 @RequestMapping("/user")
 @RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
     private final UserResignService userResignService;
 
@@ -95,7 +96,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getAccessToken(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY),  request.getHeader(UserConstants.REFRESH_TOKEN_KEY)));
     }
 
-    @RequestMapping(value = "/google-callback", method = RequestMethod.GET)
+    @GetMapping(value = "/google-callback")
     public void GoogleSignCallback(HttpServletRequest request, HttpServletResponse response) throws Exception {
         userService.googleSignCallback(request, response);
     }
