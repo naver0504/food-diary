@@ -15,7 +15,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -157,6 +156,96 @@ public class SearchControllerTest {
 
 
     }
+
+    @Test
+    public void getStatisticsSearchResultTest() throws Exception {
+        final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
+        diaryList.add(createTimeLineDiaryDTO(5));
+        diaryList.add(createTimeLineDiaryDTO(4));
+        diaryList.add(createTimeLineDiaryDTO(3));
+        diaryList.add(createTimeLineDiaryDTO(2));
+        diaryList.add(createTimeLineDiaryDTO(1));
+
+        final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
+                .categoryName("test")
+                .count(diaryList.size())
+                .diaryList(diaryList)
+                .build();
+
+        when(searchService.getStatisticSearchResult(any(User.class), any(String.class)))
+                .thenReturn(diarySearchResponseDTO);
+
+        final String searchCond = "TEST";
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/search/statistics")
+                        .headers(makeHeader())
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("searchCond", searchCond))
+                .andExpect(status().isOk())
+                .andDo(document("statistics search result"))
+                .andReturn()
+                .getResponse();
+
+        final ArgumentCaptor<String> requestCondition = ArgumentCaptor.forClass(String.class);
+
+        BDDMockito.then(searchService).should(Mockito.times(1)).getStatisticSearchResult(any(User.class), requestCondition.capture());
+
+        Assertions.assertEquals(requestCondition.getValue(), searchCond);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Assertions.assertEquals(
+                mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
+                objectMapper.writeValueAsString(diarySearchResponseDTO)
+        );
+
+    }
+
+    @Test
+    public void getSearchResultWithConditionTest() throws Exception {
+        final List<DiarySearchResponseDTO> responseDTOList = new ArrayList<>();
+        final DiarySearchResponseDTO firstResponseDTO = new DiarySearchResponseDTO();
+        firstResponseDTO.setCategoryName("TEST1");
+        firstResponseDTO.setCount(2);
+        firstResponseDTO.setDiaryList(List.of(createTimeLineDiaryDTO(2), createTimeLineDiaryDTO(1)));
+
+        final DiarySearchResponseDTO secondResponseDTO = new DiarySearchResponseDTO();
+        secondResponseDTO.setCategoryName("TEST2");
+        secondResponseDTO.setCount(1);
+        secondResponseDTO.setDiaryList(List.of(createTimeLineDiaryDTO(3)));
+
+        responseDTOList.add(firstResponseDTO);
+        responseDTOList.add(secondResponseDTO);
+
+        Mockito.when(searchService.getSearchResultWithCondition(any(User.class), any(String.class)))
+                .thenReturn(responseDTOList);
+
+        final String searchCond = "TEST";
+
+        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/search/condition")
+                        .headers(makeHeader())
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("searchCond", searchCond))
+                .andExpect(status().isOk())
+                .andDo(document("search result with condition"))
+                .andReturn()
+                .getResponse();
+
+        final ArgumentCaptor<String> requestCondition = ArgumentCaptor.forClass(String.class);
+
+        BDDMockito.then(searchService).should(Mockito.times(1)).getSearchResultWithCondition(any(User.class), requestCondition.capture());
+
+        Assertions.assertEquals(requestCondition.getValue(), searchCond);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        Assertions.assertEquals(
+                mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
+                objectMapper.writeValueAsString(responseDTOList));
+    }
+
+
+
 
     private TimelineDiaryDTO createTimeLineDiaryDTO(final int diaryId) {
         final TimelineDiaryDTO timelineDiaryDTO = new TimelineDiaryDTO();
