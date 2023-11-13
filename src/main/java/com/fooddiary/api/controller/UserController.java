@@ -78,9 +78,9 @@ public class UserController {
     }
 
     @PostMapping("/resign")
-    public ResponseEntity<Void> resign(HttpServletRequest request)
+    public ResponseEntity<Void> resign(HttpServletRequest request, @AuthenticationPrincipal User user)
             throws IOException, InterruptedException, GeneralSecurityException {
-        userService.resign(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY));
+        userService.resign(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY), user);
         return ResponseEntity.ok(null);
     }
 
@@ -91,18 +91,18 @@ public class UserController {
     }
 
     @GetMapping("/session")
-    public ResponseEntity<RefreshTokenResponseDTO> getToken(String refreshToken, String accessToken, HttpServletRequest request)
-            throws IOException, InterruptedException {
-        return ResponseEntity.ok(userService.getAccessToken(refreshToken, accessToken, request.getHeader(UserConstants.LOGIN_FROM_KEY)));
+    public ResponseEntity<RefreshTokenResponseDTO> getAccessToken(HttpServletRequest request) throws IOException, InterruptedException {
+        return ResponseEntity.ok(userService.getAccessToken(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY),  request.getHeader(UserConstants.REFRESH_TOKEN_KEY)));
     }
 
     @RequestMapping(value = "/google-callback", method = RequestMethod.GET)
-    public void GoogleSignCallback(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            userService.googleSignCallback(request, response);
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+    public void GoogleSignCallback(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        userService.googleSignCallback(request, response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request, @AuthenticationPrincipal User user) throws IOException, InterruptedException {
+        userService.logout(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY),  request.getHeader(UserConstants.REFRESH_TOKEN_KEY));
+        return ResponseEntity.ok().build();
     }
 }

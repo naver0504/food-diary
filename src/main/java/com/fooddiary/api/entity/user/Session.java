@@ -13,12 +13,15 @@ import java.time.LocalDateTime;
 public class Session {
     @Id
     private String token;
+    @Column(unique = true)
+    private String refreshToken;
     @ManyToOne
     @JoinColumn(name="user_id")
     private User user;
     @Column(nullable = false, updatable = false)
     private LocalDateTime createAt;
-    private LocalDateTime terminateAt;
+    private LocalDateTime tokenTerminateAt;
+    private LocalDateTime refreshTokenTerminateAt;
 
     @PrePersist
     public void prePersist() {
