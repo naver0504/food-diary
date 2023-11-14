@@ -409,10 +409,23 @@ public class UserService {
         RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
         switch (loginFrom) {
             case GOOGLE -> {
-                TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
                 refreshTokenResponseDTO.setRefreshToken(refreshToken); // 로그인할때만 있으므로 받은것을 다시 넣는다.
-                refreshTokenResponseDTO.setAccessToken(response.getAccessToken());
-                refreshTokenResponseDTO.setAccessTokenExpireAt(response.getExpiresInSeconds());
+                HttpClient client = HttpClient.newBuilder()
+                        .version(HttpClient.Version.HTTP_1_1)
+                        .connectTimeout(Duration.ofSeconds(5))
+                        .proxy(ProxySelector.getDefault())
+                        .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://oauth2.googleapis.com/tokeninfo?access_token=" + accessToken))
+                        .build();
+                HttpResponse<String> tokenResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+                if (tokenResponse.statusCode() != HttpServletResponse.SC_OK) { // 엑세스 토큰이 만료되었다면
+                    TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
+                    refreshTokenResponseDTO.setAccessToken(response.getAccessToken());
+                    refreshTokenResponseDTO.setAccessTokenExpireAt(response.getExpiresInSeconds());
+                } else {
+                    refreshTokenResponseDTO.setAccessToken(accessToken);
+                }
             }
             case KAKAO -> {
                 HttpClient client = HttpClient.newBuilder()
