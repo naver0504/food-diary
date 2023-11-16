@@ -7,6 +7,7 @@ public final class HttpUtil {
         final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("login-from", "none");
         httpHeaders.add("token", "asdf");
+        httpHeaders.add("refresh-token", "refreshToken");
         return httpHeaders;
     }
 }

@@ -7,12 +7,15 @@ import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
 import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.user.RefreshTokenResponseDTO;
 import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.user.UserResponseDTO;
 import com.fooddiary.api.entity.user.Role;
+import com.fooddiary.api.entity.user.Session;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.repository.user.SessionRepository;
 import com.fooddiary.api.service.user.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +42,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -271,6 +276,48 @@ public class UserControllerTest {
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.OK.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
                                 objectMapper.writeValueAsString(userNewPasswordResponseDTO));
+    }
+
+    @Test
+    void refresh_token() throws Exception {
+        final LocalDateTime now = LocalDateTime.now();
+        final String newToken = "newToken";
+        final RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
+        refreshTokenResponseDTO.setAccessToken(newToken);
+        refreshTokenResponseDTO.setRefreshToken("refreshToken");
+        refreshTokenResponseDTO.setAccessTokenExpireAt(now.plusDays(1L).toInstant(ZoneOffset.UTC).toEpochMilli());
+
+        when(userService.refreshAccessToken(anyString(), anyString(), anyString())).thenReturn(refreshTokenResponseDTO);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        mockMvc.perform(post("/user/refresh-token")
+                                                  .contentType(
+                                                          MediaType.APPLICATION_JSON)
+                                                  .headers(makeHeader()))
+               .andExpect(status().isOk())
+               .andDo(document("refresh token"));
+
+
+    }
+
+    @Test
+    void logout() throws Exception {
+        mockMvc.perform(post("/user/logout")
+                                                  .contentType(
+                                                          MediaType.APPLICATION_JSON)
+                                                  .headers(makeHeader()))
+               .andExpect(status().isOk())
+               .andDo(document("logout"));
+    }
+
+    @Test
+    void google_login_callback() throws Exception {
+        mockMvc.perform(get("/user/google-login-callback?code=googleAuthToken")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON)
+                                )
+               .andExpect(status().isOk())
+               .andDo(document("google login callback"));
     }
 
 }
