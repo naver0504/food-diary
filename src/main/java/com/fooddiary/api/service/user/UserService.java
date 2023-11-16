@@ -17,12 +17,8 @@ import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.user.SessionRepository;
 import com.fooddiary.api.repository.user.UserRepository;
 import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import jakarta.mail.Message;
 import jakarta.mail.Message.RecipientType;
@@ -61,7 +57,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -405,8 +401,11 @@ public class UserService {
         return userNewPasswordResponseDTO;
     }
 
-    public RefreshTokenResponseDTO getAccessToken(String loginFrom, String accessToken, String refreshToken) throws IOException, InterruptedException {
+    public RefreshTokenResponseDTO refreshAccessToken(String loginFrom, String accessToken, String refreshToken) throws IOException, InterruptedException {
         RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
+        refreshTokenResponseDTO.setAccessToken(accessToken);
+        refreshTokenResponseDTO.setRefreshToken(refreshToken);
+
         switch (loginFrom) {
             case GOOGLE -> {
                 refreshTokenResponseDTO.setRefreshToken(refreshToken); // 로그인할때만 있으므로 받은것을 다시 넣는다.
@@ -423,8 +422,6 @@ public class UserService {
                     TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
                     refreshTokenResponseDTO.setAccessToken(response.getAccessToken());
                     refreshTokenResponseDTO.setAccessTokenExpireAt(response.getExpiresInSeconds());
-                } else {
-                    refreshTokenResponseDTO.setAccessToken(accessToken);
                 }
             }
             case KAKAO -> {
@@ -479,9 +476,6 @@ public class UserService {
                     refreshTokenResponseDTO.setAccessToken(kakaoTokenResponseDTO.getAccess_token());
                     refreshTokenResponseDTO.setAccessTokenExpireAt((long) kakaoTokenResponseDTO.getExpires_in()); // 참고용 정보임
                     refreshTokenResponseDTO.setRefreshToken(kakaoTokenResponseDTO.getRefresh_token());
-                } else {
-                    refreshTokenResponseDTO.setAccessToken(accessToken);
-                    refreshTokenResponseDTO.setRefreshToken(refreshToken);
                 }
             }
             default -> {
@@ -498,6 +492,8 @@ public class UserService {
                     session.setToken(passwordEncoder.encode(session.getUser().getEmail() + now));
                     session.setTokenTerminateAt(now.plusDays(1));
                     sessionRepository.save(session);
+                    refreshTokenResponseDTO.setAccessToken(session.getToken());
+                    refreshTokenResponseDTO.setAccessTokenExpireAt(session.getTokenTerminateAt().toInstant(ZoneOffset.UTC).toEpochMilli());
                 }
             }
         }

@@ -91,12 +91,12 @@ public class UserController {
         return ResponseEntity.ok(null);
     }
 
-    @GetMapping("/session")
-    public ResponseEntity<RefreshTokenResponseDTO> getAccessToken(HttpServletRequest request) throws IOException, InterruptedException {
-        return ResponseEntity.ok(userService.getAccessToken(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY),  request.getHeader(UserConstants.REFRESH_TOKEN_KEY)));
+    @PostMapping("/refresh-token")
+    public ResponseEntity<RefreshTokenResponseDTO> refreshAccessToken(HttpServletRequest request) throws IOException, InterruptedException {
+        return ResponseEntity.ok(userService.refreshAccessToken(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY),  request.getHeader(UserConstants.REFRESH_TOKEN_KEY)));
     }
 
-    @GetMapping(value = "/google-callback")
+    @GetMapping(value = "/google-login-callback")
     public void GoogleSignCallback(HttpServletRequest request, HttpServletResponse response) throws Exception {
         userService.googleSignCallback(request, response);
     }
