@@ -18,7 +18,6 @@ CREATE TABLE session (
   `token` varchar(500) NOT NULL,
   `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `token_terminate_at` datetime NOT NULL,
-  `user_email` varchar(1000) DEFAULT NULL,
   `user_id` int DEFAULT NULL,
   `refresh_token` varchar(500) DEFAULT NULL,
   `refresh_token_terminate_at` datetime DEFAULT NULL,

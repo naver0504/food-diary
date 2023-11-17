@@ -93,7 +93,7 @@ public class UserController {
 
     @PostMapping("/refresh-token")
     public ResponseEntity<RefreshTokenResponseDTO> refreshAccessToken(HttpServletRequest request) throws IOException, InterruptedException {
-        return ResponseEntity.ok(userService.refreshAccessToken(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY),  request.getHeader(UserConstants.REFRESH_TOKEN_KEY)));
+        return ResponseEntity.ok(userService.refreshAccessToken(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.REFRESH_TOKEN_KEY)));
     }
 
     @GetMapping(value = "/google-login-callback")
@@ -102,8 +102,8 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request, @AuthenticationPrincipal User user) throws IOException, InterruptedException {
-        userService.logout(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY),  request.getHeader(UserConstants.REFRESH_TOKEN_KEY));
+    public ResponseEntity<Void> logout(HttpServletRequest request) throws IOException, InterruptedException {
+        userService.logout(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY));
         return ResponseEntity.ok().build();
     }
 }

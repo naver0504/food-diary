@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class RefreshTokenResponseDTO {
     private String refreshToken;
-    private String accessToken;
-    private Long accessTokenExpireAt;
+    private String token;
+    private Long tokenExpireAt;
+    private Long refreshTokenExpireAt;
 }

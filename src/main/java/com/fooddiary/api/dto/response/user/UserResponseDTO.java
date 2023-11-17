@@ -12,7 +12,11 @@ public class UserResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String token;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long tokenExpireAt;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String refreshToken;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long refreshTokenExpireAt;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Status status;
     @JsonInclude(JsonInclude.Include.NON_NULL)

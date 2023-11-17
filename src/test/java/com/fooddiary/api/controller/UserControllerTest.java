@@ -12,10 +12,8 @@ import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.user.UserResponseDTO;
 import com.fooddiary.api.entity.user.Role;
-import com.fooddiary.api.entity.user.Session;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.repository.user.SessionRepository;
 import com.fooddiary.api.service.user.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -154,6 +153,9 @@ public class UserControllerTest {
         final String token = "2$asdf1g1";
         final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setToken(token);
+        userResponseDto.setTokenExpireAt(3600L);
+        userResponseDto.setRefreshToken("refreshToken");
+        userResponseDto.setRefreshTokenExpireAt(3600*24*30L);
         userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
 
         given(userService.loginUser(any())).willReturn(userResponseDto);
@@ -283,17 +285,19 @@ public class UserControllerTest {
         final LocalDateTime now = LocalDateTime.now();
         final String newToken = "newToken";
         final RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
-        refreshTokenResponseDTO.setAccessToken(newToken);
+        refreshTokenResponseDTO.setToken(newToken);
         refreshTokenResponseDTO.setRefreshToken("refreshToken");
-        refreshTokenResponseDTO.setAccessTokenExpireAt(now.plusDays(1L).toInstant(ZoneOffset.UTC).toEpochMilli());
+        refreshTokenResponseDTO.setTokenExpireAt(now.plusDays(1L).toEpochSecond(ZoneOffset.of("+09:00")) - now.toEpochSecond(ZoneOffset.of("+09:00")) );
 
-        when(userService.refreshAccessToken(anyString(), anyString(), anyString())).thenReturn(refreshTokenResponseDTO);
+        when(userService.refreshAccessToken(anyString(), anyString())).thenReturn(refreshTokenResponseDTO);
 
-        final ObjectMapper objectMapper = new ObjectMapper();
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("login-from", "none");
+        httpHeaders.add("refresh-token", "refreshToken");
         mockMvc.perform(post("/user/refresh-token")
                                                   .contentType(
                                                           MediaType.APPLICATION_JSON)
-                                                  .headers(makeHeader()))
+                                                  .headers(httpHeaders))
                .andExpect(status().isOk())
                .andDo(document("refresh token"));
 

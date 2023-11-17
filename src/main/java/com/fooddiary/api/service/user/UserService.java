@@ -150,11 +150,18 @@ public class UserService {
             sessionList.stream().sorted(Comparator.comparing(Session::getTokenTerminateAt).reversed()).skip(10).forEach(sessionService::deleteSession);
         }
 
+        user.setPwTry(0);
+        user.setUpdateAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        LocalDateTime now = LocalDateTime.now();
         final Session session = sessionService.createSession(user);
         userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
         userResponseDto.setToken(session.getToken());
         userResponseDto.setPwExpired(user.getPwUpdateDelayAt().isBefore(LocalDateTime.now()));
         userResponseDto.setRefreshToken(session.getRefreshToken());
+        userResponseDto.setTokenExpireAt(session.getTokenTerminateAt().toEpochSecond(ZoneOffset.of("+09:00")) - now.toEpochSecond(ZoneOffset.of("+09:00")));
+        userResponseDto.setRefreshTokenExpireAt(session.getRefreshTokenTerminateAt().toEpochSecond(ZoneOffset.of("+09:00")) - now.toEpochSecond(ZoneOffset.of("+09:00")));
 
         return userResponseDto;
     }
@@ -256,6 +263,9 @@ public class UserService {
                 if (session != null) {
                     if (session.getUser().getStatus() != Status.ACTIVE) {
                         throw new BizException(NOT_ACTIVE_USER_KEY);
+                    }
+                    if (session.getTokenTerminateAt().isBefore(LocalDateTime.now())) {
+                        throw new BizException(LOGIN_REQUEST_KEY);
                     }
                     User user = session.getUser();
                     user.setLastAccessAt(LocalDateTime.now());
@@ -401,13 +411,12 @@ public class UserService {
         return userNewPasswordResponseDTO;
     }
 
-    public RefreshTokenResponseDTO refreshAccessToken(String loginFrom, String accessToken, String refreshToken) throws IOException, InterruptedException {
+    public RefreshTokenResponseDTO refreshAccessToken(String loginFrom, String refreshToken) throws IOException, InterruptedException {
         RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
-        refreshTokenResponseDTO.setAccessToken(accessToken);
-        refreshTokenResponseDTO.setRefreshToken(refreshToken);
 
         switch (loginFrom) {
             case GOOGLE -> {
+                /*
                 refreshTokenResponseDTO.setRefreshToken(refreshToken); // 로그인할때만 있으므로 받은것을 다시 넣는다.
                 HttpClient client = HttpClient.newBuilder()
                         .version(HttpClient.Version.HTTP_1_1)
@@ -420,11 +429,18 @@ public class UserService {
                 HttpResponse<String> tokenResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (tokenResponse.statusCode() != HttpServletResponse.SC_OK) { // 엑세스 토큰이 만료되었다면
                     TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
-                    refreshTokenResponseDTO.setAccessToken(response.getAccessToken());
-                    refreshTokenResponseDTO.setAccessTokenExpireAt(response.getExpiresInSeconds());
+                    refreshTokenResponseDTO.setToken(response.getAccessToken());
+                    refreshTokenResponseDTO.setTokenExpireAt(response.getExpiresInSeconds());
                 }
+
+                 */
+                TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
+                refreshTokenResponseDTO.setToken(response.getAccessToken());
+                refreshTokenResponseDTO.setRefreshToken(response.getRefreshToken());
+                refreshTokenResponseDTO.setTokenExpireAt(response.getExpiresInSeconds()); // google은 갱신토큰 만료일을 안준다. 왜냐면 갱신토큰은 로그인할때만 새로 주기 때문이다.
             }
             case KAKAO -> {
+                /*
                 HttpClient client = HttpClient.newBuilder()
                         .version(HttpClient.Version.HTTP_1_1)
                         .connectTimeout(Duration.ofSeconds(5))
@@ -473,28 +489,59 @@ public class UserService {
                     response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
                     KakaoTokenResponseDTO kakaoTokenResponseDTO = objectMapper.readValue(response.body(), KakaoTokenResponseDTO.class);
-                    refreshTokenResponseDTO.setAccessToken(kakaoTokenResponseDTO.getAccess_token());
-                    refreshTokenResponseDTO.setAccessTokenExpireAt((long) kakaoTokenResponseDTO.getExpires_in()); // 참고용 정보임
+                    refreshTokenResponseDTO.setToken(kakaoTokenResponseDTO.getAccess_token());
+                    refreshTokenResponseDTO.setTokenExpireAt((long) kakaoTokenResponseDTO.getExpires_in()); // 참고용 정보임
                     refreshTokenResponseDTO.setRefreshToken(kakaoTokenResponseDTO.getRefresh_token());
                 }
+                */
+
+                Map<String, String> parameters = new HashMap<>();
+                parameters.put("grant_type", "refresh_token");
+                parameters.put("client_id", KAKAO_SERVICE_APP_KEY);
+                parameters.put("refresh_token", refreshToken);
+
+                String form = parameters.entrySet()
+                                        .stream()
+                                        .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
+                                        .collect(Collectors.joining("&"));
+
+                HttpRequest request = HttpRequest.newBuilder()
+                                     .uri(URI.create("https://kauth.kakao.com/oauth/token"))
+                                     .header("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
+                                     .POST(HttpRequest.BodyPublishers.ofString(form))
+                                     .build();
+                HttpClient client = HttpClient.newBuilder()
+                                              .version(HttpClient.Version.HTTP_1_1)
+                                              .connectTimeout(Duration.ofSeconds(5))
+                                              .proxy(ProxySelector.getDefault())
+                                              .build();
+
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                KakaoTokenResponseDTO kakaoTokenResponseDTO = objectMapper.readValue(response.body(), KakaoTokenResponseDTO.class);
+                refreshTokenResponseDTO.setToken(kakaoTokenResponseDTO.getAccess_token());
+                refreshTokenResponseDTO.setTokenExpireAt((long) kakaoTokenResponseDTO.getExpires_in()); // 참고용 정보임
+                refreshTokenResponseDTO.setRefreshToken(kakaoTokenResponseDTO.getRefresh_token());
+                refreshTokenResponseDTO.setRefreshTokenExpireAt((long) kakaoTokenResponseDTO.getRefresh_token_expires_in());
             }
             default -> {
-                Session session = sessionService.getSession(accessToken);
+                Session session = sessionRepository.findByRefreshToken(refreshToken);
                 if (session == null || !session.getRefreshToken().equals(refreshToken)) {
                     throw new BizException("INVALID_PARAM");
                 }
-
                 LocalDateTime now = LocalDateTime.now();
                 if (session.getRefreshTokenTerminateAt().isBefore(now)) {
                     throw new BizException(LOGIN_REQUEST_KEY); // 로그인을 너무 오래 유지하는 것도 문제다.
                 }
-                if (session.getTokenTerminateAt().isBefore(now)) {
-                    session.setToken(passwordEncoder.encode(session.getUser().getEmail() + now));
-                    session.setTokenTerminateAt(now.plusDays(1));
-                    sessionRepository.save(session);
-                    refreshTokenResponseDTO.setAccessToken(session.getToken());
-                    refreshTokenResponseDTO.setAccessTokenExpireAt(session.getTokenTerminateAt().toInstant(ZoneOffset.UTC).toEpochMilli());
-                }
+                sessionRepository.delete(session);
+
+                session.setToken(passwordEncoder.encode(session.getUser().getEmail() + now));
+                session.setTokenTerminateAt(now.plusDays(1));
+                sessionRepository.save(session);
+                refreshTokenResponseDTO.setToken(session.getToken());
+                refreshTokenResponseDTO.setTokenExpireAt(session.getTokenTerminateAt().toEpochSecond(ZoneOffset.of("+09:00")) - now.toEpochSecond(ZoneOffset.of("+09:00")));
+                refreshTokenResponseDTO.setRefreshToken(refreshToken);
             }
         }
         return refreshTokenResponseDTO;
@@ -665,7 +712,7 @@ public class UserService {
         HttpEntity<MultiValueMap<String,String>> rest_request = new HttpEntity<>(parameters, headers);
         return rest_request;
     }
-    public void logout(String loginFrom, String accessToken, String refreshToken) throws IOException, InterruptedException {
+    public void logout(String loginFrom, String accessToken) throws IOException, InterruptedException {
         switch (loginFrom) {
             case GOOGLE -> {
                 HttpClient client = HttpClient.newBuilder()
