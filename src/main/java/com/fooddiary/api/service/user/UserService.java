@@ -9,14 +9,11 @@ import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
 import com.fooddiary.api.dto.response.user.*;
 import com.fooddiary.api.dto.response.user.KakaoUserInfo.KakaoAccount;
-import com.fooddiary.api.entity.user.Session;
-import com.fooddiary.api.entity.user.CreatePath;
-import com.fooddiary.api.entity.user.Role;
-import com.fooddiary.api.entity.user.Status;
-import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.entity.user.*;
 import com.fooddiary.api.repository.user.SessionRepository;
 import com.fooddiary.api.repository.user.UserRepository;
 import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
@@ -46,7 +43,6 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.net.BindException;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -58,16 +54,11 @@ import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.fooddiary.api.common.constants.UserConstants.LOGIN_REQUEST_KEY;
-import static com.fooddiary.api.common.constants.UserConstants.NOT_ACTIVE_USER_KEY;
+import static com.fooddiary.api.common.constants.UserConstants.*;
 
 @Slf4j
 @Service
@@ -235,11 +226,11 @@ public class UserService {
                 KakaoUserInfo kakaoUserInfo = objectMapper.readValue(response.body(), KakaoUserInfo.class);
 
                 if (kakaoUserInfo.getKakao_account() == null) {
-                    throw new BizException("FAIL_FINDING_USER_INFO");
+                    throw new BizException(FAIL_FINDING_USER_INFO_KEY);
                 }
                 KakaoAccount kakaoAccount = kakaoUserInfo.getKakao_account();
                 if (!kakaoAccount.getIs_email_valid() || !kakaoAccount.getIs_email_verified()) {
-                    throw new BizException("INVALID_KAKAO_EMAIL");
+                    throw new BizException(INVALID_KAKAO_EMAIL_KEY);
                 }
 
                 User user = userRepository.findByEmailAndCreatePathAndStatus(kakaoUserInfo.getKakao_account().getEmail(), CreatePath.KAKAO, Status.ACTIVE)
@@ -434,10 +425,14 @@ public class UserService {
                 }
 
                  */
-                TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
-                refreshTokenResponseDTO.setToken(response.getAccessToken());
-                refreshTokenResponseDTO.setRefreshToken(response.getRefreshToken());
-                refreshTokenResponseDTO.setTokenExpireAt(response.getExpiresInSeconds()); // google은 갱신토큰 만료일을 안준다. 왜냐면 갱신토큰은 로그인할때만 새로 주기 때문이다.
+                try { // https://developers.google.com/identity/protocols/oauth2/web-server?hl=ko#httprest_7  직접 rest api호출(POST https://oauth2.googleapis.com/token)도 가능하나. 제공하는 library를 써봤습니다.
+                    TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
+                    refreshTokenResponseDTO.setToken(response.getAccessToken());
+                    refreshTokenResponseDTO.setRefreshToken(response.getRefreshToken());
+                    refreshTokenResponseDTO.setTokenExpireAt(response.getExpiresInSeconds()); // google은 갱신토큰 만료일을 안준다. 왜냐면 갱신토큰은 로그인할때만 새로 주기 때문이다.
+                } catch (TokenResponseException e) {
+                    throw new BizException(LOGIN_REQUEST_KEY);
+                }
             }
             case KAKAO -> {
                 /*
@@ -518,6 +513,10 @@ public class UserService {
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+                if (response.statusCode() != HttpServletResponse.SC_OK) {
+                    throw new BizException(LOGIN_REQUEST_KEY);
+                }
+
                 ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 KakaoTokenResponseDTO kakaoTokenResponseDTO = objectMapper.readValue(response.body(), KakaoTokenResponseDTO.class);
                 refreshTokenResponseDTO.setToken(kakaoTokenResponseDTO.getAccess_token());
@@ -527,11 +526,8 @@ public class UserService {
             }
             default -> {
                 Session session = sessionRepository.findByRefreshToken(refreshToken);
-                if (session == null || !session.getRefreshToken().equals(refreshToken)) {
-                    throw new BizException("INVALID_PARAM");
-                }
                 LocalDateTime now = LocalDateTime.now();
-                if (session.getRefreshTokenTerminateAt().isBefore(now)) {
+                if (session == null || !session.getRefreshToken().equals(refreshToken) || session.getRefreshTokenTerminateAt().isBefore(now)) {
                     throw new BizException(LOGIN_REQUEST_KEY); // 로그인을 너무 오래 유지하는 것도 문제다.
                 }
                 sessionRepository.delete(session);
@@ -619,7 +615,7 @@ public class UserService {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != HttpServletResponse.SC_OK) {
-            throw new BizException("UNLINK_FAIL");
+            throw new BizException(UNLINK_FAIL_KEY);
         }
     }
     private static void unlinkKakao(String token) throws IOException, InterruptedException {
@@ -636,18 +632,18 @@ public class UserService {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != HttpServletResponse.SC_OK) {
-            throw new BizException("kakao user info api error");
+            throw new BizException(UNLINK_FAIL_KEY);
         }
 
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         KakaoUserInfo kakaoUserInfo = objectMapper.readValue(response.body(), KakaoUserInfo.class);
 
         if (kakaoUserInfo.getKakao_account() == null) {
-            throw new BizException("fail finding user info");
+            throw new BizException(FAIL_FINDING_USER_INFO_KEY);
         }
         KakaoAccount kakaoAccount = kakaoUserInfo.getKakao_account();
         if (!kakaoAccount.getIs_email_valid() || !kakaoAccount.getIs_email_verified()) {
-            throw new BizException("invalid kakao email");
+            throw new BizException(INVALID_KAKAO_EMAIL_KEY);
         }
 
         final String form = "target_id_type=user_id&" + "target_id=" + kakaoUserInfo.getId();
@@ -661,7 +657,7 @@ public class UserService {
         KakaoUnlink kakaoUnlink = objectMapper.readValue(response.body(), KakaoUnlink.class);
 
         if (!kakaoUnlink.getId().equals(kakaoUserInfo.getId())) {
-            throw new BindException("fail unlinking kakao");
+            throw new BizException(UNLINK_FAIL_KEY);
         }
 
     }
@@ -727,7 +723,7 @@ public class UserService {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
                 if (response.statusCode() != HttpServletResponse.SC_OK) {
-                    throw new BizException("LOGOUT_FAIL");
+                    throw new BizException(LOGOUT_FAIL_KEY);
                 }
             }
             case KAKAO -> {
@@ -745,7 +741,7 @@ public class UserService {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
                 if (response.statusCode() != HttpServletResponse.SC_OK) {
-                    throw new BizException("LOGOUT_FAIL");
+                    throw new BizException(LOGOUT_FAIL_KEY);
                 }
             }
             default -> {
