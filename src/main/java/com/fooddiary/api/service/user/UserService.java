@@ -685,12 +685,13 @@ public class UserService {
         log.info("response body: {}",rest_reponse.getBody());
 
         StringBuilder sb = new StringBuilder();
+        sb.append("?expires-in=").append(rest_reponse.getBody().get("expires_in"));
+        sb.append("&token=").append(rest_reponse.getBody().get("access_token"));
         // 로그인할때만 refresh 토큰이 부여된다.
         if (rest_reponse.getBody().get("refresh_token") != null) {
             sb.append("&refresh-token=").append(rest_reponse.getBody().get("refresh_token"));
         }
-        sb.append("&token=").append(rest_reponse.getBody().get("access_token"));
-        String queryString = sb.toString().replaceFirst("&", "?");
+        String queryString = sb.toString();
 
         response.sendRedirect(request.getRequestURL().toString().replace(request.getRequestURI(), "") + queryString);
     }
