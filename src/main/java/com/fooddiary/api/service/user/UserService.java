@@ -664,14 +664,13 @@ public class UserService {
 
     /**
      * 로그인할때 id token이 아닌 access token을 가져오는 방법
-     * https://idlecomputer.tistory.com/310
-     * https://developers.google.com/identity/protocols/oauth2/web-server?hl=ko#obtainingaccesstokens
+     * <a href="https://idlecomputer.tistory.com/310">사용법 예제</a>
+     * <a href="https://developers.google.com/identity/protocols/oauth2/web-server?hl=ko#obtainingaccesstokens">구글 문서</a>
      * @param request
      * @param response
      * @throws Exception
      */
     public void googleSignCallback(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        // TODO Auto-generated method stub
         String code = request.getParameter("code");
         HttpHeaders headers = new HttpHeaders();
         RestTemplate restTemplate = new RestTemplate();
@@ -685,7 +684,7 @@ public class UserService {
         rest_reponse = restTemplate.postForEntity(uri, rest_request, Map.class);
         log.info("response body: {}",rest_reponse.getBody());
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         // 로그인할때만 refresh 토큰이 부여된다.
         if (rest_reponse.getBody().get("refresh_token") != null) {
             sb.append("&refresh-token=").append(rest_reponse.getBody().get("refresh_token"));
@@ -693,7 +692,7 @@ public class UserService {
         sb.append("&token=").append(rest_reponse.getBody().get("access_token"));
         String queryString = sb.toString().replaceFirst("&", "?");
 
-        response.sendRedirect(request.getRequestURL().toString().replace(request.getRequestURI().toString(), "") + queryString);
+        response.sendRedirect(request.getRequestURL().toString().replace(request.getRequestURI(), "") + queryString);
     }
 
     @NotNull
@@ -705,8 +704,7 @@ public class UserService {
         parameters.add("grant_type", "authorization_code");
         parameters.add("redirect_uri", url); // 현재 서버의 url
 
-        HttpEntity<MultiValueMap<String,String>> rest_request = new HttpEntity<>(parameters, headers);
-        return rest_request;
+        return new HttpEntity<>(parameters, headers);
     }
     public void logout(String loginFrom, String accessToken) throws IOException, InterruptedException {
         switch (loginFrom) {
