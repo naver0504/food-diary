@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -58,6 +59,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.fooddiary.api.common.constants.Profiles.PRODUCTION;
 import static com.fooddiary.api.common.constants.UserConstants.*;
 
 @Slf4j
@@ -75,6 +77,7 @@ public class UserService {
     private final SessionService sessionService;
     private final SessionRepository sessionRepository;
     private final UserResignService userResignService;
+    private final Environment environment;
     private final String EMAIL_PATTERN = "^(.+)@(\\S+)$";
     @Value("${food-diary.pw-try-limit}")
     private Integer pwTryLimit;
@@ -670,19 +673,23 @@ public class UserService {
      * @param response
      * @throws Exception
      */
-    public void googleSignCallback(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void googleSignCallback(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String code = request.getParameter("code");
         HttpHeaders headers = new HttpHeaders();
         RestTemplate restTemplate = new RestTemplate();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> rest_request = getMultiValueMapHttpEntity(code, request.getRequestURL().toString(), headers);
+        String currentURL = request.getRequestURL().toString();
+        // 난 분명히 웹브라우저에서 redirect url에 https protocol로 요청했는데 돌아온건 http이라서..
+        if (Arrays.stream(environment.getActiveProfiles()).anyMatch(profile -> profile.equals(PRODUCTION))) {
+            currentURL = currentURL.replaceFirst("http", "https");
+        }
+        HttpEntity<MultiValueMap<String, String>> rest_request = getMultiValueMapHttpEntity(code, currentURL, headers);
 
         URI uri = URI.create("https://oauth2.googleapis.com/token");
 
         ResponseEntity<Map> rest_reponse;
         rest_reponse = restTemplate.postForEntity(uri, rest_request, Map.class);
-        log.info("response body: {}",rest_reponse.getBody());
+        log.info("response body: {}", rest_reponse.getBody());
 
         StringBuilder sb = new StringBuilder();
         sb.append("?expires-in=").append(rest_reponse.getBody().get("expires_in"));
