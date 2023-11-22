@@ -3,6 +3,7 @@ package com.fooddiary.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.search.CategoryType;
 import com.fooddiary.api.dto.response.search.DiarySearchResponseDTO;
 import com.fooddiary.api.dto.response.timeline.TimelineDiaryDTO;
 import com.fooddiary.api.entity.user.User;
@@ -92,14 +93,16 @@ public class SearchControllerTest {
     void getSearchResultWithoutCondition() throws Exception {
         final List<DiarySearchResponseDTO> responseDTOList = new ArrayList<>();
         final DiarySearchResponseDTO firstResponseDTO = new DiarySearchResponseDTO();
-        firstResponseDTO.setCategoryName("#고기");
+        firstResponseDTO.setCategoryName("고기");
         firstResponseDTO.setCount(2);
         firstResponseDTO.setDiaryList(List.of(createTimeLineDiaryDTO(2), createTimeLineDiaryDTO(1)));
+        firstResponseDTO.setCategoryType(CategoryType.TAG);
 
         final DiarySearchResponseDTO secondResponseDTO = new DiarySearchResponseDTO();
         secondResponseDTO.setCategoryName("경복궁 앞");
         secondResponseDTO.setCount(1);
         secondResponseDTO.setDiaryList(List.of(createTimeLineDiaryDTO(3)));
+        secondResponseDTO.setCategoryType(CategoryType.PLACE);
 
         responseDTOList.add(firstResponseDTO);
         responseDTOList.add(secondResponseDTO);
@@ -125,11 +128,13 @@ public class SearchControllerTest {
     void getMoreSearchResult() throws Exception {
         final List<TimelineDiaryDTO> timelineDiaryDTOList = List.of(createTimeLineDiaryDTO(3), createTimeLineDiaryDTO(2), createTimeLineDiaryDTO(1));
 
-        when(searchService.getMoreSearchResult(any(User.class), any(String.class), any(Integer.class))).thenReturn(timelineDiaryDTOList);
+        when(searchService.getMoreSearchResult(any(User.class), any(String.class), any(Integer.class), any(CategoryType.class)))
+                .thenReturn(timelineDiaryDTOList);
 
         final MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
         multiValueMap.set("searchCond", "BREAKFAST");
         multiValueMap.set("offset", "1");
+        multiValueMap.set("categoryType", "DIARY_TIME");
 
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/search/more-diary")
                         .headers(makeHeader())
@@ -143,11 +148,14 @@ public class SearchControllerTest {
 
         final ArgumentCaptor<String> requestCondition = ArgumentCaptor.forClass(String.class);
         final ArgumentCaptor<Integer> requestOffset = ArgumentCaptor.forClass(Integer.class);
+        final ArgumentCaptor<CategoryType> requestCategoryType = ArgumentCaptor.forClass(CategoryType.class);
 
-        BDDMockito.then(searchService).should(Mockito.times(1)).getMoreSearchResult(any(User.class), requestCondition.capture(), requestOffset.capture());
+        BDDMockito.then(searchService).should(Mockito.times(1))
+                .getMoreSearchResult(any(User.class), requestCondition.capture(), requestOffset.capture(), requestCategoryType.capture());
 
         Assertions.assertEquals(requestCondition.getValue(), Objects.requireNonNull(multiValueMap.getFirst("searchCond")));
         Assertions.assertEquals(requestOffset.getValue(), Integer.valueOf(Objects.requireNonNull(multiValueMap.getFirst("offset"))));
+        Assertions.assertEquals(requestCategoryType.getValue(), CategoryType.valueOf(Objects.requireNonNull(multiValueMap.getFirst("categoryType"))));
 
         final ObjectMapper objectMapper = new ObjectMapper();
         Assertions.assertEquals(
@@ -168,11 +176,12 @@ public class SearchControllerTest {
 
         final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
                 .categoryName("test")
+                .categoryType(CategoryType.PLACE)
                 .count(diaryList.size())
                 .diaryList(diaryList)
                 .build();
 
-        when(searchService.getStatisticSearchResult(any(User.class), any(String.class)))
+        when(searchService.getStatisticSearchResult(any(User.class), any(String.class), any(CategoryType.class)))
                 .thenReturn(diarySearchResponseDTO);
 
         final String searchCond = "TEST";
@@ -187,10 +196,14 @@ public class SearchControllerTest {
                 .getResponse();
 
         final ArgumentCaptor<String> requestCondition = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<CategoryType> requestCategoryType = ArgumentCaptor.forClass(CategoryType.class);
 
-        BDDMockito.then(searchService).should(Mockito.times(1)).getStatisticSearchResult(any(User.class), requestCondition.capture());
+
+        BDDMockito.then(searchService).should(Mockito.times(1))
+                .getStatisticSearchResult(any(User.class), requestCondition.capture(), requestCategoryType.capture());
 
         Assertions.assertEquals(requestCondition.getValue(), searchCond);
+        Assertions.assertEquals(requestCategoryType.getValue(), CategoryType.PLACE);
 
         final ObjectMapper objectMapper = new ObjectMapper();
         Assertions.assertEquals(
@@ -206,11 +219,13 @@ public class SearchControllerTest {
         final DiarySearchResponseDTO firstResponseDTO = new DiarySearchResponseDTO();
         firstResponseDTO.setCategoryName("TEST1");
         firstResponseDTO.setCount(2);
+        firstResponseDTO.setCategoryType(CategoryType.DIARY_TIME);
         firstResponseDTO.setDiaryList(List.of(createTimeLineDiaryDTO(2), createTimeLineDiaryDTO(1)));
 
         final DiarySearchResponseDTO secondResponseDTO = new DiarySearchResponseDTO();
         secondResponseDTO.setCategoryName("TEST2");
         secondResponseDTO.setCount(1);
+        secondResponseDTO.setCategoryType(CategoryType.TAG);
         secondResponseDTO.setDiaryList(List.of(createTimeLineDiaryDTO(3)));
 
         responseDTOList.add(firstResponseDTO);
