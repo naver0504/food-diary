@@ -1,5 +1,6 @@
 package com.fooddiary.api.controller;
 
+import com.fooddiary.api.dto.request.search.CategoryType;
 import com.fooddiary.api.dto.response.search.DiarySearchResponseDTO;
 import com.fooddiary.api.dto.response.timeline.TimelineDiaryDTO;
 import com.fooddiary.api.entity.user.User;
@@ -30,13 +31,16 @@ public class SearchController {
     @GetMapping("/more-diary")
     public ResponseEntity<List<TimelineDiaryDTO>> getMoreSearchResult(final @AuthenticationPrincipal User user,
                                                                       final @RequestParam String searchCond,
-                                                                      final @RequestParam(value = "offset", defaultValue = "1") int offset) {
-        return ResponseEntity.ok(searchService.getMoreSearchResult(user, searchCond,offset));
+                                                                      final @RequestParam(value = "offset", defaultValue = "1") int offset,
+                                                                      final @RequestParam CategoryType categoryType) {
+        return ResponseEntity.ok(searchService.getMoreSearchResult(user, searchCond,offset, categoryType));
     }
 
     @GetMapping("/statistics")
-    public ResponseEntity<DiarySearchResponseDTO> getStatisticsSearchResult(final @AuthenticationPrincipal User user, final @RequestParam("searchCond") String searchCond) {
-        return ResponseEntity.ok(searchService.getStatisticSearchResult(user, searchCond));
+    public ResponseEntity<DiarySearchResponseDTO> getStatisticsSearchResult(final @AuthenticationPrincipal User user,
+                                                                            final @RequestParam("searchCond") String searchCond,
+                                                                            final @RequestParam("categoryType") CategoryType categoryType) {
+        return ResponseEntity.ok(searchService.getStatisticSearchResult(user, searchCond, categoryType));
     }
 
     @GetMapping("/condition")
