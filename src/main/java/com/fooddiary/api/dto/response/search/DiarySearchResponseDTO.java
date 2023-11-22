@@ -15,7 +15,6 @@ public class DiarySearchResponseDTO {
 
     private String categoryName;
     private CategoryType categoryType;
-
     private int count;
     private List<TimelineDiaryDTO> diaryList;
 }
