@@ -140,13 +140,13 @@ public class UserService {
         }
         final List<Session> sessionList = user.getSession();
 
-        if (sessionList.size() > 10) {
-            sessionList.stream().sorted(Comparator.comparing(Session::getTokenTerminateAt).reversed()).skip(10).forEach(sessionService::deleteSession);
-        }
-
         user.setPwTry(0);
         user.setUpdateAt(LocalDateTime.now());
         userRepository.save(user);
+
+        if (sessionList.size() > 9) {
+            sessionList.stream().sorted(Comparator.comparing(Session::getTokenTerminateAt).reversed()).skip(9).forEach(sessionService::deleteSession);
+        }
 
         LocalDateTime now = LocalDateTime.now();
         final Session session = sessionService.createSession(user);
