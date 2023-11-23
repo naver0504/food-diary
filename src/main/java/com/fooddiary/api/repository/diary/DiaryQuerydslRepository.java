@@ -58,5 +58,4 @@ return null;
 
         return fetchFirst != null;
     }
-
 }

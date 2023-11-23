@@ -146,6 +146,4 @@ public class DiaryController {
                                                       @AuthenticationPrincipal final User user) {
         return ResponseEntity.ok(diaryService.getHomeDay(date, user));
     }
-
-
 }
