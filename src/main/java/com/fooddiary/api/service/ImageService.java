@@ -154,7 +154,6 @@ public class ImageService {
         try {
             bytes = fileStorageService.getObject(dirPath + image.getStoredFileName());
         } catch (IOException e) {
-            log.error("IOException ", e);
             throw new RuntimeException(e);
         }
         final ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
