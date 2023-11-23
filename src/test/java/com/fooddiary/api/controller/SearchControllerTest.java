@@ -132,7 +132,7 @@ public class SearchControllerTest {
                 .thenReturn(timelineDiaryDTOList);
 
         final MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.set("searchCond", "BREAKFAST");
+        multiValueMap.set("categoryName", "BREAKFAST");
         multiValueMap.set("offset", "1");
         multiValueMap.set("categoryType", "DIARY_TIME");
 
@@ -185,7 +185,7 @@ public class SearchControllerTest {
                 .thenReturn(diarySearchResponseDTO);
 
         final MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.set("searchCond", "BREAKFAST");
+        multiValueMap.set("categoryName", "BREAKFAST");
         multiValueMap.set("offset", "1");
         multiValueMap.set("categoryType", "DIARY_TIME");
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/search/statistics")
