@@ -106,8 +106,6 @@ public class SearchService {
             case TAG:
                 setDiaryList(user, diaryList, searchRepository.getSearchResultWithTag(user.getId(), searchCond, PageRequest.of(offset, 3)));
                 break;
-            default:
-                throw new BizException("잘못된 카테고리 타입입니다.");
         }
         return diaryList;
     }
@@ -203,9 +201,6 @@ public class SearchService {
             case TAG:
                 setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithPlaceNoLimit(user.getId(), searchCond));
                 break;
-            default:
-                throw new BizException("잘못된 카테고리 타입입니다.");
-
         }
         setDiarySearchResponseDTO(searchCond, diarySearchResponseDTO, diaryList, categoryType);
         return diarySearchResponseDTO;

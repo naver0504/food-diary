@@ -32,15 +32,16 @@ public class SearchController {
     public ResponseEntity<List<TimelineDiaryDTO>> getMoreSearchResult(final @AuthenticationPrincipal User user,
                                                                       final @RequestParam String searchCond,
                                                                       final @RequestParam(value = "offset", defaultValue = "1") int offset,
-                                                                      final @RequestParam CategoryType categoryType) {
-        return ResponseEntity.ok(searchService.getMoreSearchResult(user, searchCond,offset, categoryType));
+                                                                      final @RequestParam("categoryType") String categoryType) {
+
+        return ResponseEntity.ok(searchService.getMoreSearchResult(user, searchCond,offset, CategoryType.fromString(categoryType)));
     }
 
     @GetMapping("/statistics")
     public ResponseEntity<DiarySearchResponseDTO> getStatisticsSearchResult(final @AuthenticationPrincipal User user,
                                                                             final @RequestParam("searchCond") String searchCond,
-                                                                            final @RequestParam("categoryType") CategoryType categoryType) {
-        return ResponseEntity.ok(searchService.getStatisticSearchResult(user, searchCond, categoryType));
+                                                                            final @RequestParam("categoryType") String categoryType) {
+        return ResponseEntity.ok(searchService.getStatisticSearchResult(user, searchCond, CategoryType.fromString(categoryType)));
     }
 
     @GetMapping("/condition")

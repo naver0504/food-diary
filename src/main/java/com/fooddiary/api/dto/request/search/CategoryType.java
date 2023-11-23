@@ -7,14 +7,13 @@ public enum CategoryType {
 
     DIARY_TIME,
     PLACE,
-    TAG,
-    ETC;
+    TAG;
 
     public static CategoryType fromString(String value) {
         return Arrays.stream(CategoryType.values())
                 .filter(categoryType -> categoryType.name().equals(value))
                 .findFirst()
-                .orElse(CategoryType.ETC);
+                .orElse(null);
     }
 
 }
