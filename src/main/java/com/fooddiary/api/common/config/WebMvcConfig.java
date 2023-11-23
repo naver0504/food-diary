@@ -1,11 +1,8 @@
 package com.fooddiary.api.common.config;
 
-import java.util.List;
-
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.diary.DiaryTimeConverter;
 
-import com.fooddiary.api.dto.request.search.CategoryTypeConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
@@ -36,7 +33,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addFormatters(FormatterRegistry registry) {
 
         registry.addConverter(new DiaryTimeConverter());
-        registry.addConverter(new CategoryTypeConverter());
     }
 
 }
