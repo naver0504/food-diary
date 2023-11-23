@@ -90,21 +90,21 @@ public class SearchService {
         return diarySearchResponseDTOList;
     }
 
-    public List<TimelineDiaryDTO> getMoreSearchResult(final User user, final String searchCond, final int offset, final CategoryType categoryType) {
+    public List<TimelineDiaryDTO> getMoreSearchResult(final User user, final String categoryName, final int offset, final CategoryType categoryType) {
         final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
         if(categoryType == null) {
             throw new BizException("잘못된 카테고리 타입입니다.");
         }
         switch (categoryType) {
             case DIARY_TIME:
-                final DiaryTime diaryTime = DiaryTime.valueOf(searchCond);
+                final DiaryTime diaryTime = DiaryTime.valueOf(categoryName);
                 setDiaryList(user, diaryList, searchRepository.getSearchResultWithDiaryTime(user.getId(), diaryTime, PageRequest.of(offset, 3)));
                 break;
             case PLACE:
-                setDiaryList(user, diaryList, searchRepository.getSearchResultWithPlace(user.getId(), searchCond, PageRequest.of(offset, 3)));
+                setDiaryList(user, diaryList, searchRepository.getSearchResultWithPlace(user.getId(), categoryName, PageRequest.of(offset, 3)));
                 break;
             case TAG:
-                setDiaryList(user, diaryList, searchRepository.getSearchResultWithTag(user.getId(), searchCond, PageRequest.of(offset, 3)));
+                setDiaryList(user, diaryList, searchRepository.getSearchResultWithTag(user.getId(), categoryName, PageRequest.of(offset, 3)));
                 break;
         }
         return diaryList;
@@ -184,7 +184,7 @@ public class SearchService {
     }
 
 
-    public DiarySearchResponseDTO getStatisticSearchResult(final User user, final String searchCond, final CategoryType categoryType) {
+    public DiarySearchResponseDTO getStatisticSearchResult(final User user, final String categoryName, final CategoryType categoryType) {
         final DiarySearchResponseDTO diarySearchResponseDTO = new DiarySearchResponseDTO();
         final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
         if(categoryType == null) {
@@ -192,23 +192,23 @@ public class SearchService {
         }
         switch (categoryType) {
             case DIARY_TIME:
-                final DiaryTime diaryTime = DiaryTime.valueOf(searchCond);
+                final DiaryTime diaryTime = DiaryTime.valueOf(categoryName);
                 setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithDiaryTimeNoLimit(user.getId(), diaryTime));
                 break;
             case PLACE:
-                setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithPlaceNoLimit(user.getId(), searchCond));
+                setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithPlaceNoLimit(user.getId(), categoryName));
                 break;
             case TAG:
-                setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithPlaceNoLimit(user.getId(), searchCond));
+                setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithPlaceNoLimit(user.getId(), categoryName));
                 break;
         }
-        setDiarySearchResponseDTO(searchCond, diarySearchResponseDTO, diaryList, categoryType);
+        setDiarySearchResponseDTO(categoryName, diarySearchResponseDTO, diaryList, categoryType);
         return diarySearchResponseDTO;
     }
 
-    private static void setDiarySearchResponseDTO(final String searchCond, final DiarySearchResponseDTO diarySearchResponseDTO,
+    private static void setDiarySearchResponseDTO(final String categoryName, final DiarySearchResponseDTO diarySearchResponseDTO,
                                                   final List<TimelineDiaryDTO> diaryList, final CategoryType categoryType) {
-        diarySearchResponseDTO.setCategoryName(searchCond);
+        diarySearchResponseDTO.setCategoryName(categoryName);
         diarySearchResponseDTO.setDiaryList(diaryList);
         diarySearchResponseDTO.setCount(diaryList.size());
         diarySearchResponseDTO.setCategoryType(categoryType);
