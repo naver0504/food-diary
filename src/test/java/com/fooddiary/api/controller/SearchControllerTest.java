@@ -153,7 +153,7 @@ public class SearchControllerTest {
         BDDMockito.then(searchService).should(Mockito.times(1))
                 .getMoreSearchResult(any(User.class), requestCondition.capture(), requestOffset.capture(), requestCategoryType.capture());
 
-        Assertions.assertEquals(requestCondition.getValue(), Objects.requireNonNull(multiValueMap.getFirst("searchCond")));
+        Assertions.assertEquals(requestCondition.getValue(), Objects.requireNonNull(multiValueMap.getFirst("categoryName")));
         Assertions.assertEquals(requestOffset.getValue(), Integer.valueOf(Objects.requireNonNull(multiValueMap.getFirst("offset"))));
         Assertions.assertEquals(requestCategoryType.getValue(), CategoryType.valueOf(Objects.requireNonNull(multiValueMap.getFirst("categoryType"))));
 
@@ -186,7 +186,6 @@ public class SearchControllerTest {
 
         final MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
         multiValueMap.set("categoryName", "BREAKFAST");
-        multiValueMap.set("offset", "1");
         multiValueMap.set("categoryType", "DIARY_TIME");
         final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/search/statistics")
                         .headers(makeHeader())
@@ -205,7 +204,7 @@ public class SearchControllerTest {
         BDDMockito.then(searchService).should(Mockito.times(1))
                 .getStatisticSearchResult(any(User.class), requestCondition.capture(), requestCategoryType.capture());
 
-        Assertions.assertEquals(requestCondition.getValue(), Objects.requireNonNull(multiValueMap.getFirst("searchCond")));
+        Assertions.assertEquals(requestCondition.getValue(), Objects.requireNonNull(multiValueMap.getFirst("categoryName")));
         Assertions.assertEquals(requestCategoryType.getValue(), CategoryType.valueOf(Objects.requireNonNull(multiValueMap.getFirst("categoryType"))));
 
         final ObjectMapper objectMapper = new ObjectMapper();
