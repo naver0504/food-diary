@@ -1,5 +1,6 @@
 package com.fooddiary.api.common.interceptor;
 
+import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,10 +33,14 @@ public class Interceptor implements HandlerInterceptor {
         {
             add("/");
             add("/index.html"); // 두 path /, /index.html 는 상태확인용으로 넣었습니다.
+            add("/google963ef638dc972a89.html"); // google로그인 인증을 위해 google에서 도메인의 소유권 확인하려고 종종 호출하는 페이지
             add("/user/new");
             add("/user/login");
             add("/user/is-login");
             add("/user/reset-password");
+            add("/user/google-login-callback");
+            add("/user/session");
+            add("/user/refresh-token");
         }
     };
 
@@ -45,12 +50,16 @@ public class Interceptor implements HandlerInterceptor {
 
         if (bypassUri.contains(request.getRequestURI())) {return true;}
 
-        final User user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
-
-        if (user == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return false;
+        User user;
+        try {
+            user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
+        } catch (IllegalArgumentException e) {
+            throw new BizException(LOGIN_REQUEST_KEY);
         }
+        if (user == null) {
+            throw new BizException(LOGIN_REQUEST_KEY);
+        }
+
         final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
         simpleGrantedAuthority.add(new SimpleGrantedAuthority("all"));
         final RememberMeAuthenticationToken userDataAuthenticationTokenByEmail =

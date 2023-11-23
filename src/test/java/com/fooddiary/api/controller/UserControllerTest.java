@@ -7,6 +7,7 @@ import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
 import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.user.RefreshTokenResponseDTO;
 import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.user.UserResponseDTO;
@@ -22,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -39,6 +41,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -149,6 +153,9 @@ public class UserControllerTest {
         final String token = "2$asdf1g1";
         final UserResponseDTO userResponseDto = new UserResponseDTO();
         userResponseDto.setToken(token);
+        userResponseDto.setTokenExpireAt(3600L);
+        userResponseDto.setRefreshToken("refreshToken");
+        userResponseDto.setRefreshTokenExpireAt(3600*24*30L);
         userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
 
         given(userService.loginUser(any())).willReturn(userResponseDto);
@@ -271,6 +278,50 @@ public class UserControllerTest {
         Assertions.assertEquals(mockHttpServletResponse.getStatus(), HttpStatus.OK.value());
         Assertions.assertEquals(mockHttpServletResponse.getContentAsString(),
                                 objectMapper.writeValueAsString(userNewPasswordResponseDTO));
+    }
+
+    @Test
+    void refresh_token() throws Exception {
+        final LocalDateTime now = LocalDateTime.now();
+        final String newToken = "newToken";
+        final RefreshTokenResponseDTO refreshTokenResponseDTO = new RefreshTokenResponseDTO();
+        refreshTokenResponseDTO.setToken(newToken);
+        refreshTokenResponseDTO.setRefreshToken("refreshToken");
+        refreshTokenResponseDTO.setTokenExpireAt(now.plusDays(1L).toEpochSecond(ZoneOffset.of("+09:00")) - now.toEpochSecond(ZoneOffset.of("+09:00")) );
+
+        when(userService.refreshAccessToken(anyString(), anyString())).thenReturn(refreshTokenResponseDTO);
+
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("login-from", "none");
+        httpHeaders.add("refresh-token", "refreshToken");
+        mockMvc.perform(post("/user/refresh-token")
+                                                  .contentType(
+                                                          MediaType.APPLICATION_JSON)
+                                                  .headers(httpHeaders))
+               .andExpect(status().isOk())
+               .andDo(document("refresh token"));
+
+
+    }
+
+    @Test
+    void logout() throws Exception {
+        mockMvc.perform(post("/user/logout")
+                                                  .contentType(
+                                                          MediaType.APPLICATION_JSON)
+                                                  .headers(makeHeader()))
+               .andExpect(status().isOk())
+               .andDo(document("logout"));
+    }
+
+    @Test
+    void google_login_callback() throws Exception {
+        mockMvc.perform(get("/user/google-login-callback?code=googleAuthToken")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON)
+                                )
+               .andExpect(status().isOk())
+               .andDo(document("google login callback"));
     }
 
 }
