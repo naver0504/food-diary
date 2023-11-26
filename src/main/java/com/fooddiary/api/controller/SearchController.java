@@ -55,20 +55,20 @@ public class SearchController {
         return ResponseEntity.ok(searchService.getMoreSearchResult(user, categoryName,offset, CategoryType.fromString(categoryType)));
     }
 
-    /***
-     *
-     * 카테고리 클릭 시 보이는 페이지
-     * @param user SecurityContextHolder에서 가져온 사용자 정보
-     * @param categoryName 검색어
-     * @param categoryType 카테고리 타입
-     * @return 카테고리에 해당하는 일기 리스트
-     */
-    @GetMapping("/statistics")
-    public ResponseEntity<DiarySearchResponseDTO> getStatisticsSearchResult(final @AuthenticationPrincipal User user,
-                                                                            final @RequestParam("categoryName") String categoryName,
-                                                                            final @RequestParam("categoryType") String categoryType) {
-        return ResponseEntity.ok(searchService.getStatisticSearchResult(user, categoryName, CategoryType.fromString(categoryType)));
-    }
+//    /***
+//     *
+//     * 카테고리 클릭 시 보이는 페이지
+//     * @param user SecurityContextHolder에서 가져온 사용자 정보
+//     * @param categoryName 검색어
+//     * @param categoryType 카테고리 타입
+//     * @return 카테고리에 해당하는 일기 리스트
+//     */
+//    @GetMapping("/statistics")
+//    public ResponseEntity<DiarySearchResponseDTO> getStatisticsSearchResult(final @AuthenticationPrincipal User user,
+//                                                                            final @RequestParam("categoryName") String categoryName,
+//                                                                            final @RequestParam("categoryType") String categoryType) {
+//        return ResponseEntity.ok(searchService.getStatisticSearchResult(user, categoryName, CategoryType.fromString(categoryType)));
+//    }
 
     /***
      *
