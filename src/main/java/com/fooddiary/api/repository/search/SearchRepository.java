@@ -18,27 +18,27 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select u.category, u.c as countNum from (
-            (select d1.diary_time as category, count(diary_time) as c from diary as d1 where d1.user_id = :userId group by d1.diary_time ) 
+            select u.category as categoryName, categoryType from (
+            (select d1.diary_time as category, count(diary_time) as c, 'DIARY_TIME' as categoryType from diary as d1 where d1.user_id = :userId group by d1.diary_time ) 
             union all
-            (select d2.place as category, count(d2.place) as c from diary as d2 where d2.user_id = :userId and d2.place is not null group by d2.place )
+            (select d2.place as category, count(d2.place), 'PLACE' as categoryType as c from diary as d2 where d2.user_id = :userId and d2.place is not null group by d2.place )
             ) as u order by u.c desc
             """, nativeQuery = true)
     List<SearchSQLDTO> getSearchResultWithoutConditionAndTag(@Param("userId") int id, Pageable pageable);
 
     @Query(
             value = """
-            select u.category, u.c as countNum from 
+            select u.category as categoryName, categoryType from 
             (
                 (
-                select concat('#', t.tag_name) as category, count(t.tag_name) as c from diary as d1 
+                select t.tag_name as category, count(t.tag_name) as c, 'TAG' as categoryType from diary as d1 
                 inner join diary_tag as dt on d1.id = dt.diary_id 
                 inner join tag as t on t.id = dt.tag_id 
                 where d1.user_id = :userId group by t.tag_name
                 ) 
             union all
                 (  
-                select d2.place as category, count(d2.place) as c from diary as d2 
+                select d2.place as category, count(d2.place) as c,'PLACE' as categoryType from diary as d2 
                 where d2.user_id = :userId and d2.place is not null group by d2.place 
                 )
             ) as u order by u.c desc
@@ -123,6 +123,20 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
             order by d.id desc, x.update_at desc""", nativeQuery = true)
     List<DiarySearchSQLDTO.DiarySearchWithTagSQLDTO> getSearchResultContainTagName(@Param("userId") int id, @Param("tagName") String tagName);
 
+    @Query(
+            value = """
+            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            inner join 
+            ( 
+                select diary_id, thumbnail_file_name, update_at,
+                row_number() over (partition by diary_id order by update_at desc) as n 
+                from image 
+            ) as x 
+            on d.id = x.diary_id
+            where d.user_id = :userId and d.diary_time = :#{#diaryTime.name()} and n <= 1
+            order by d.id desc, x.update_at desc""", nativeQuery = true)
+    List<DiarySearchSQLDTO> getStatisticsSearchResultWithDiaryTimeNoLimit(@Param("userId") int userId, @Param("diaryTime") DiaryTime diaryTime);
+
 
 
 //    @Query(
@@ -140,51 +154,10 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 //    List<DiarySearchSQLDTO.DiarySearchWithDiaryTimeSQLDTO> getSearchResultWithDiaryTimeNoLimit(@Param("userId") int userId,
 //                                                                                               @Param("diaryTime") DiaryTime diaryTime);
 
-    @Query(
-            value = """
-            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
-            inner join 
-            ( 
-                select diary_id, thumbnail_file_name, update_at,
-                row_number() over (partition by diary_id order by update_at desc) as n 
-                from image 
-            ) as x 
-            on d.id = x.diary_id
-            where d.user_id = :userId and d.diary_time = :#{#diaryTime.name()} and n <= 1
-            order by d.id desc, x.update_at desc""", nativeQuery = true)
-    List<DiarySearchSQLDTO> getStatisticsSearchResultWithDiaryTimeNoLimit(@Param("userId") int userId, @Param("diaryTime") DiaryTime diaryTime);
 
 //    @Query(
 //            value = """
-//            select d.id, d.place, x.thumbnail_file_name as thumbnailFileName from Diary as d
-//            inner join
-//            (
-//                select diary_id, thumbnail_file_name, update_at,
-//                row_number() over (partition by diary_id order by update_at desc) as n
-//                from image
-//            ) as x
-//            on d.id = x.diary_id
-//            where d.user_id = :userId and d.place = :place and n <= 1
-//            order by d.id desc, x.update_at desc""", nativeQuery = true)
-//    List<DiarySearchSQLDTO.DiarySearchWithPlaceSQLDTO> getSearchResultWithPlaceNoLimit(@Param("userId") int id,
-//                                                                                       @Param("place") String place);
-
-    @Query(
-            value = """
-            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
-            inner join 
-            ( 
-                select diary_id, thumbnail_file_name, update_at,  
-                row_number() over (partition by diary_id order by update_at desc) as n 
-                from image
-            ) as x
-            on d.id = x.diary_id
-            where d.user_id = :userId and d.place = :place and n <= 1
-            order by d.id desc, x.update_at desc""", nativeQuery = true)
-    List<DiarySearchSQLDTO> getStatisticsSearchResultWithPlaceNoLimit(@Param("userId") int id, @Param("place") String place);
-//    @Query(
-//            value = """
-//            select d.id, t.tag_name as tagName, x.thumbnail_file_name as thumbnailFileName from Diary as d
+//            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d
 //            inner join
 //            (
 //                select diary_id, thumbnail_file_name, update_at,
@@ -196,25 +169,8 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 //            inner join tag as t on (t.id = dt.tag_id)
 //            where d.user_id = :userId and t.tag_name = :tagName and n <= 1
 //            order by d.id desc, x.update_at desc""", nativeQuery = true)
-//    List<DiarySearchSQLDTO.DiarySearchWithTagSQLDTO> getSearchResultWithTagNoLimit(@Param("userId") int id,
-//                                                                                   @Param("tagName") String tagName);
-
-    @Query(
-            value = """
-            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
-            inner join 
-            ( 
-                select diary_id, thumbnail_file_name, update_at,  
-                row_number() over (partition by diary_id order by update_at desc) as n 
-                from image 
-            ) as x 
-            on d.id = x.diary_id
-            inner join diary_tag as dt on (dt.diary_id = d.id)
-            inner join tag as t on (t.id = dt.tag_id)
-            where d.user_id = :userId and t.tag_name = :tagName and n <= 1
-            order by d.id desc, x.update_at desc""", nativeQuery = true)
-    List<DiarySearchSQLDTO> getStatisticsSearchResultWithTagNoLimit(@Param("userId") int id, @Param("tagName") String tagName);
-
+//    List<DiarySearchSQLDTO> getStatisticsSearchResultWithTagNoLimit(@Param("userId") int id, @Param("tagName") String tagName);
+//
 
 }
 
