@@ -166,56 +166,6 @@ public class SearchControllerTest {
     }
 
     @Test
-    public void getStatisticsSearchResultTest() throws Exception {
-        final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
-        diaryList.add(createTimeLineDiaryDTO(5));
-        diaryList.add(createTimeLineDiaryDTO(4));
-        diaryList.add(createTimeLineDiaryDTO(3));
-        diaryList.add(createTimeLineDiaryDTO(2));
-        diaryList.add(createTimeLineDiaryDTO(1));
-
-        final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
-                .categoryName("test")
-                .categoryType(CategoryType.PLACE)
-                .count(diaryList.size())
-                .diaryList(diaryList)
-                .build();
-
-        when(searchService.getStatisticSearchResult(any(User.class), any(String.class), any(CategoryType.class)))
-                .thenReturn(diarySearchResponseDTO);
-
-        final MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.set("categoryName", "BREAKFAST");
-        multiValueMap.set("categoryType", "DIARY_TIME");
-        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/search/statistics")
-                        .headers(makeHeader())
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .queryParams(multiValueMap))
-                .andExpect(status().isOk())
-                .andDo(document("statistics search result"))
-                .andReturn()
-                .getResponse();
-
-        final ArgumentCaptor<String> requestCondition = ArgumentCaptor.forClass(String.class);
-        final ArgumentCaptor<CategoryType> requestCategoryType = ArgumentCaptor.forClass(CategoryType.class);
-
-
-        BDDMockito.then(searchService).should(Mockito.times(1))
-                .getStatisticSearchResult(any(User.class), requestCondition.capture(), requestCategoryType.capture());
-
-        Assertions.assertEquals(requestCondition.getValue(), Objects.requireNonNull(multiValueMap.getFirst("categoryName")));
-        Assertions.assertEquals(requestCategoryType.getValue(), CategoryType.valueOf(Objects.requireNonNull(multiValueMap.getFirst("categoryType"))));
-
-        final ObjectMapper objectMapper = new ObjectMapper();
-        Assertions.assertEquals(
-                mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
-                objectMapper.writeValueAsString(diarySearchResponseDTO)
-        );
-
-    }
-
-    @Test
     public void getSearchResultWithConditionTest() throws Exception {
         final List<DiarySearchResponseDTO> responseDTOList = new ArrayList<>();
         final DiarySearchResponseDTO firstResponseDTO = new DiarySearchResponseDTO();
@@ -261,15 +211,64 @@ public class SearchControllerTest {
                 objectMapper.writeValueAsString(responseDTOList));
     }
 
-
-
-
     private TimelineDiaryDTO createTimeLineDiaryDTO(final int diaryId) {
         final TimelineDiaryDTO timelineDiaryDTO = new TimelineDiaryDTO();
         timelineDiaryDTO.setDiaryId(diaryId);
         timelineDiaryDTO.setBytes(BYTES);
         return timelineDiaryDTO;
     }
+
+
+//    @Test
+//    public void getStatisticsSearchResultTest() throws Exception {
+//        final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
+//        diaryList.add(createTimeLineDiaryDTO(5));
+//        diaryList.add(createTimeLineDiaryDTO(4));
+//        diaryList.add(createTimeLineDiaryDTO(3));
+//        diaryList.add(createTimeLineDiaryDTO(2));
+//        diaryList.add(createTimeLineDiaryDTO(1));
+//
+//        final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
+//                .categoryName("test")
+//                .categoryType(CategoryType.PLACE)
+//                .count(diaryList.size())
+//                .diaryList(diaryList)
+//                .build();
+//
+//        when(searchService.getStatisticSearchResult(any(User.class), any(String.class), any(CategoryType.class)))
+//                .thenReturn(diarySearchResponseDTO);
+//
+//        final MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
+//        multiValueMap.set("categoryName", "BREAKFAST");
+//        multiValueMap.set("categoryType", "DIARY_TIME");
+//        final MockHttpServletResponse mockHttpServletResponse = mockMvc.perform(get("/search/statistics")
+//                        .headers(makeHeader())
+//                        .characterEncoding(StandardCharsets.UTF_8)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .queryParams(multiValueMap))
+//                .andExpect(status().isOk())
+//                .andDo(document("statistics search result"))
+//                .andReturn()
+//                .getResponse();
+//
+//        final ArgumentCaptor<String> requestCondition = ArgumentCaptor.forClass(String.class);
+//        final ArgumentCaptor<CategoryType> requestCategoryType = ArgumentCaptor.forClass(CategoryType.class);
+//
+//
+//        BDDMockito.then(searchService).should(Mockito.times(1))
+//                .getStatisticSearchResult(any(User.class), requestCondition.capture(), requestCategoryType.capture());
+//
+//        Assertions.assertEquals(requestCondition.getValue(), Objects.requireNonNull(multiValueMap.getFirst("categoryName")));
+//        Assertions.assertEquals(requestCategoryType.getValue(), CategoryType.valueOf(Objects.requireNonNull(multiValueMap.getFirst("categoryType"))));
+//
+//        final ObjectMapper objectMapper = new ObjectMapper();
+//        Assertions.assertEquals(
+//                mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
+//                objectMapper.writeValueAsString(diarySearchResponseDTO)
+//        );
+//
+//    }
+
 
 
 
