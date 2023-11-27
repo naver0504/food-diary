@@ -178,37 +178,6 @@ public class SearchService {
         return diarySearchResponseDTOList;
     }
 
-
-//    public DiarySearchResponseDTO getStatisticSearchResult(final User user, final String categoryName, final CategoryType categoryType) {
-//        final DiarySearchResponseDTO diarySearchResponseDTO = new DiarySearchResponseDTO();
-//        final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
-//        if(categoryType == null) {
-//            throw new BizException("잘못된 카테고리 타입입니다.");
-//        }
-//        switch (categoryType) {
-//            case DIARY_TIME:
-//                final DiaryTime diaryTime = DiaryTime.valueOf(categoryName);
-//                setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithDiaryTimeNoLimit(user.getId(), diaryTime));
-//                break;
-//            case PLACE:
-//                setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithPlaceNoLimit(user.getId(), categoryName));
-//                break;
-//            case TAG:
-//                setDiaryList(user, diaryList, searchRepository.getStatisticsSearchResultWithPlaceNoLimit(user.getId(), categoryName));
-//                break;
-//        }
-//        setDiarySearchResponseDTO(categoryName, diarySearchResponseDTO, diaryList, categoryType);
-//        return diarySearchResponseDTO;
-//    }
-
-    private static void setDiarySearchResponseDTO(final String categoryName, final DiarySearchResponseDTO diarySearchResponseDTO,
-                                                  final List<TimelineDiaryDTO> diaryList, final CategoryType categoryType) {
-        diarySearchResponseDTO.setCategoryName(categoryName);
-        diarySearchResponseDTO.setDiaryList(diaryList);
-        diarySearchResponseDTO.setCount(diaryList.size());
-        diarySearchResponseDTO.setCategoryType(categoryType);
-    }
-
     @NotNull
     private TimelineDiaryDTO createTimeLineDiaryDTO(final User user, final DiarySearchSQLDTO diary) {
         final TimelineDiaryDTO timelineDiaryDTO = new TimelineDiaryDTO();
