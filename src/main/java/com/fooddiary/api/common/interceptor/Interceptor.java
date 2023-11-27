@@ -32,8 +32,8 @@ public class Interceptor implements HandlerInterceptor {
 
         {
             add("/");
-            add("/index.html"); // 두 path /, /index.html 는 상태확인용으로 넣었습니다.
-            add("/google963ef638dc972a89.html"); // google로그인 인증을 위해 google에서 도메인의 소유권 확인하려고 종종 호출하는 페이지
+            // add("/index.html"); // 두 path /, /index.html 는 상태확인용으로 넣었습니다.
+            // add("/google963ef638dc972a89.html"); // google로그인 인증을 위해 google에서 도메인의 소유권 확인하려고 종종 호출하는 페이지
             add("/user/new");
             add("/user/login");
             add("/user/is-login");
