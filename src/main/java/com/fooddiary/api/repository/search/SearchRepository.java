@@ -78,6 +78,22 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
+            select  d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            inner join 
+            ( 
+                select diary_id, thumbnail_file_name, update_at,
+                row_number() over (partition by diary_id order by update_at desc) as n 
+                from image 
+            ) as x 
+            on d.id = x.diary_id
+            where d.user_id = :userId and d.place = :place and n <= 1
+            order by d.id desc, x.update_at desc
+            """, nativeQuery = true)
+    List<DiarySearchSQLDTO> getSearchResultWithPlaceNoLimit(@Param("userId") int id, @Param("place") String place);
+
+
+    @Query(
+            value = """
             select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
             inner join 
             ( 
@@ -91,6 +107,23 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
             where d.user_id = :userId and t.tag_name = :tagName and n <= 1
             order by d.id desc, x.update_at desc""", nativeQuery = true)
     List<DiarySearchSQLDTO> getSearchResultWithTag(@Param("userId") int id, @Param("tagName") String tagName, Pageable pageable);
+
+    @Query(
+            value = """
+            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            inner join 
+            ( 
+                select diary_id, thumbnail_file_name, update_at,  
+                row_number() over (partition by diary_id order by update_at desc) as n 
+                from image 
+            ) as x 
+            on d.id = x.diary_id
+            inner join diary_tag as dt on (dt.diary_id = d.id)
+            inner join tag as t on (t.id = dt.tag_id)
+            where d.user_id = :userId and t.tag_name = :tagName and n <= 1
+            order by d.id desc, x.update_at desc""", nativeQuery = true)
+    List<DiarySearchSQLDTO> getSearchResultWithTagNoLimit(@Param("userId") int id, @Param("tagName") String tagName);
+
 
 
     @Query(
@@ -136,6 +169,32 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
             where d.user_id = :userId and d.diary_time = :#{#diaryTime.name()} and n <= 1
             order by d.id desc, x.update_at desc""", nativeQuery = true)
     List<DiarySearchSQLDTO> getStatisticsSearchResultWithDiaryTimeNoLimit(@Param("userId") int userId, @Param("diaryTime") DiaryTime diaryTime);
-    
+
+    @Query(
+            value = """
+            select u.categoryName, u.categoryType from
+            	(
+            		(
+            		    select t.tag_name as categoryName, count(t.tag_name) as c, 'TAG' as categoryType from diary as d1 
+                        inner join diary_tag as dt on d1.id = dt.diary_id inner join tag as t on t.id = dt.tag_id 
+                        where d1.user_id = :userId and t.tag_name like :condition group by t.tag_name 
+                    )
+                    union all
+                    (
+                        select d2.place as categoryName, count(d2.place) as c, 'PLACE' as categoryType from diary as d2
+                        where d2.place like :condition and d2.user_id = :userId group by d2.place
+                    )
+                    union all
+                    (
+                        select d1.diary_time as categoryName, count(d1.diary_time) as c, 'DIARY_TIME' as categoryType  from diary as d1 
+                        where d1.user_id = :userId and  d1.diary_time in :diaryTimeList group by d1.diary_time
+                    )
+            	) as u 
+            order by u.c desc """, nativeQuery = true)
+    List<SearchSQLDTO> getSearchResultWithCondition(@Param("userId") int userId, @Param("condition") String condition, @Param("diaryTimeList") List<String> diaryTimeList);
+
+
+
+
 }
 

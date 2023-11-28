@@ -11,33 +11,20 @@ import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.repository.diary.DiaryTagQuerydslRepository;
 import com.fooddiary.api.repository.search.SearchRepository;
 import com.fooddiary.api.service.ImageService;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class SearchService {
-
-    @EqualsAndHashCode
-    @Getter
-    private class Pair {
-        private String categoryName;
-        private CategoryType categoryType;
-
-        public Pair(final String categoryName, final CategoryType categoryType) {
-            this.categoryName = categoryName;
-            this.categoryType = categoryType;
-        }
-    }
 
     private final ImageService imageService;
     private final SearchRepository searchRepository;
@@ -107,74 +94,58 @@ public class SearchService {
         return diaryList;
     }
 
-    /***
-     * 검색 조건을 포함하는 태그 목록을 반환한다.
-     *
-     */
+
     public List<DiarySearchResponseDTO> getSearchResultWithCondition(final User user, final String searchCond) {
         final List<DiarySearchResponseDTO> diarySearchResponseDTOList = new ArrayList<>();
-        final LinkedMultiValueMap<Pair, TimelineDiaryDTO> diarySearchResponseDTOMap = new LinkedMultiValueMap<>();
-        final List<DiaryTime> diaryTimeList = DiaryTime.getTime(searchCond);
-        if (!diaryTimeList.isEmpty()) {
-            diaryTimeList.forEach(
-                    diaryTime -> {
-                        final Pair pair = new Pair(diaryTime.name(), CategoryType.DIARY_TIME);
-                        searchRepository.getStatisticsSearchResultWithDiaryTimeNoLimit(user.getId(), diaryTime)
-                                .forEach(
-                                        diary -> {
-                                            final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                                            addDiarySearchResponseMap(diarySearchResponseDTOMap, pair, timelineDiaryDTO);
-                                        }
-                                );
-                    }
-            );
+
+        if(!StringUtils.hasText(searchCond)) return diarySearchResponseDTOList;
+
+        final List<String> diaryTimeList = DiaryTime.getTime(searchCond).stream().map(DiaryTime::name).collect(Collectors.toList());
+        final String condition = "%" + searchCond + "%";
+        final List<SearchSQLDTO> searchResultWithCondition;
+        try {
+            searchResultWithCondition = searchRepository.getSearchResultWithCondition(user.getId(), condition, diaryTimeList);
+        } catch (IllegalArgumentException e) {
+            log.error("검색 결과가 없습니다. searchCond : {}", searchCond);
+            return diarySearchResponseDTOList;
         }
-        /**
-         * 해당 검색어 조건을 포함하는 장소를 추가
-         *
-         */
-        searchRepository.getSearchResultContainPlace(user.getId(), "%" +searchCond + "%").forEach(
-                diary -> {
-                    final Pair pair = new Pair(diary.getPlace(), CategoryType.PLACE);
-                    final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                    addDiarySearchResponseMap(diarySearchResponseDTOMap, pair, timelineDiaryDTO);
-                }
-        );
-        /***
-         * 해당 검색어 조건을 포함하는 태그를 추가
-         */
-        searchRepository.getSearchResultContainTagName(user.getId(), "%" +searchCond + "%").forEach(
-                diary -> {
-                    final Pair pair = new Pair(diary.getTagName(), CategoryType.TAG);
-                    final TimelineDiaryDTO timelineDiaryDTO = createTimeLineDiaryDTO(user, diary);
-                    addDiarySearchResponseMap(diarySearchResponseDTOMap, pair, timelineDiaryDTO);
-                }
-        );
 
-        diarySearchResponseDTOMap.forEach(
-                (key, value) -> {
-                    final DiarySearchResponseDTO diarySearchResponseDTO = DiarySearchResponseDTO.builder()
-                            .diaryList(value)
-                            .count(value.size())
-                            .categoryName(key.getCategoryName())
-                            .categoryType(key.getCategoryType())
-                            .build();
-                    diarySearchResponseDTOList.add(diarySearchResponseDTO);
-                }
-        );
-
-        diarySearchResponseDTOList.sort(new Comparator<DiarySearchResponseDTO>() {
-                                            @Override
-                                            public int compare(DiarySearchResponseDTO o1, DiarySearchResponseDTO o2) {
-                                                if (o1.getCount() == o2.getCount()) {
-                                                    return o1.getCategoryName().compareTo(o2.getCategoryName());
-                                                } else {
-                                                    return o2.getCount() - o1.getCount();
-                                                }
-                                            }
-                                        }
-        );
-
+        searchResultWithCondition
+                .forEach(
+                        searchSQLDTO -> {
+                            final String categoryName = searchSQLDTO.getCategoryName();
+                            final CategoryType categoryType = searchSQLDTO.getCategoryType();
+                            final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
+                            switch (categoryType) {
+                                case DIARY_TIME:
+                                    final DiaryTime diaryTime = DiaryTime.valueOf(categoryName);
+                                    searchRepository.getStatisticsSearchResultWithDiaryTimeNoLimit(user.getId(), diaryTime)
+                                            .forEach(
+                                                    diary -> {
+                                                        diaryList.add(createTimeLineDiaryDTO(user, diary));
+                                                    }
+                                            );
+                                    break;
+                                case PLACE:
+                                    searchRepository.getSearchResultWithPlaceNoLimit(user.getId(), categoryName)
+                                            .forEach(
+                                                    diary -> {
+                                                        diaryList.add(createTimeLineDiaryDTO(user, diary));
+                                                    }
+                                            );
+                                    break;
+                                case TAG:
+                                    searchRepository.getSearchResultWithTagNoLimit(user.getId(), categoryName)
+                                            .forEach(
+                                                    diary -> {
+                                                        diaryList.add(createTimeLineDiaryDTO(user, diary));
+                                                    }
+                                            );
+                                    break;
+                            }
+                            addDiarySearchResponseDTO(diarySearchResponseDTOList, categoryName, diaryList, categoryType);
+                        }
+                );
         return diarySearchResponseDTOList;
     }
 
@@ -205,11 +176,4 @@ public class SearchService {
         diarySearchResponseDTOList.add(diarySearchResponseDTO);
     }
 
-    private void addDiarySearchResponseMap(final LinkedMultiValueMap<Pair, TimelineDiaryDTO> map, final Pair pair, final TimelineDiaryDTO timelineDiaryDTO) {
-        if (!map.containsKey(pair)) {
-            map.add(pair, timelineDiaryDTO);
-        } else {
-            map.get(pair).add(timelineDiaryDTO);
-        }
-    }
 }
