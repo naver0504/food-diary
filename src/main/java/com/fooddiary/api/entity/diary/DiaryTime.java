@@ -70,41 +70,8 @@ public enum DiaryTime {
             diaryTimeList.add(DiaryTime.ETC);
         }
         return diaryTimeList;
-        //        if(searchCond.contains("아")){
-//            if ("아침".contains(searchCond)) {
-//                diaryTimeList.add(DiaryTime.BREAKFAST);
-//            }
-//            if ("아점".contains(searchCond)) {
-//                diaryTimeList.add(DiaryTime.BRUNCH);
-//            }
-//            return diaryTimeList;
-//        }
-//        if(searchCond.contains("점")){
-//            if ("점심".contains(searchCond)) {
-//                diaryTimeList.add(DiaryTime.LUNCH);
-//            }
-//            if ("점저".contains(searchCond)) {
-//                diaryTimeList.add(DiaryTime.LINNER);
-//            }
-//            return diaryTimeList;
-//        }
-//        if(searchCond.contains("저")){
-//            if ("점저".contains(searchCond)) {
-//                diaryTimeList.add(DiaryTime.LINNER);
-//            }
-//            if ("저녁".contains(searchCond)) {
-//                diaryTimeList.add(DiaryTime.DINNER);
-//            }
-//            return diaryTimeList;
-//        }
     }
 
-    public static boolean isDiaryTime(final String time) {
-        return Arrays.stream(values())
-                .filter(diaryTime -> diaryTime.name().equals(time))
-                .findFirst()
-                .isPresent();
-    }
     public String getCode() {
         return code;
     }
