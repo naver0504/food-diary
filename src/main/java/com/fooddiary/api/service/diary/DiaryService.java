@@ -11,15 +11,11 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.fooddiary.api.FileStorageService;
 import com.fooddiary.api.common.util.ImageUtils;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
-import com.fooddiary.api.dto.response.diary.DiaryMemoResponseDTO;
-import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
-import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
-import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
+import com.fooddiary.api.dto.response.diary.*;
 import com.fooddiary.api.entity.diary.*;
 import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.repository.ImageRepository;
-import com.fooddiary.api.repository.diary.DiaryTagRepository;
-import com.fooddiary.api.repository.diary.TagRepository;
+import com.fooddiary.api.repository.diary.*;
 import com.fooddiary.api.service.ImageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,8 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.diary.PlaceInfoDTO;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;
-import com.fooddiary.api.repository.diary.DiaryRepository;
 
 import lombok.RequiredArgsConstructor;
 

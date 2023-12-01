@@ -154,13 +154,22 @@ public class ImageService {
         try {
             bytes = fileStorageService.getObject(dirPath + image.getStoredFileName());
         } catch (IOException e) {
-            log.error("IOException ", e);
             throw new RuntimeException(e);
         }
         final ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
         imageResponseDTO.setImageId(image.getId());
         imageResponseDTO.setBytes(bytes);
         return imageResponseDTO;
+    }
+
+    public byte[] getImage(final String fileName, final User user) {
+        final String dirPath = ImageUtils.getDirPath(basePath, user);
+        try {
+            return fileStorageService.getObject(dirPath + fileName);
+        } catch (IOException e) {
+            log.error("IOException ", e);
+            throw new RuntimeException(e);
+        }
     }
 
     public void updateImage(final long imageId, final MultipartFile file, final User user) {

@@ -1,7 +1,9 @@
 package com.fooddiary.api.entity.diary;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public enum DiaryTime {
     BREAKFAST("breakfast"), BRUNCH("brunch"),LUNCH("lunch"), SNACK("snack"),
@@ -39,6 +41,35 @@ public enum DiaryTime {
         } else {
             return DiaryTime.DINNER;
         }
+    }
+
+    public static List<DiaryTime> getTime(final String searchCond) {
+        List<DiaryTime> diaryTimeList = new ArrayList<>();
+        if ("아침".contains(searchCond)) {
+            diaryTimeList.add(DiaryTime.BREAKFAST);
+        }
+        if ("아점".contains(searchCond)) {
+            diaryTimeList.add(DiaryTime.BRUNCH);
+        }
+        if ("점심".contains(searchCond)) {
+            diaryTimeList.add(DiaryTime.LUNCH);
+        }
+        if ("점저".contains(searchCond)) {
+            diaryTimeList.add(DiaryTime.LINNER);
+        }
+        if ("저녁".contains(searchCond)) {
+            diaryTimeList.add(DiaryTime.DINNER);
+        }
+        if ("간식".contains(searchCond)) {
+            diaryTimeList.add(DiaryTime.SNACK);
+        }
+        if ("야식".contains(searchCond)) {
+            diaryTimeList.add(DiaryTime.LATESNACK);
+        }
+        if ("기타".contains(searchCond)) {
+            diaryTimeList.add(DiaryTime.ETC);
+        }
+        return diaryTimeList;
     }
 
     public String getCode() {

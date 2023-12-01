@@ -1,7 +1,5 @@
 package com.fooddiary.api.common.config;
 
-import java.util.List;
-
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.diary.DiaryTimeConverter;
 
