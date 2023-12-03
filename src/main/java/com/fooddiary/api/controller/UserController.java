@@ -9,6 +9,7 @@ import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
 import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
+import com.fooddiary.api.dto.response.diary.DiaryStatisticsQueryDslResponseDTO;
 import com.fooddiary.api.dto.response.user.RefreshTokenResponseDTO;
 import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
@@ -105,5 +106,15 @@ public class UserController {
     public ResponseEntity<Void> logout(HttpServletRequest request) throws IOException, InterruptedException {
         userService.logout(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY));
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 식사일기의 식사시간 통계 정보를 출력합니다.
+     * @param user 스프링 SecurityContextHolder에 저장된 사용자 정보(https://docs.spring.io/spring-security/reference/servlet/integrations/mvc.html#mvc-authentication-principal)
+     * @return
+     */
+    @GetMapping("/statistics")
+    public ResponseEntity<DiaryStatisticsQueryDslResponseDTO> statistics(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(userService.getStatistics(user.getId()));
     }
 }
