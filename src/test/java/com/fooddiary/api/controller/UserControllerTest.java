@@ -7,10 +7,12 @@ import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
 import com.fooddiary.api.dto.response.ErrorResponseDTO;
+import com.fooddiary.api.dto.response.diary.DiaryStatisticsQueryDslResponseDTO;
 import com.fooddiary.api.dto.response.user.RefreshTokenResponseDTO;
 import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
 import com.fooddiary.api.dto.response.user.UserNewPasswordResponseDTO;
 import com.fooddiary.api.dto.response.user.UserResponseDTO;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
@@ -96,6 +98,10 @@ public class UserControllerTest {
         SecurityContextHolder.setContext(securityContext);
     }
 
+    /**
+     * 사용자 권한 확인 API 문서
+     * @throws Exception
+     */
     @Test
     void user_info() throws Exception {
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -114,6 +120,10 @@ public class UserControllerTest {
         Assertions.assertEquals(servletResponse, objectMapper.writeValueAsString(userInfoResponseDTO));
     }
 
+    /**
+     * 로그인 확인 API 문서
+     * @throws Exception
+     */
     @Test
     void is_login() throws Exception {
         given(userService.getValidUser(anyString(), anyString())).willReturn(new User());
@@ -125,6 +135,10 @@ public class UserControllerTest {
                .andDo(document("is login"));
     }
 
+    /**
+     * 전용계정 생성 API 문서
+     * @throws Exception
+     */
     @Test
     void create_user() throws Exception {
         final UserResponseDTO userResponseDto = new UserResponseDTO();
@@ -218,6 +232,10 @@ public class UserControllerTest {
                                 objectMapper.writeValueAsString(errorResponseDto));
     }
 
+    /**
+     * 전용계정의 비밀번호 초기화 API 문서
+     * @throws Exception
+     */
     @Test
     void reset_password() throws Exception {
         final String email = "jasuil@daum.net";
@@ -237,6 +255,10 @@ public class UserControllerTest {
                .andDo(document("reset password"));
     }
 
+    /**
+     * 전용계정의 비밀번호 수정 API 문서
+     * @throws Exception
+     */
     @Test
     void new_password() throws Exception {
         final String password = "Food1234@!";
@@ -280,6 +302,10 @@ public class UserControllerTest {
                                 objectMapper.writeValueAsString(userNewPasswordResponseDTO));
     }
 
+    /**
+     * 토큰 갱신 API 문서
+     * @throws Exception
+     */
     @Test
     void refresh_token() throws Exception {
         final LocalDateTime now = LocalDateTime.now();
@@ -304,6 +330,10 @@ public class UserControllerTest {
 
     }
 
+    /**
+     * 로그아웃 API 문서
+     * @throws Exception
+     */
     @Test
     void logout() throws Exception {
         mockMvc.perform(post("/user/logout")
@@ -314,6 +344,10 @@ public class UserControllerTest {
                .andDo(document("logout"));
     }
 
+    /**
+     * google 로그인 콜백 API 문서
+     * @throws Exception
+     */
     @Test
     void google_login_callback() throws Exception {
         mockMvc.perform(get("/user/google-login-callback?code=googleAuthToken")
@@ -322,6 +356,36 @@ public class UserControllerTest {
                                 )
                .andExpect(status().isOk())
                .andDo(document("google login callback"));
+    }
+
+    /**
+     * 일기 통계 API 문서
+     * @throws Exception
+     */
+    @Test
+    void statistics() throws Exception {
+        DiaryStatisticsQueryDslResponseDTO responseDTO = new DiaryStatisticsQueryDslResponseDTO();
+        List<DiaryStatisticsQueryDslResponseDTO.DiarySubStatistics> diarySubStatisticsList = new ArrayList<>();
+
+        DiaryStatisticsQueryDslResponseDTO.DiarySubStatistics diarySubStatistics = new DiaryStatisticsQueryDslResponseDTO.DiarySubStatistics(DiaryTime.BREAKFAST, 2L);
+        diarySubStatisticsList.add(diarySubStatistics);
+        diarySubStatistics = new DiaryStatisticsQueryDslResponseDTO.DiarySubStatistics(DiaryTime.LINNER, 1L);
+        diarySubStatisticsList.add(diarySubStatistics);
+
+        responseDTO.setDiarySubStatisticsList(diarySubStatisticsList);
+        responseDTO.setTotalCount(3L);
+
+        given(userService.getStatistics(principal.getId())).willReturn(responseDTO);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(get("/user/statistics")
+                        .contentType(
+                        MediaType.APPLICATION_JSON).headers(makeHeader())
+                )
+                .andExpectAll(status().isOk(),
+                        content().json(objectMapper.writeValueAsString(responseDTO)))
+                .andDo(document("diary statistics"));
     }
 
 }
