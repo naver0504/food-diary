@@ -21,7 +21,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
             select u.category as categoryName, categoryType from (
             (select d1.diary_time as category, count(diary_time) as c, 'DIARY_TIME' as categoryType from diary as d1 where d1.user_id = :userId group by d1.diary_time ) 
             union all
-            (select d2.place as category, count(d2.place), 'PLACE' as categoryType as c from diary as d2 where d2.user_id = :userId and d2.place is not null group by d2.place )
+            (select d2.place as category, count(d2.place)  as c, 'PLACE' as categoryType from diary as d2 where d2.user_id = :userId and d2.place is not null group by d2.place )
             ) as u order by u.c desc
             """, nativeQuery = true)
     List<SearchSQLDTO> getSearchResultWithoutConditionAndTag(@Param("userId") int id, Pageable pageable);
