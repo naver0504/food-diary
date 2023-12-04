@@ -1,19 +1,22 @@
 package com.fooddiary.api.repository.diary;
 
+import com.fooddiary.api.dto.response.diary.DiaryStatisticsQueryDslResponseDTO;
 import com.fooddiary.api.entity.diary.Diary;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.diary.Time;
-import com.fooddiary.api.entity.user.QUser;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.fooddiary.api.entity.diary.QDiary.diary;
-import static com.fooddiary.api.entity.diary.QImage.image;
+
 
 @Repository
 @Slf4j
@@ -54,9 +57,35 @@ return null;
         Integer fetchFirst = jpaQueryFactory
                 .selectOne()
                 .from(diary)
-                .join(diary.user, QUser.user)
+                .where(diary.user.id.eq(userId))
                 .fetchFirst();
 
         return fetchFirst != null;
+    }
+
+    /**
+     * 식사일기의 식사시간 통계 정보를 조회합니다.
+     * @param userId
+     * @return DiaryStatisticsQueryDslReponseDTO
+     */
+    public DiaryStatisticsQueryDslResponseDTO selectDiaryStatistics(final int userId) {
+        DiaryStatisticsQueryDslResponseDTO diaryStatisticsQueryDslReponseDTO = new DiaryStatisticsQueryDslResponseDTO();
+        List<DiaryStatisticsQueryDslResponseDTO.DiarySubStatistics> diarySubStatisticsList = new ArrayList<>();
+        diaryStatisticsQueryDslReponseDTO.setDiarySubStatisticsList(diarySubStatisticsList);
+        AtomicLong totalSum = new AtomicLong();
+        jpaQueryFactory.select(diary.diaryTime, diary.diaryTime.count())
+                .from(diary)
+                .where(diary.user.id.eq(userId))
+                .groupBy(diary.diaryTime)
+                .fetch()
+                .stream()
+                .forEach(tuple -> {
+                    Long count = tuple.get(1, Long.class);
+                    totalSum.getAndAdd(count);
+                    diarySubStatisticsList.add(new DiaryStatisticsQueryDslResponseDTO.DiarySubStatistics(tuple.get(0, DiaryTime.class), count));
+                });
+        diaryStatisticsQueryDslReponseDTO.setTotalCount(totalSum.get());
+
+        return diaryStatisticsQueryDslReponseDTO;
     }
 }

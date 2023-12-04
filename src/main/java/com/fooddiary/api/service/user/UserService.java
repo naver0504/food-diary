@@ -7,9 +7,11 @@ import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
+import com.fooddiary.api.dto.response.diary.DiaryStatisticsQueryDslResponseDTO;
 import com.fooddiary.api.dto.response.user.*;
 import com.fooddiary.api.dto.response.user.KakaoUserInfo.KakaoAccount;
 import com.fooddiary.api.entity.user.*;
+import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;
 import com.fooddiary.api.repository.user.SessionRepository;
 import com.fooddiary.api.repository.user.UserRepository;
 import com.google.api.client.auth.oauth2.TokenResponse;
@@ -77,6 +79,7 @@ public class UserService {
     private final SessionService sessionService;
     private final SessionRepository sessionRepository;
     private final UserResignService userResignService;
+    private final DiaryQuerydslRepository diaryQuerydslRepository;
     private final Environment environment;
     private final String EMAIL_PATTERN = "^(.+)@(\\S+)$";
     @Value("${food-diary.pw-try-limit}")
@@ -410,24 +413,6 @@ public class UserService {
 
         switch (loginFrom) {
             case GOOGLE -> {
-                /*
-                refreshTokenResponseDTO.setRefreshToken(refreshToken); // 로그인할때만 있으므로 받은것을 다시 넣는다.
-                HttpClient client = HttpClient.newBuilder()
-                        .version(HttpClient.Version.HTTP_1_1)
-                        .connectTimeout(Duration.ofSeconds(5))
-                        .proxy(ProxySelector.getDefault())
-                        .build();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://oauth2.googleapis.com/tokeninfo?access_token=" + accessToken))
-                        .build();
-                HttpResponse<String> tokenResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (tokenResponse.statusCode() != HttpServletResponse.SC_OK) { // 엑세스 토큰이 만료되었다면
-                    TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
-                    refreshTokenResponseDTO.setToken(response.getAccessToken());
-                    refreshTokenResponseDTO.setTokenExpireAt(response.getExpiresInSeconds());
-                }
-
-                 */
                 try { // https://developers.google.com/identity/protocols/oauth2/web-server?hl=ko#httprest_7  직접 rest api호출(POST https://oauth2.googleapis.com/token)도 가능하나. 제공하는 library를 써봤습니다.
                     TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new GsonFactory(), refreshToken, GOOGLE_AUTH_WEB_CLIENT_ID, GOOGLE_AUTH_WEB_CLIENT_SECRET).execute();
                     refreshTokenResponseDTO.setToken(response.getAccessToken());
@@ -438,61 +423,6 @@ public class UserService {
                 }
             }
             case KAKAO -> {
-                /*
-                HttpClient client = HttpClient.newBuilder()
-                        .version(HttpClient.Version.HTTP_1_1)
-                        .connectTimeout(Duration.ofSeconds(5))
-                        .proxy(ProxySelector.getDefault())
-                        .build();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://kapi.kakao.com/v1/user/access_token_info"))
-                        .header("Authorization", "Bearer " + accessToken)
-                        .build();
-                ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                boolean isRefresh = false;
-                if (response.statusCode() == HttpServletResponse.SC_BAD_REQUEST) {
-                    KakaoKapiErrorResponseDTO kakaoKapiErrorResponseDTO = objectMapper.readValue(response.body(), KakaoKapiErrorResponseDTO.class);
-                    if (kakaoKapiErrorResponseDTO.getCode() == -1) {
-                        throw new IOException("KAKAO_SEVER_ERROR");
-                    } else {
-                        throw new BizException("INVALID_FORMAT");
-                    }
-                } else if (response.statusCode() == HttpServletResponse.SC_UNAUTHORIZED) {
-                    isRefresh = true;
-                }
-                objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                KakaoTokenInfoResponseDTO kakaoTokenInfoResponseDTO = objectMapper.readValue(response.body(), KakaoTokenInfoResponseDTO.class);
-                if (kakaoTokenInfoResponseDTO.getExpires_in() <= 1) {
-                    isRefresh = true;
-                }
-
-                if (isRefresh) {
-                    Map<String, String> parameters = new HashMap<>();
-                    parameters.put("grant_type", "refresh_token");
-                    parameters.put("client_id", KAKAO_SERVICE_APP_KEY);
-                    parameters.put("refresh_token", refreshToken);
-
-                    String form = parameters.entrySet()
-                                            .stream()
-                                            .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
-                                            .collect(Collectors.joining("&"));
-
-                    request = HttpRequest.newBuilder()
-                            .uri(URI.create("https://kauth.kakao.com/oauth/token"))
-                            .header("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
-                            .POST(HttpRequest.BodyPublishers.ofString(form))
-                            .build();
-                    response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                    KakaoTokenResponseDTO kakaoTokenResponseDTO = objectMapper.readValue(response.body(), KakaoTokenResponseDTO.class);
-                    refreshTokenResponseDTO.setToken(kakaoTokenResponseDTO.getAccess_token());
-                    refreshTokenResponseDTO.setTokenExpireAt((long) kakaoTokenResponseDTO.getExpires_in()); // 참고용 정보임
-                    refreshTokenResponseDTO.setRefreshToken(kakaoTokenResponseDTO.getRefresh_token());
-                }
-                */
-
                 Map<String, String> parameters = new HashMap<>();
                 parameters.put("grant_type", "refresh_token");
                 parameters.put("client_id", KAKAO_SERVICE_APP_KEY);
@@ -757,5 +687,9 @@ public class UserService {
                 }
             }
         }
+    }
+
+    public DiaryStatisticsQueryDslResponseDTO getStatistics(int userId) {
+        return diaryQuerydslRepository.selectDiaryStatistics(userId);
     }
 }
