@@ -35,7 +35,7 @@ public class TimelineService {
 
         dateList.forEach(d -> diaryList.addAll(timelineRepository.getTimeLineDiaryWithLatestImage(user.getId(),
                                                                LocalDate.parse(d.getDate(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay(),
-                                                               LocalDate.parse(d.getDate(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().plusDays(1).minusNanos(1L),
+                                                               LocalDate.parse(d.getDate(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().plusDays(1).minusSeconds(1L).withNano(999999000),
                          PageRequest.of(0, 5))));
 
         List<TimeLineResponseDTO> timeLineResponseDTOList = new ArrayList<>();
@@ -81,7 +81,7 @@ public class TimelineService {
         List<TimelineDiaryDTO> timelineDiaryDTOList = new ArrayList<>();
         List<TimelineDiaryImageSQLDTO> diaryList = timelineRepository.getTimeLineDiaryWithLatestImage(user.getId(),
                                                            date.atStartOfDay(),
-                                                           date.atStartOfDay().plusDays(1).minusNanos(1L),
+                                                           date.atStartOfDay().plusDays(1).minusSeconds(1L).withNano(999999000),
                                                            PageRequest.of(offset, 5));
 
         diaryList.forEach(diary -> {
