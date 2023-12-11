@@ -103,13 +103,7 @@ public class SearchService {
         final List<String> diaryTimeList = DiaryTime.getTime(searchCond).stream().map(DiaryTime::name).collect(Collectors.toList());
         final String condition = "%" + searchCond + "%";
         final List<SearchSQLDTO> searchResultWithCondition;
-        try {
-            searchResultWithCondition = searchRepository.getSearchResultWithCondition(user.getId(), condition, diaryTimeList);
-        } catch (IllegalArgumentException e) {
-            log.error("검색 결과가 없습니다. searchCond : {}", searchCond);
-            return diarySearchResponseDTOList;
-        }
-
+        searchResultWithCondition = searchRepository.getSearchResultWithCondition(user.getId(), condition, diaryTimeList);
         searchResultWithCondition
                 .forEach(
                         searchSQLDTO -> {
