@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,9 +47,29 @@ return null;
 
     }
 
-    public Map<String, Time> getBeforeAndAfterTime(final int year, final int month, final int day, final int userId) {
-        final Map<String, Time> timeMap = new HashMap<>();
+    public Map<String, LocalDateTime> getBeforeAndAfterTime(final int year, final int month, final int day, final int userId) {
+        final Map<String, LocalDateTime> timeMap = new HashMap<>();
 
+        final LocalDateTime beforeTime = jpaQueryFactory.select(diary.createTime)
+                                                        .from(diary)
+                                                        .where(diary.user.id.eq(userId),
+                                                      diary.createTime
+                                                              .before(Time.getDateWithMinTime(year, month, day))
+                                               )
+                                                        .orderBy(diary.createTime.desc())
+                                                        .fetchFirst();
+
+        timeMap.put("before", beforeTime);
+
+        final LocalDateTime AfterTime = jpaQueryFactory.select(diary.createTime).distinct()
+                                              .from(diary)
+                                              .where(diary.user.id.eq(userId),
+                                                     diary.createTime
+                                                             .after(Time.getDateWithMaxTime(year, month, day)))
+                                              .orderBy(diary.createTime.asc())
+                                              .fetchFirst();
+
+        timeMap.put("after", AfterTime);
 
         return timeMap;
     }

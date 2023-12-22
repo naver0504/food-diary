@@ -232,14 +232,14 @@ public class DiaryService {
         final HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
         homeDayResponseDTO.setHomeDayList(homeDayList);
 
-        final Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
+        final Map<String, LocalDateTime> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
         if (timeMap.get("before") != null) {
-            final Time before = timeMap.get("before");
-            homeDayResponseDTO.setBeforeDay(LocalDate.of(before.getYear(), before.getMonth(), before.getDay()));
+            final LocalDateTime before = timeMap.get("before");
+            homeDayResponseDTO.setBeforeDay(LocalDate.of(before.getYear(), before.getMonth(), before.getDayOfMonth()));
         }
         if (timeMap.get("after") != null) {
-            final Time after = timeMap.get("after");
-            homeDayResponseDTO.setAfterDay(LocalDate.of(after.getYear(), after.getMonth(), after.getDay()));
+            final LocalDateTime after = timeMap.get("after");
+            homeDayResponseDTO.setAfterDay(LocalDate.of(after.getYear(), after.getMonth(), after.getDayOfMonth()));
         }
 
         return homeDayResponseDTO;
