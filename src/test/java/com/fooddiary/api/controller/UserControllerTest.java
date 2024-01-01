@@ -83,7 +83,13 @@ public class UserControllerTest {
     @BeforeEach
     public void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                                 .apply(documentationConfiguration(restDocumentation)).build();
+                .apply(documentationConfiguration(restDocumentation)
+                        .uris()
+                        .withHost("www.myfooddiarybook.click")
+                        .withScheme("https")
+                        .withPort(443)
+                ).build();
+
         given(interceptor.preHandle(any(), any(), any())).willReturn(true);
 
         principal = new User();

@@ -63,7 +63,12 @@ public class TimelineControllerTest {
     @BeforeEach
     void setUp(RestDocumentationContextProvider restDocumentation) {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(documentationConfiguration(restDocumentation)).build();
+                .apply(documentationConfiguration(restDocumentation)
+                        .uris()
+                        .withHost("www.myfooddiarybook.click")
+                        .withScheme("https")
+                        .withPort(443)
+                ).build();
 
         principal = new User();
         principal.setEmail("test@test.com");

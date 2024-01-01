@@ -83,7 +83,12 @@ public class SearchControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(documentationConfiguration(restDocumentation)).build();
+                .apply(documentationConfiguration(restDocumentation)
+                        .uris()
+                        .withHost("www.myfooddiarybook.click")
+                        .withScheme("https")
+                        .withPort(443)
+                ).build();
 
         given(interceptor.preHandle(any(), any(), any())).willReturn(true);
     }
