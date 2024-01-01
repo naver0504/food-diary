@@ -6,11 +6,7 @@ import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.request.diary.PlaceInfoDTO;
-import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
-import com.fooddiary.api.dto.response.diary.DiaryMemoResponseDTO;
-import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
-import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
-import com.fooddiary.api.dto.response.diary.ImageResponseDTO;
+import com.fooddiary.api.dto.response.diary.*;
 import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.diary.DiaryService;
@@ -60,12 +56,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
 public class DiaryControllerTest {
 
+    static User principal;
     @MockBean
     Interceptor interceptor;
     @Autowired
     WebApplicationContext context;
     MockMvc mockMvc;
-    static User principal;
     @MockBean
     DiaryService diaryService;
 
@@ -84,7 +80,12 @@ public class DiaryControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(documentationConfiguration(restDocumentation)).build();
+                .apply(documentationConfiguration(restDocumentation)
+                        .uris()
+                        .withHost("www.myfooddiarybook.click")
+                        .withScheme("https")
+                        .withPort(443)
+                ).build();
 
         given(interceptor.preHandle(any(), any(), any())).willReturn(true);
     }
