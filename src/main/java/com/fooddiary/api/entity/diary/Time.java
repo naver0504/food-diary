@@ -28,7 +28,7 @@ public class Time {
     }
 
     public static LocalDateTime getDateWithMaxTime(final int year, final int month, final int day) {
-        return LocalDateTime.of(year, month, day, 23, 59, 59, 999999999);
+        return LocalDateTime.of(year, month, day, 23, 59, 59, 999999000); // mySQL의 기본값은 microseconds 이므로 6자리입니다.
     }
 
     public static String getDayOfWeek(final Time time) {

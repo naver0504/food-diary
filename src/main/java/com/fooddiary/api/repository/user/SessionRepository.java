@@ -9,6 +9,7 @@ import com.fooddiary.api.entity.user.Session;
 public interface SessionRepository extends JpaRepository<Session, Integer> {
 
     Session findByToken(String token);
+    Session findByRefreshToken(String refreshToken);
 
-    Session findByTokenAndTerminateAtGreaterThanEqual(String token, LocalDateTime TerminateAt);
+    Session findByTokenAndTokenTerminateAtGreaterThanEqual(String token, LocalDateTime TerminateAt);
 }

@@ -63,12 +63,17 @@ class NoticeControllerTest {
     @BeforeEach
     void setUp(RestDocumentationContextProvider restDocumentation) throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                                 .apply(documentationConfiguration(restDocumentation)).build();
+                .apply(documentationConfiguration(restDocumentation)
+                        .uris()
+                        .withHost("www.myfooddiarybook.click")
+                        .withScheme("https")
+                        .withPort(443)
+                ).build();
         given(interceptor.preHandle(any(), any(), any())).willReturn(true);
     }
 
     @Test
-    void getMoreNoticeList() throws Exception {
+    void get_more_notice_list() throws Exception {
         final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
         when(noticeService.getMoreNoticeList(any(NoticeGetListRequestDTO.class))).thenReturn(noticeResponseDTO);
         final String param = "?startId=0&size=10";
@@ -88,7 +93,7 @@ class NoticeControllerTest {
     }
 
     @Test
-    void newNotice() throws Exception {
+    void new_notice() throws Exception {
         final NoticeNewRequestDTO noticeNewRequestDTO = new NoticeNewRequestDTO();
         noticeNewRequestDTO.setTitle("[공지]신규 기능 베타버전 출시");
         noticeNewRequestDTO.setContent("친구 추가하고 친구가 공유한 일기에 좋아요 및 댓글 기능이 추가되었습니다. 해당 기능은 실험실 메뉴에서 이용가능합니다.");
@@ -115,7 +120,7 @@ class NoticeControllerTest {
     }
 
     @Test
-    void modifyNotice() throws Exception {
+    void modify_notice() throws Exception {
         final NoticeModifyRequestDTO noticeModifyRequestDTO = new NoticeModifyRequestDTO();
         noticeModifyRequestDTO.setId(1);
         noticeModifyRequestDTO.setTitle("[공지]신규 기능 베타버전 출시");
@@ -146,7 +151,7 @@ class NoticeControllerTest {
     }
 
     @Test
-    void getPagingNotice() throws Exception {
+    void get_paging_notice() throws Exception {
         final NoticeResponseDTO noticeResponseDTO = makeNoticeList();
         final String title = noticeResponseDTO.getList().get(0).getTitle().substring(0, 2);
         final String param = "?page=0&size=10&title=" + title;
@@ -173,7 +178,7 @@ class NoticeControllerTest {
     }
 
     @Test
-    void deleteNotice() throws Exception {
+    void delete_notice() throws Exception {
         willDoNothing().given(noticeService).deleteNotice(eq(1));
         mockMvc.perform(delete("/notice/{noticeId}", 1)
                 .contentType(MediaType.APPLICATION_JSON).headers(makeHeader()))

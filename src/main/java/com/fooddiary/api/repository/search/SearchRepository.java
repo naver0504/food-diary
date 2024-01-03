@@ -47,7 +47,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select  d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            select  d.id, x.thumbnail_file_name as thumbnailFileName from diary as d 
             inner join 
             ( 
                 select diary_id, thumbnail_file_name, update_at,
@@ -63,7 +63,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select  d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            select  d.id, x.thumbnail_file_name as thumbnailFileName from diary as d 
             inner join 
             ( 
                 select diary_id, thumbnail_file_name, update_at,
@@ -78,7 +78,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select  d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            select  d.id, x.thumbnail_file_name as thumbnailFileName from diary as d 
             inner join 
             ( 
                 select diary_id, thumbnail_file_name, update_at,
@@ -94,7 +94,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            select d.id, x.thumbnail_file_name as thumbnailFileName from diary as d 
             inner join 
             ( 
                 select diary_id, thumbnail_file_name, update_at,  
@@ -110,7 +110,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            select d.id, x.thumbnail_file_name as thumbnailFileName from diary as d 
             inner join 
             ( 
                 select diary_id, thumbnail_file_name, update_at,  
@@ -128,7 +128,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select d.id, d.place, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            select d.id, d.place, x.thumbnail_file_name as thumbnailFileName from diary as d 
             inner join 
             ( 
                 select diary_id, thumbnail_file_name, update_at,  
@@ -142,7 +142,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select d.id, t.tag_name as tagName, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            select d.id, t.tag_name as tagName, x.thumbnail_file_name as thumbnailFileName from diary as d 
             inner join 
             ( 
                 select diary_id, thumbnail_file_name, update_at,  
@@ -158,7 +158,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
 
     @Query(
             value = """
-            select d.id, x.thumbnail_file_name as thumbnailFileName from Diary as d 
+            select d.id, x.thumbnail_file_name as thumbnailFileName from diary as d 
             inner join 
             ( 
                 select diary_id, thumbnail_file_name, update_at,

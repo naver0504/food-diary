@@ -52,7 +52,7 @@ public class DiaryService {
     public void createDiary(final List<MultipartFile> files, final LocalDate createDate, final PlaceInfoDTO placeInfoDTO,
                             final User user) {
         final LocalDateTime startDate = createDate.atStartOfDay();
-        final LocalDateTime endDate = createDate.plusDays(1L).atStartOfDay().minusNanos(1L);
+        final LocalDateTime endDate = createDate.plusDays(1L).atStartOfDay().minusSeconds(1L).withNano(999999000);
         final int todayDiaryCount = diaryRepository.getByYearAndMonthAndDayCount(startDate, endDate,
                                                                                  user.getId());
 
@@ -191,7 +191,7 @@ public class DiaryService {
     public List<HomeResponseDTO> getHome(final YearMonth yearMonth, final User user) throws IOException {
         final List<HomeResponseDTO> homeResponseDTOList = new LinkedList<>();
         final LocalDateTime startDate = yearMonth.atDay(1).atStartOfDay();
-        final LocalDateTime endDate = yearMonth.atEndOfMonth().plusDays(1L).atStartOfDay().minusNanos(1L);
+        final LocalDateTime endDate = yearMonth.atEndOfMonth().plusDays(1L).atStartOfDay().minusSeconds(1L).withNano(999999000);
         final List<Diary> diaryList = diaryRepository.findByYearAndMonth(startDate, endDate, user.getId());
         for (Diary diary : diaryList) {
             if (!diary.getImages().isEmpty()) {
@@ -209,7 +209,7 @@ public class DiaryService {
     public HomeDayResponseDTO getHomeDay(final LocalDate date, final User user) {
         final List<HomeDayResponseDTO.HomeDay> homeDayList = new LinkedList<>();
         final LocalDateTime startDate = date.atStartOfDay();
-        final LocalDateTime endDate = date.plusDays(1).atStartOfDay().minusNanos(1L);
+        final LocalDateTime endDate = date.plusDays(1).atStartOfDay().minusSeconds(1L).withNano(999999000);
         final List<Diary> diaryList = diaryRepository.findByYearAndMonthAndDay(startDate, endDate, user.getId());
 
         for (Diary diary : diaryList) {
@@ -232,14 +232,14 @@ public class DiaryService {
         final HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
         homeDayResponseDTO.setHomeDayList(homeDayList);
 
-        final Map<String, Time> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
+        final Map<String, LocalDateTime> timeMap =  diaryQuerydslRepository.getBeforeAndAfterTime(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), user.getId());
         if (timeMap.get("before") != null) {
-            final Time before = timeMap.get("before");
-            homeDayResponseDTO.setBeforeDay(LocalDate.of(before.getYear(), before.getMonth(), before.getDay()));
+            final LocalDateTime before = timeMap.get("before");
+            homeDayResponseDTO.setBeforeDay(LocalDate.of(before.getYear(), before.getMonth(), before.getDayOfMonth()));
         }
         if (timeMap.get("after") != null) {
-            final Time after = timeMap.get("after");
-            homeDayResponseDTO.setAfterDay(LocalDate.of(after.getYear(), after.getMonth(), after.getDay()));
+            final LocalDateTime after = timeMap.get("after");
+            homeDayResponseDTO.setAfterDay(LocalDate.of(after.getYear(), after.getMonth(), after.getDayOfMonth()));
         }
 
         return homeDayResponseDTO;

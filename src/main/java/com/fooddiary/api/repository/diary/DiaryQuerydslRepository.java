@@ -1,15 +1,20 @@
 package com.fooddiary.api.repository.diary;
 
+import com.fooddiary.api.dto.response.diary.DiaryStatisticsQueryDslResponseDTO;
 import com.fooddiary.api.entity.diary.Diary;
+import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.diary.Time;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.fooddiary.api.entity.diary.QDiary.diary;
 
@@ -42,9 +47,29 @@ return null;
 
     }
 
-    public Map<String, Time> getBeforeAndAfterTime(final int year, final int month, final int day, final int userId) {
-        final Map<String, Time> timeMap = new HashMap<>();
+    public Map<String, LocalDateTime> getBeforeAndAfterTime(final int year, final int month, final int day, final int userId) {
+        final Map<String, LocalDateTime> timeMap = new HashMap<>();
 
+        final LocalDateTime beforeTime = jpaQueryFactory.select(diary.createTime)
+                                                        .from(diary)
+                                                        .where(diary.user.id.eq(userId),
+                                                      diary.createTime
+                                                              .before(Time.getDateWithMinTime(year, month, day))
+                                               )
+                                                        .orderBy(diary.createTime.desc())
+                                                        .fetchFirst();
+
+        timeMap.put("before", beforeTime);
+
+        final LocalDateTime AfterTime = jpaQueryFactory.select(diary.createTime).distinct()
+                                              .from(diary)
+                                              .where(diary.user.id.eq(userId),
+                                                     diary.createTime
+                                                             .after(Time.getDateWithMaxTime(year, month, day)))
+                                              .orderBy(diary.createTime.asc())
+                                              .fetchFirst();
+
+        timeMap.put("after", AfterTime);
 
         return timeMap;
     }
@@ -57,5 +82,31 @@ return null;
                 .fetchFirst();
 
         return fetchFirst != null;
+    }
+
+    /**
+     * 식사일기의 식사시간 통계 정보를 조회합니다.
+     * @param userId
+     * @return DiaryStatisticsQueryDslReponseDTO
+     */
+    public DiaryStatisticsQueryDslResponseDTO selectDiaryStatistics(final int userId) {
+        DiaryStatisticsQueryDslResponseDTO diaryStatisticsQueryDslReponseDTO = new DiaryStatisticsQueryDslResponseDTO();
+        List<DiaryStatisticsQueryDslResponseDTO.DiarySubStatistics> diarySubStatisticsList = new ArrayList<>();
+        diaryStatisticsQueryDslReponseDTO.setDiarySubStatisticsList(diarySubStatisticsList);
+        AtomicLong totalSum = new AtomicLong();
+        jpaQueryFactory.select(diary.diaryTime, diary.diaryTime.count())
+                .from(diary)
+                .where(diary.user.id.eq(userId))
+                .groupBy(diary.diaryTime)
+                .fetch()
+                .stream()
+                .forEach(tuple -> {
+                    Long count = tuple.get(1, Long.class);
+                    totalSum.getAndAdd(count);
+                    diarySubStatisticsList.add(new DiaryStatisticsQueryDslResponseDTO.DiarySubStatistics(tuple.get(0, DiaryTime.class), count));
+                });
+        diaryStatisticsQueryDslReponseDTO.setTotalCount(totalSum.get());
+
+        return diaryStatisticsQueryDslReponseDTO;
     }
 }

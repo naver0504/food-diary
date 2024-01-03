@@ -63,7 +63,12 @@ public class TimelineControllerTest {
     @BeforeEach
     void setUp(RestDocumentationContextProvider restDocumentation) {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(documentationConfiguration(restDocumentation)).build();
+                .apply(documentationConfiguration(restDocumentation)
+                        .uris()
+                        .withHost("www.myfooddiarybook.click")
+                        .withScheme("https")
+                        .withPort(443)
+                ).build();
 
         principal = new User();
         principal.setEmail("test@test.com");
@@ -78,7 +83,7 @@ public class TimelineControllerTest {
     }
 
     @Test
-    void timelineShow() throws Exception {
+    void timeline_show() throws Exception {
         final List<TimeLineResponseDTO> timeLineResponseDTOList = new ArrayList<>();
         final TimeLineResponseDTO timeLineResponseDTO = new TimeLineResponseDTO();
         timeLineResponseDTO.setDate(LocalDate.now());
@@ -115,7 +120,7 @@ public class TimelineControllerTest {
     }
 
     @Test
-    void showMoreDiary() throws Exception {
+    void show_more_diary() throws Exception {
         final List<TimelineDiaryDTO> timelineDiaryDTOList = new ArrayList<>();
         final TimelineDiaryDTO timelineDiaryDTO = new TimelineDiaryDTO();
         timelineDiaryDTO.setDiaryId(1);

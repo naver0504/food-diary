@@ -6,11 +6,7 @@ import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.request.diary.PlaceInfoDTO;
-import com.fooddiary.api.dto.response.diary.DiaryDetailResponseDTO;
-import com.fooddiary.api.dto.response.diary.DiaryMemoResponseDTO;
-import com.fooddiary.api.dto.response.diary.HomeDayResponseDTO;
-import com.fooddiary.api.dto.response.diary.HomeResponseDTO;
-import com.fooddiary.api.dto.response.diary.ImageResponseDTO;
+import com.fooddiary.api.dto.response.diary.*;
 import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.diary.DiaryService;
@@ -60,12 +56,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith({ RestDocumentationExtension.class, SpringExtension.class })
 public class DiaryControllerTest {
 
+    static User principal;
     @MockBean
     Interceptor interceptor;
     @Autowired
     WebApplicationContext context;
     MockMvc mockMvc;
-    static User principal;
     @MockBean
     DiaryService diaryService;
 
@@ -84,13 +80,18 @@ public class DiaryControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(documentationConfiguration(restDocumentation)).build();
+                .apply(documentationConfiguration(restDocumentation)
+                        .uris()
+                        .withHost("www.myfooddiarybook.click")
+                        .withScheme("https")
+                        .withPort(443)
+                ).build();
 
         given(interceptor.preHandle(any(), any(), any())).willReturn(true);
     }
 
     @Test
-    void getHome() throws Exception {
+    void get_home() throws Exception {
         final String param = YearMonth.now().toString();
 
         final List<HomeResponseDTO> responseDTOList = new LinkedList<>();
@@ -118,7 +119,7 @@ public class DiaryControllerTest {
     }
 
     @Test
-    void homeDay() throws Exception {
+    void home_day() throws Exception {
         final String param = LocalDate.now().toString();
 
         final HomeDayResponseDTO homeDayResponseDTO = new HomeDayResponseDTO();
@@ -157,7 +158,7 @@ public class DiaryControllerTest {
     }
 
     @Test
-    void newDiary() throws Exception {
+    void new_diary() throws Exception {
         final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         final MockMultipartFile mockMultipartFile = new MockMultipartFile("files", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
         final MockMultipartFile mockMultipartFile2 = new MockMultipartFile("files", "t2.jpg", "image/jpeg", new byte[]{'i','m','a','g','e','2'});
@@ -182,7 +183,7 @@ public class DiaryControllerTest {
     }
 
     @Test
-    void addImages() throws Exception {
+    void add_images() throws Exception {
         final MockMultipartFile mockMultipartFile = new MockMultipartFile("files", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
         final MockMultipartFile mockMultipartFile2 = new MockMultipartFile("files", "t2.jpg", "image/jpeg", new byte[]{'i','m','a','g','e','2'});
 
@@ -196,7 +197,7 @@ public class DiaryControllerTest {
     }
 
     @Test
-    void updateImage() throws Exception {
+    void update_image() throws Exception {
         final MockMultipartFile mockMultipartFile = new MockMultipartFile("file", "t.jpg", "image/jpeg", new byte[]{'i','m','a','g','e'});
 
         doNothing().when(diaryService).updateImage(any(Integer.class), any(MultipartFile.class), any(User.class));
@@ -212,7 +213,7 @@ public class DiaryControllerTest {
     }
 
     @Test
-    void getDiaryDetail() throws Exception {
+    void get_diary_detail() throws Exception {
         final DiaryDetailResponseDTO diaryDetailResponseDTO = new DiaryDetailResponseDTO();
         setMemo(diaryDetailResponseDTO);
 
@@ -239,7 +240,7 @@ public class DiaryControllerTest {
     }
 
     @Test
-    void getDiaryMemo() throws Exception {
+    void get_diary_demo() throws Exception {
         final DiaryMemoResponseDTO diaryMemoResponseDTO = new DiaryMemoResponseDTO();
         setMemo(diaryMemoResponseDTO);
         diaryMemoResponseDTO.setLatitude(-200D);
@@ -260,7 +261,7 @@ public class DiaryControllerTest {
     }
 
     @Test
-    void updateMemo() throws Exception {
+    void update_memo() throws Exception {
         final DiaryMemoRequestDTO diaryMemoRequestDTO = new DiaryMemoRequestDTO();
         diaryMemoRequestDTO.setMemo("궁금");
         diaryMemoRequestDTO.setDiaryTime(DiaryTime.DINNER);
@@ -288,7 +289,7 @@ public class DiaryControllerTest {
     }
 
     @Test
-    void deleteDiary() throws Exception {
+    void delete_diary() throws Exception {
         mockMvc.perform(delete("/diary/{diaryId}", 1)
                         .headers(makeHeader()))
                 .andExpect(status().isOk())

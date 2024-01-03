@@ -47,7 +47,8 @@ public class SessionRepositoryTest {
 
         final Session session = new Session();
         session.setToken(passwordEncoder.encode(user.getEmail() + LocalDateTime.now().plusDays(1)));
-        session.setTerminateAt(LocalDateTime.now().plusDays(1));
+        session.setTokenTerminateAt(LocalDateTime.now().plusDays(1));
+        session.setRefreshToken(passwordEncoder.encode(user.getEmail() + LocalDateTime.now().plusMonths(1L)));
         session.setUser(user);
 
         sessionRepository.save(session);
@@ -60,7 +61,7 @@ public class SessionRepositoryTest {
         Assertions.assertNotNull(user);
         // fetch lazy
         Assertions.assertEquals(user.getSession().size(), 1);
-        Assertions.assertTrue(sessionRepository.findByToken(session.getToken()).getTerminateAt()
+        Assertions.assertTrue(sessionRepository.findByToken(session.getToken()).getTokenTerminateAt()
                                                .isAfter(LocalDateTime.now()));
     }
 }
