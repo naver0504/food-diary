@@ -1,8 +1,9 @@
 package com.fooddiary.api.controller;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+
+import com.fooddiary.api.dto.response.version.AppVersionResponseDTO;
+import com.fooddiary.api.service.version.VersionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,19 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/app")
+@RequiredArgsConstructor
 public class AppVersionController {
 
-    @AllArgsConstructor
-    @Getter
-    class AppVersion {
-        private String appVersion;
-    }
-
-    @Value("${app.version}")
-    private String appVersion;
+    private final VersionService versionService;
 
     @GetMapping("/version")
-    public ResponseEntity<AppVersion> getVersion() {
-        return ResponseEntity.ok(new AppVersion(appVersion));
+    public ResponseEntity<AppVersionResponseDTO> getVersion() {
+        return ResponseEntity.ok(versionService.getReleaseVersion());
     }
 }
