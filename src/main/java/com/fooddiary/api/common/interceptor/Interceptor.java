@@ -36,7 +36,7 @@ public class Interceptor implements HandlerInterceptor {
             add("/user/login");
             add("/user/is-login");
             add("/user/reset-password");
-            add("/app/version");
+            add("/app/version"); //앱 버전 확인용
         }
     };
 
