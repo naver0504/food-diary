@@ -42,6 +42,5 @@ food-diary:
   pw-try-limit: 5
   pw-reset-size: 8
 
-
 app:
   version: 1.0.0
