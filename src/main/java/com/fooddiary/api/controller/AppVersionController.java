@@ -23,7 +23,6 @@ public class AppVersionController {
 
     @GetMapping("/version")
     public ResponseEntity<AppVersion> getVersion() {
-
         return ResponseEntity.ok(new AppVersion(appVersion));
     }
 }
