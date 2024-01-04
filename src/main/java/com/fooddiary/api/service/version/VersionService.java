@@ -14,11 +14,10 @@ public class VersionService {
     private final VersionRepository versionRepository;
 
     public AppVersionResponseDTO getReleaseVersion() {
-        LocalDateTime now = LocalDateTime.now();
-        String version = versionRepository.findLatestReleaseVersion(now);
+        final LocalDateTime now = LocalDateTime.now();
+        final String version = versionRepository.findLatestReleaseVersion(now);
         return AppVersionResponseDTO.builder()
                 .version(version)
                 .build();
-
     }
 }
