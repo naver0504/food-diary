@@ -21,8 +21,7 @@ public class Version {
     @Column(nullable = false)
     private LocalDateTime releaseAt;
     private boolean isRelease;
-    @Column(updatable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
 
 }
