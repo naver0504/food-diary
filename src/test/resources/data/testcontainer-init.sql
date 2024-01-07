@@ -87,3 +87,11 @@ CREATE TABLE `diary_tag` (
   CONSTRAINT `FKoubxtedj8osbw8j4gksb3jy65` FOREIGN KEY (`tag_id`) REFERENCES `tag` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE `version` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) DEFAULT NULL,
+  `is_release` bit(1) NOT NULL,
+  `release_at` datetime(6) NOT NULL,
+  `version` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
