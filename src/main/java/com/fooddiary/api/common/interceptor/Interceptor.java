@@ -38,6 +38,7 @@ public class Interceptor implements HandlerInterceptor {
             add("/user/login");
             add("/user/is-login");
             add("/user/reset-password");
+            add("/app/version"); //앱 버전 확인용
             add("/user/google-login-callback");
             add("/user/session");
             add("/user/refresh-token");
