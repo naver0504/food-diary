@@ -1,14 +1,16 @@
 package com.fooddiary.api.common.exception;
 
-import com.fooddiary.api.dto.response.ErrorResponseDTO;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
+
+import com.fooddiary.api.dto.response.ErrorResponseDTO;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ControllerAdvice
@@ -25,6 +27,13 @@ public class CommonExceptionHandler {
         log.error("BizException", e);
         final ErrorResponseDTO response = new ErrorResponseDTO(e.getMessage());
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(LoginException.class)
+    protected ResponseEntity<ErrorResponseDTO> RuntimeExceptionHandler(LoginException e) {
+        log.error("LoginTokenException", e);
+        final ErrorResponseDTO response = new ErrorResponseDTO(e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response,

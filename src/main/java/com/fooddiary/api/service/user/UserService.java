@@ -3,6 +3,7 @@ package com.fooddiary.api.service.user;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.exception.BizException;
+import com.fooddiary.api.common.exception.LoginException;
 import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
@@ -262,7 +263,7 @@ public class UserService {
                         throw new BizException(NOT_ACTIVE_USER_KEY);
                     }
                     if (session.getTokenTerminateAt().isBefore(LocalDateTime.now())) {
-                        throw new BizException(LOGIN_REQUEST_KEY);
+                        throw new LoginException(LOGIN_REQUEST_KEY);
                     }
                     User user = session.getUser();
                     user.setLastAccessAt(LocalDateTime.now());
@@ -419,7 +420,7 @@ public class UserService {
                     refreshTokenResponseDTO.setRefreshToken(response.getRefreshToken());
                     refreshTokenResponseDTO.setTokenExpireAt(response.getExpiresInSeconds()); // google은 갱신토큰 만료일을 안준다. 왜냐면 갱신토큰은 로그인할때만 새로 주기 때문이다.
                 } catch (TokenResponseException e) {
-                    throw new BizException(LOGIN_REQUEST_KEY);
+                    throw new LoginException(LOGIN_REQUEST_KEY);
                 }
             }
             case KAKAO -> {
@@ -447,7 +448,7 @@ public class UserService {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
                 if (response.statusCode() != HttpServletResponse.SC_OK) {
-                    throw new BizException(LOGIN_REQUEST_KEY);
+                    throw new LoginException(LOGIN_REQUEST_KEY);
                 }
 
                 ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -461,7 +462,7 @@ public class UserService {
                 Session session = sessionRepository.findByRefreshToken(refreshToken);
                 LocalDateTime now = LocalDateTime.now();
                 if (session == null || !session.getRefreshToken().equals(refreshToken) || session.getRefreshTokenTerminateAt().isBefore(now)) {
-                    throw new BizException(LOGIN_REQUEST_KEY); // 로그인을 너무 오래 유지하는 것도 문제다.
+                    throw new LoginException(LOGIN_REQUEST_KEY); // 로그인을 너무 오래 유지하는 것도 문제다.
                 }
                 sessionRepository.delete(session);
 

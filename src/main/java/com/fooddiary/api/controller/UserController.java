@@ -1,10 +1,22 @@
 package com.fooddiary.api.controller;
 
+import static com.fooddiary.api.common.constants.UserConstants.LOGIN_REQUEST_KEY;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+import org.apache.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fooddiary.api.common.constants.UserConstants;
-import com.fooddiary.api.common.exception.BizException;
+import com.fooddiary.api.common.exception.LoginException;
 import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
@@ -17,17 +29,11 @@ import com.fooddiary.api.dto.response.user.UserResponseDTO;
 import com.fooddiary.api.entity.user.User;
 import com.fooddiary.api.service.user.UserResignService;
 import com.fooddiary.api.service.user.UserService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import static com.fooddiary.api.common.constants.UserConstants.LOGIN_REQUEST_KEY;
 
 @Slf4j
 @RestController
@@ -49,10 +55,10 @@ public class UserController {
         try {
             user = userService.getValidUser(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY));
         } catch (IllegalArgumentException e) { // 잘못된 구글 토큰값이 들어올때
-            throw new BizException(LOGIN_REQUEST_KEY);
+            throw new LoginException(LOGIN_REQUEST_KEY);
         }
         if (user == null) {
-            throw new BizException(LOGIN_REQUEST_KEY);
+            throw new LoginException(LOGIN_REQUEST_KEY);
         }
         return ResponseEntity.ok().build();
     }
