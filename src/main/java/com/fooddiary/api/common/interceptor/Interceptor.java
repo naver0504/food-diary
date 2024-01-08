@@ -1,11 +1,14 @@
 package com.fooddiary.api.common.interceptor;
 
-import com.fooddiary.api.common.exception.BizException;
-import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.service.user.UserService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import static com.fooddiary.api.common.constants.UserConstants.LOGIN_FROM_KEY;
+import static com.fooddiary.api.common.constants.UserConstants.LOGIN_REQUEST_KEY;
+import static com.fooddiary.api.common.constants.UserConstants.TOKEN_KEY;
+
+import java.io.Serial;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,12 +17,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.io.Serial;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import com.fooddiary.api.common.exception.LoginException;
+import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.service.user.UserService;
 
-import static com.fooddiary.api.common.constants.UserConstants.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -55,10 +59,10 @@ public class Interceptor implements HandlerInterceptor {
         try {
             user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
         } catch (IllegalArgumentException e) {
-            throw new BizException(LOGIN_REQUEST_KEY);
+            throw new LoginException(LOGIN_REQUEST_KEY);
         }
         if (user == null) {
-            throw new BizException(LOGIN_REQUEST_KEY);
+            throw new LoginException(LOGIN_REQUEST_KEY);
         }
 
         final ArrayList<SimpleGrantedAuthority> simpleGrantedAuthority = new ArrayList<>();
