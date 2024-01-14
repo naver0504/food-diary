@@ -19,8 +19,8 @@ public class ExternalHttpApis {
 
     static {
         simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
-        simpleClientHttpRequestFactory.setConnectTimeout(5 * 000);
-        simpleClientHttpRequestFactory.setReadTimeout(10 * 000);
+        simpleClientHttpRequestFactory.setConnectTimeout(5000);
+        simpleClientHttpRequestFactory.setReadTimeout(10000);
     }
 
     public RestClient getGoogleAuthClient() {
