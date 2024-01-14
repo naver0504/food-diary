@@ -1,6 +1,6 @@
 package com.fooddiary.api.common.external;
 
-import com.fooddiary.api.common.interceptor.RestClientInterceptor;
+import com.fooddiary.api.common.interceptor.ExternalApiClientInterceptor;
 import lombok.AllArgsConstructor;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -14,7 +14,7 @@ import org.springframework.web.client.RestClient;
 @AllArgsConstructor
 public class ExternalHttpApis {
 
-    private final RestClientInterceptor restClientInterceptor;
+    private final ExternalApiClientInterceptor externalApiClientInterceptor;
     private static final SimpleClientHttpRequestFactory simpleClientHttpRequestFactory;
 
     static {
@@ -29,7 +29,7 @@ public class ExternalHttpApis {
                 // .messageConverters(converters -> converters.add(new FormHttpMessageConverter()))
                 .requestFactory(new BufferingClientHttpRequestFactory(simpleClientHttpRequestFactory))
                 .baseUrl("https://oauth2.googleapis.com")
-                .requestInterceptor(restClientInterceptor)
+                .requestInterceptor(externalApiClientInterceptor)
                 .build();
     }
 
@@ -37,7 +37,7 @@ public class ExternalHttpApis {
         return RestClient.builder()
                 .requestFactory(new BufferingClientHttpRequestFactory(simpleClientHttpRequestFactory))
                 .baseUrl("https://accounts.google.com")
-                .requestInterceptor(restClientInterceptor)
+                .requestInterceptor(externalApiClientInterceptor)
                 .build();
     }
 
@@ -45,7 +45,7 @@ public class ExternalHttpApis {
         return RestClient.builder()
                 .requestFactory(new BufferingClientHttpRequestFactory(simpleClientHttpRequestFactory))
                 .baseUrl("https://kapi.kakao.com")
-                .requestInterceptor(restClientInterceptor)
+                .requestInterceptor(externalApiClientInterceptor)
                 .build();
     }
 
@@ -53,7 +53,7 @@ public class ExternalHttpApis {
         return RestClient.builder()
                 .requestFactory(new BufferingClientHttpRequestFactory(simpleClientHttpRequestFactory))
                 .baseUrl("https://kauth.kakao.com")
-                .requestInterceptor(restClientInterceptor)
+                .requestInterceptor(externalApiClientInterceptor)
                 .build();
     }
 

@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Slf4j
 @Component
-public class RestClientInterceptor implements ClientHttpRequestInterceptor {
+public class ExternalApiClientInterceptor implements ClientHttpRequestInterceptor {
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
         String uuid = UUID.randomUUID().toString();
@@ -37,7 +37,7 @@ public class RestClientInterceptor implements ClientHttpRequestInterceptor {
             }
             log.info("response;;" + " uuid;" + uuid + ' ' + response.getStatusCode().toString() + "\nheader;" + response.getHeaders().toString() + "\nbody;" + textBuilder.toString());
             return response;
-        } catch(Exception e) {
+        } catch(IOException e) {
             log.info("response;;" + " uuid;" + uuid + " was failed because of IOException");
             throw new IOException(e);
         }

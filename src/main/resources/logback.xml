@@ -77,7 +77,7 @@
     <logger name="com.fooddiary.api.common.filter.LoggingFilter" level="INFO">
       <appender-ref ref="apiLogFile" />
     </logger>
-    <logger name="com.fooddiary.api.common.interceptor.RestClientInterceptor" level="INFO">
+    <logger name="com.fooddiary.api.common.interceptor.ExternalApiClientInterceptor" level="INFO">
       <appender-ref ref="externalApiLogFile" />
     </logger>
   </springProfile>
