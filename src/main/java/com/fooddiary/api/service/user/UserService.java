@@ -1,9 +1,8 @@
 package com.fooddiary.api.service.user;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.common.exception.LoginException;
+import com.fooddiary.api.common.external.ExternalHttpApis;
 import com.fooddiary.api.common.util.Random;
 import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
@@ -36,29 +35,22 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.net.ProxySelector;
-import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -87,6 +79,7 @@ public class UserService {
     private Integer pwTryLimit;
     @Value("${food-diary.pw-reset-size}")
     private Integer pwResetSize;
+    private final ExternalHttpApis externalHttpApis;
 
     public UserResponseDTO createUser(UserNewRequestDTO userDto) {
         final UserResponseDTO userResponseDto = new UserResponseDTO();
@@ -178,22 +171,19 @@ public class UserService {
         switch (loginFrom) {
             // todo- https://developers.google.com/identity/openid-connect/openid-connect?hl=ko#appsetup
             case GOOGLE -> {
-                HttpClient client = HttpClient.newBuilder()
-                        .version(HttpClient.Version.HTTP_1_1)
-                        .connectTimeout(Duration.ofSeconds(5))
-                        .proxy(ProxySelector.getDefault())
-                        .build();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://oauth2.googleapis.com/tokeninfo?access_token=" + token))
-                        .build();
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() != HttpServletResponse.SC_OK) {
+                GoogleTokenInfoResponseDTO googleTokenInfoResponseDTO = externalHttpApis.getGoogleAuthClient()
+                        .get()
+                        .uri("/tokeninfo?access_token=" + token)
+                        .exchange((req, res) -> {
+                            if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                                return null;
+                            }
+                            return res;
+                        }).bodyTo(GoogleTokenInfoResponseDTO.class);
+
+                if (googleTokenInfoResponseDTO == null) {
                     return null;
                 }
-                ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                GoogleTokenInfoResponseDTO googleTokenInfoResponseDTO = objectMapper.readValue(response.body(), GoogleTokenInfoResponseDTO.class);
-
-
                 if (googleTokenInfoResponseDTO != null) {
 
                     User user = userRepository.findByEmailAndCreatePathAndStatus(googleTokenInfoResponseDTO.getEmail(), CreatePath.GOOGLE, Status.ACTIVE)
@@ -216,21 +206,22 @@ public class UserService {
                 }
             }
             case KAKAO -> {
-                HttpClient client = HttpClient.newBuilder()
-                        .version(HttpClient.Version.HTTP_1_1)
-                        .connectTimeout(Duration.ofSeconds(5))
-                        .proxy(ProxySelector.getDefault())
-                        .build();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://kapi.kakao.com/v2/user/me"))
+                KakaoUserInfo kakaoUserInfo = externalHttpApis.getKakaoApiClient()
+                        .get()
+                        .uri("/v2/user/me")
                         .header("Authorization", "Bearer " + token)
-                        .build();
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() != HttpServletResponse.SC_OK) {
+                        .accept(MediaType.APPLICATION_JSON)
+                        .exchange((req, res) -> {
+                            if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                                return null;
+                            }
+                            return res;
+                        }).bodyTo(KakaoUserInfo.class);
+
+                if (kakaoUserInfo == null) {
                     return null;
                 }
-                ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                KakaoUserInfo kakaoUserInfo = objectMapper.readValue(response.body(), KakaoUserInfo.class);
+
 
                 if (kakaoUserInfo.getKakao_account() == null) {
                     throw new BizException(FAIL_FINDING_USER_INFO_KEY);
@@ -434,25 +425,22 @@ public class UserService {
                                         .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
                                         .collect(Collectors.joining("&"));
 
-                HttpRequest request = HttpRequest.newBuilder()
-                                     .uri(URI.create("https://kauth.kakao.com/oauth/token"))
-                                     .header("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
-                                     .POST(HttpRequest.BodyPublishers.ofString(form))
-                                     .build();
-                HttpClient client = HttpClient.newBuilder()
-                                              .version(HttpClient.Version.HTTP_1_1)
-                                              .connectTimeout(Duration.ofSeconds(5))
-                                              .proxy(ProxySelector.getDefault())
-                                              .build();
+                KakaoTokenResponseDTO kakaoTokenResponseDTO = externalHttpApis.getKakaoAuthClient()
+                        .post()
+                        .uri("/oauth/token")
+                        .header("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
+                        .body(form)
+                        .exchange((req, res) -> {
+                            if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                                return null;
+                            }
+                            return res;
+                        }).bodyTo(KakaoTokenResponseDTO.class);
 
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                if (response.statusCode() != HttpServletResponse.SC_OK) {
+                if (kakaoTokenResponseDTO == null) {
                     throw new LoginException(LOGIN_REQUEST_KEY);
                 }
 
-                ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                KakaoTokenResponseDTO kakaoTokenResponseDTO = objectMapper.readValue(response.body(), KakaoTokenResponseDTO.class);
                 refreshTokenResponseDTO.setToken(kakaoTokenResponseDTO.getAccess_token());
                 refreshTokenResponseDTO.setTokenExpireAt((long) kakaoTokenResponseDTO.getExpires_in()); // 참고용 정보임
                 refreshTokenResponseDTO.setRefreshToken(kakaoTokenResponseDTO.getRefresh_token());
@@ -516,7 +504,7 @@ public class UserService {
      * @throws IOException
      * @throws InterruptedException
      */
-    private static void unlinkGoogle(String token) throws IOException, InterruptedException {
+    private void unlinkGoogle(String token) throws IOException, InterruptedException {
         /*
         HttpClient client = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
@@ -536,41 +524,38 @@ public class UserService {
             throw new BizException("INVALID_USER");
         }
         */
-        HttpClient client = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofSeconds(5))
-                .proxy(ProxySelector.getDefault())
-                .build();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://oauth2.googleapis.com/revoke?token=" + token)) // 그냥 로그아웃과 동일..
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                .build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() != HttpServletResponse.SC_OK) {
+        String response = externalHttpApis.getGoogleAuthClient()
+                .post()
+                .uri("/revoke?token=" + token)
+                .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                .exchange((req, res) -> {
+                    if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                        return null;
+                    }
+                    return "ok";
+                });
+
+        if (response == null) {
             throw new BizException(UNLINK_FAIL_KEY);
         }
     }
-    private static void unlinkKakao(String token) throws IOException, InterruptedException {
 
-        HttpClient client = HttpClient.newBuilder()
-                                      .version(HttpClient.Version.HTTP_1_1)
-                                      .connectTimeout(Duration.ofSeconds(5))
-                                      .proxy(ProxySelector.getDefault())
-                                      .build();
-        HttpRequest request = HttpRequest.newBuilder()
-                                         .uri(URI.create("https://kapi.kakao.com/v2/user/me"))
-                                         .header("Authorization", "Bearer " + token)
-                                         .build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    private void unlinkKakao(String token) throws IOException, InterruptedException {
+        KakaoUserInfo kakaoUserInfo = externalHttpApis.getKakaoApiClient()
+                .get()
+                .uri("/v2/user/me")
+                .header("Authorization", "Bearer " + token)
+                .exchange((req, res) -> {
+                    if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                        return null;
+                    }
+                    return res;
+                }).bodyTo(KakaoUserInfo.class);
 
-        if (response.statusCode() != HttpServletResponse.SC_OK) {
-            throw new BizException(UNLINK_FAIL_KEY);
+        if (kakaoUserInfo == null) {
+            throw new LoginException(LOGIN_REQUEST_KEY);
         }
-
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        KakaoUserInfo kakaoUserInfo = objectMapper.readValue(response.body(), KakaoUserInfo.class);
 
         if (kakaoUserInfo.getKakao_account() == null) {
             throw new BizException(FAIL_FINDING_USER_INFO_KEY);
@@ -581,15 +566,28 @@ public class UserService {
         }
 
         final String form = "target_id_type=user_id&" + "target_id=" + kakaoUserInfo.getId();
-        request = HttpRequest.newBuilder()
-                                         .uri(URI.create("https://kapi.kakao.com/v1/user/unlink"))
-                                         .POST(HttpRequest.BodyPublishers.ofString(form))
-                                         .header("Authorization", "KakaoAK " + KAKAO_SERVICE_APP_KEY)
-                                         .headers("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                                         .build();
-        response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        KakaoUnlink kakaoUnlink = objectMapper.readValue(response.body(), KakaoUnlink.class);
 
+        Consumer<HttpHeaders> headersConsumer = new Consumer<HttpHeaders>() {
+            @Override
+            public void accept(HttpHeaders httpHeaders) {
+                httpHeaders.add("Authorization", "KakaoAK " + KAKAO_SERVICE_APP_KEY);
+                httpHeaders.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE);
+            }
+        };
+        KakaoUnlink kakaoUnlink = externalHttpApis.getKakaoApiClient()
+                .post()
+                .uri("/v1/user/unlink")
+                .headers(headersConsumer)
+                .body(form).exchange((req, res) -> {
+                    if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                        return null;
+                    }
+                    return res;
+                }).bodyTo(KakaoUnlink.class);
+
+        if (kakaoUnlink == null) {
+            throw new BizException(FAIL_FINDING_USER_INFO_KEY);
+        }
         if (!kakaoUnlink.getId().equals(kakaoUserInfo.getId())) {
             throw new BizException(UNLINK_FAIL_KEY);
         }
@@ -607,31 +605,46 @@ public class UserService {
     public void googleSignCallback(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String code = request.getParameter("code");
         HttpHeaders headers = new HttpHeaders();
-        RestTemplate restTemplate = new RestTemplate();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
         String currentURL = request.getRequestURL().toString();
         // 난 분명히 웹브라우저에서 redirect url에 https protocol로 요청했는데 돌아온건 http이라서..
         if (Arrays.stream(environment.getActiveProfiles()).anyMatch(profile -> profile.equals(PRODUCTION))) {
             currentURL = currentURL.replaceFirst("http", "https");
         }
-        HttpEntity<MultiValueMap<String, String>> rest_request = getMultiValueMapHttpEntity(code, currentURL, headers);
 
-        URI uri = URI.create("https://oauth2.googleapis.com/token");
-
-        ResponseEntity<Map> rest_reponse;
-        rest_reponse = restTemplate.postForEntity(uri, rest_request, Map.class);
-        log.info("response body: {}", rest_reponse.getBody());
+        Map rest_reponse = externalHttpApis.getGoogleAuthClient()
+                .post()
+                .uri("/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(getMultiValueMapHttpEntity(code, currentURL))
+                .exchange((req, res) -> {
+                  if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                      return null;
+                  }
+                  return res;
+                }).bodyTo(Map.class);
 
         StringBuilder sb = new StringBuilder();
-        sb.append("?expires-in=").append(rest_reponse.getBody().get("expires_in"));
-        sb.append("&token=").append(rest_reponse.getBody().get("access_token"));
+        sb.append("?expires-in=").append(rest_reponse.get("expires_in"));
+        sb.append("&token=").append(rest_reponse.get("access_token"));
         // 로그인할때만 refresh 토큰이 부여된다.
-        if (rest_reponse.getBody().get("refresh_token") != null) {
-            sb.append("&refresh-token=").append(rest_reponse.getBody().get("refresh_token"));
+        if (rest_reponse.get("refresh_token") != null) {
+            sb.append("&refresh-token=").append(rest_reponse.get("refresh_token"));
         }
         String queryString = sb.toString();
 
         response.sendRedirect(request.getRequestURL().toString().replace(request.getRequestURI(), "") + queryString);
+    }
+
+    @NotNull
+    private static MultiValueMap<String, String> getMultiValueMapHttpEntity(String code, String url) {
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        parameters.add("code", code);
+        parameters.add("client_id", GOOGLE_AUTH_WEB_CLIENT_ID);
+        parameters.add("client_secret", GOOGLE_AUTH_WEB_CLIENT_SECRET);
+        parameters.add("grant_type", "authorization_code");
+        parameters.add("redirect_uri", url); // 현재 서버의 url
+        return parameters;
     }
 
     @NotNull
@@ -648,36 +661,41 @@ public class UserService {
     public void logout(String loginFrom, String accessToken) throws IOException, InterruptedException {
         switch (loginFrom) {
             case GOOGLE -> {
-                HttpClient client = HttpClient.newBuilder()
-                        .version(HttpClient.Version.HTTP_1_1)
-                        .connectTimeout(Duration.ofSeconds(5))
-                        .proxy(ProxySelector.getDefault())
-                        .build();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://accounts.google.com/o/oauth2/revoke?token=" + accessToken))
-                        .POST(HttpRequest.BodyPublishers.noBody())
-                        .build();
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                String response = externalHttpApis.getGoogleAccountsClient()
+                        .post()
+                        .uri("/o/oauth2/revoke?token=" + accessToken)
+                        .exchange((req, res) -> {
+                            if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                                return null;
+                            }
+                            return "ok";
+                        });
 
-                if (response.statusCode() != HttpServletResponse.SC_OK) {
+                if (response == null) {
                     throw new BizException(LOGOUT_FAIL_KEY);
                 }
             }
             case KAKAO -> {
-                HttpClient client = HttpClient.newBuilder()
-                        .version(HttpClient.Version.HTTP_1_1)
-                        .connectTimeout(Duration.ofSeconds(5))
-                        .proxy(ProxySelector.getDefault())
-                        .build();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://kapi.kakao.com/v1/user/logout"))
-                        .header("Authorization", "Bearer " + accessToken)
-                        .headers("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        .POST(HttpRequest.BodyPublishers.noBody())
-                        .build();
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                Consumer<HttpHeaders> headersConsumer = new Consumer<HttpHeaders>() {
+                    @Override
+                    public void accept(HttpHeaders httpHeaders) {
+                        httpHeaders.add("Authorization", "Bearer " + accessToken);
+                        httpHeaders.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE);
+                    }
+                };
 
-                if (response.statusCode() != HttpServletResponse.SC_OK) {
+                String response = externalHttpApis.getKakaoApiClient()
+                        .post()
+                        .uri("/v1/user/logout")
+                        .headers(headersConsumer)
+                        .exchange((req, res) -> {
+                            if (res.getStatusCode().value() != HttpServletResponse.SC_OK) {
+                                return null;
+                            }
+                            return "ok";
+                        });
+
+                if (response == null) {
                     throw new BizException(LOGOUT_FAIL_KEY);
                 }
             }
