@@ -349,7 +349,10 @@ public class UserService {
         }
         final UserNewPasswordResponseDTO userNewPasswordResponseDTO = validatePassword(userNewPasswordRequestDTO.getNewPassword());
         if (userNewPasswordResponseDTO.getStatus() == UserNewPasswordResponseDTO.Status.SUCCESS) {
+            final LocalDateTime now = LocalDateTime.now();
             user.setPw(passwordEncoder.encode(userNewPasswordRequestDTO.getNewPassword()));
+            user.setPwUpdateAt(now);
+            user.setPwUpdateDelayAt(now.plusDays(PW_EXPIRED_DAY_LIMIT));
             userRepository.save(user);
         }
         return userNewPasswordResponseDTO;
