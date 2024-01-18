@@ -22,7 +22,7 @@ public class LogDTO {
         private String uri;
         private String method;
         private String contentType;
-        private byte[] body;
+        private String body;
         private String remoteIp;
         private Cookie[] cookies;
     }
