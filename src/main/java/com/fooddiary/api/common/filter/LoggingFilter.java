@@ -2,7 +2,6 @@ package com.fooddiary.api.common.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.entity.user.User;
-import com.fooddiary.api.service.user.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +34,6 @@ public class LoggingFilter extends OncePerRequestFilter {
     private static final Set<String> EXCLUDED_LOG_URL = Set.of("/favicon.ico", "assets/");
     private static final String ELB_HEALTH_CHECKER_HEADER_NAME_KEYWORD = "HealthChecker";
     private final ObjectMapper objectMapper;
-    private final UserService userService;
 
     private static boolean isVisible(MediaType mediaType) {
         final List<MediaType> VISIBLE_TYPES = Arrays.asList(
@@ -44,12 +42,21 @@ public class LoggingFilter extends OncePerRequestFilter {
                 MediaType.APPLICATION_JSON,
                 MediaType.APPLICATION_XML,
                 MediaType.valueOf("application/*+json"),
-                MediaType.valueOf("application/*+xml"),
-                MediaType.MULTIPART_FORM_DATA
+                MediaType.valueOf("application/*+xml")
         );
 
         return VISIBLE_TYPES.stream()
                             .anyMatch(visibleType -> visibleType.includes(mediaType));
+    }
+
+    /**
+     * spring boot 3.1.x 부터 다음 형식으로 request에 body 복사하는 것이 실패하고 있습니다.
+     * https://github.com/my-food-diarybook/api/issues/83
+     * @param mediaType
+     * @return
+     */
+    private static boolean isMultipartType(MediaType mediaType) {
+        return MediaType.MULTIPART_FORM_DATA.getType().equals(mediaType.getType());
     }
 
     @Override
@@ -62,14 +69,14 @@ public class LoggingFilter extends OncePerRequestFilter {
             || isAsyncDispatch(request)) {
             filterChain.doFilter(request, response);
         } else {
-            doFilterWrapped(new RequestWrapper(request), new ContentCachingResponseWrapper(response),
+            doFilterWrapped(request, new ContentCachingResponseWrapper(response),
                             filterChain);
         }
         //MDC.clear();
     }
 
-    protected void doFilterWrapped(HttpServletRequestWrapper request, ContentCachingResponseWrapper response,
-                                   FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterWrapped(HttpServletRequest request, ContentCachingResponseWrapper response,
+                                   FilterChain filterChain) {
         final LocalDateTime startTime = LocalDateTime.now();
         final LogDTO.RequestLogDTO requestLogDTO;
         try {
@@ -79,22 +86,37 @@ public class LoggingFilter extends OncePerRequestFilter {
                 final String name = keys.next();
                 headerMap.put(name, request.getHeader(name));
             }
+            final String contentType = request.getContentType();
+            final boolean visible = isVisible(
+                    MediaType.valueOf(contentType == null ? "text/plain" : contentType));
+            boolean isMultipartType = isMultipartType(MediaType.valueOf(contentType == null ? "text/plain" : contentType));
+
             final String uri = request.getQueryString() != null ?
                                request.getRequestURI() + '?' + request.getQueryString() :
                                request.getRequestURI();
-            final byte[] body = StreamUtils.copyToByteArray(request.getInputStream());
+            String body = "";
+
+            if (isMultipartType) {
+                filterChain.doFilter(request, response);
+            } else {
+                HttpServletRequestWrapper requestWrapper = new RequestWrapper(request);
+                if (visible) {
+                    body = new String(StreamUtils.copyToByteArray(requestWrapper.getInputStream()), StandardCharsets.UTF_8);
+                    if (body.length() > TRANSFER_BODY_SIZE) {
+                        body = body.substring(0, TRANSFER_BODY_SIZE) + "...";
+                    }
+                }
+                filterChain.doFilter(requestWrapper, response);
+            }
             requestLogDTO = new LogDTO.RequestLogDTO(startTime, headerMap, uri, request.getMethod(),
                                                      request.getContentType(), body, request.getRemoteAddr(),
                                                      request.getCookies());
-            filterChain.doFilter(request, response);
 
             User user = null;
             if (SecurityContextHolder.getContext().getAuthentication() instanceof RememberMeAuthenticationToken && SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User) {
                 user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             }
-            //User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-                    //userService.getValidUser(request.getHeader(LOGIN_FROM_KEY),
-                     //                                  request.getHeader(TOKEN_KEY));
+
             LogDTO.UserDTO userDTO = null;
             if (user != null) {
                 userDTO = new LogDTO.UserDTO(user.getEmail(), user.getCreatePath().getCode());

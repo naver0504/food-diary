@@ -35,7 +35,7 @@ public class DiaryController {
      * @param user 스프링 thread-local SecurityContext에 저장된 사용자 정보
      * @return void ok응답으로 처리
      */
-    @PostMapping(value = "/new", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/new", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE })
     public ResponseEntity<Void> createDiary(@RequestPart("files") final List<MultipartFile> images,
                                             @RequestParam("createTime") final LocalDate createDate,
                                             @RequestPart(value = "placeInfo", required = false) final PlaceInfoDTO placeInfoDTO,
