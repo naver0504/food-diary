@@ -292,7 +292,7 @@ public class UserService {
             // pw reset
             final String tempPw = Random.RandomString(pwResetSize);
 
-            final String username = "jasuil1212@gmail.com";
+            final String username = "jasuil1212@gmail.com"; // todo - my.food.diarybook@gmail.com 에서 직접 보내는 것으로 변경예정, 현재는 대신 보내고 있음
             final String password = "vyyqzspyrhfmzivy";
 
             final Properties prop = new Properties();
@@ -313,7 +313,7 @@ public class UserService {
 
             try {
                 final Message message = new MimeMessage(session);
-                message.setFrom(new InternetAddress("jasuil1212@gmail.com"));
+                message.setFrom(new InternetAddress("my.food.diarybook@gmail.com"));
                 message.setRecipients(
                         RecipientType.TO,
                         InternetAddress.parse(user.getEmail())
