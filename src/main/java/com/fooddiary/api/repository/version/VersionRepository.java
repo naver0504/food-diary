@@ -6,10 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface VersionRepository extends JpaRepository<Version, Integer> {
 
     @Query("select v.version from Version as v where v.releaseAt <= :now and v.isRelease = true order by v.releaseAt desc limit 1")
     String findLatestReleaseVersion(@Param("now") LocalDateTime now);
-
+    Optional<Version> findOneByVersion(@Param("version") String version);
 }

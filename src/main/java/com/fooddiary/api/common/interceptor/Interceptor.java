@@ -1,9 +1,5 @@
 package com.fooddiary.api.common.interceptor;
 
-import static com.fooddiary.api.common.constants.UserConstants.LOGIN_FROM_KEY;
-import static com.fooddiary.api.common.constants.UserConstants.LOGIN_REQUEST_KEY;
-import static com.fooddiary.api.common.constants.UserConstants.TOKEN_KEY;
-
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,6 +20,8 @@ import com.fooddiary.api.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+
+import static com.fooddiary.api.common.constants.UserConstants.*;
 
 @Component
 @RequiredArgsConstructor
@@ -57,7 +55,7 @@ public class Interceptor implements HandlerInterceptor {
 
         final User user;
         try {
-            user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY));
+            user = userService.getValidUser(request.getHeader(LOGIN_FROM_KEY), request.getHeader(TOKEN_KEY), request.getHeader(REQUEST_AGENT_KEY));
         } catch (IllegalArgumentException e) {
             throw new LoginException(LOGIN_REQUEST_KEY);
         }

@@ -37,12 +37,13 @@ public class User {
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
     private LocalDateTime lastAccessAt;
-
     @OneToMany(mappedBy = "user")
     private List<Session> session = new ArrayList<>();
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     private List<Diary> diaries = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "version_id")
+    private com.fooddiary.api.entity.version.Version version;
 
     @PrePersist
     public void prePersist() {

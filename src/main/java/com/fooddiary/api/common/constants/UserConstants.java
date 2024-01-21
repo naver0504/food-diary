@@ -1,6 +1,8 @@
 package com.fooddiary.api.common.constants;
 
 public final class UserConstants {
+    public static final String REQUEST_AGENT_KEY = "request-agent";
+    public static final String APP_VERSION_KEY = "app-version";
     public static final String LOGIN_FROM_KEY = "login-from";
     public static final String TOKEN_KEY = "token";
     public static final String REFRESH_TOKEN_KEY = "refresh-token";
