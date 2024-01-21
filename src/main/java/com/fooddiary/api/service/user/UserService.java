@@ -14,6 +14,7 @@ import com.fooddiary.api.entity.user.*;
 import com.fooddiary.api.repository.diary.DiaryQuerydslRepository;
 import com.fooddiary.api.repository.user.SessionRepository;
 import com.fooddiary.api.repository.user.UserRepository;
+import com.fooddiary.api.repository.version.VersionRepository;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
@@ -73,6 +74,7 @@ public class UserService {
     private final SessionRepository sessionRepository;
     private final UserResignService userResignService;
     private final DiaryQuerydslRepository diaryQuerydslRepository;
+    private final VersionRepository versionRepository;
     private final Environment environment;
     private final String EMAIL_PATTERN = "^(.+)@(\\S+)$";
     @Value("${food-diary.pw-try-limit}")
@@ -165,8 +167,7 @@ public class UserService {
      * @return 유효하면 User 객체반환
      */
     @Nullable
-    public User getValidUser(String loginFrom, String token) throws GeneralSecurityException, IOException, InterruptedException {
-        // todo
+    public User getValidUser(String loginFrom, String token, String requestAgent) throws GeneralSecurityException, IOException, InterruptedException {
         if (!StringUtils.hasText(loginFrom) || !StringUtils.hasText(token)) {return null;}
         switch (loginFrom) {
             // todo- https://developers.google.com/identity/openid-connect/openid-connect?hl=ko#appsetup
@@ -198,6 +199,7 @@ public class UserService {
                         user.setCreatePath(CreatePath.GOOGLE);
                     }
                     user.setLastAccessAt(LocalDateTime.now());
+                    updateUserAppVersionInfo(user, requestAgent);
                     userRepository.save(user);
                     return user;
 
@@ -244,6 +246,7 @@ public class UserService {
 
                 }
                 user.setLastAccessAt(LocalDateTime.now());
+                updateUserAppVersionInfo(user, requestAgent);
                 userRepository.save(user);
                 return user;
             }
@@ -258,6 +261,7 @@ public class UserService {
                     }
                     User user = session.getUser();
                     user.setLastAccessAt(LocalDateTime.now());
+                    updateUserAppVersionInfo(user, requestAgent);
                     userRepository.save(user);
                     return user;
                 }
@@ -265,6 +269,16 @@ public class UserService {
         }
 
         return null;
+    }
+
+    private void updateUserAppVersionInfo(User user, String requestAgent) {
+        if (requestAgent != null) {
+            User finalUser = user;
+            if (requestAgent.contains(APP_VERSION_KEY)) {
+                versionRepository.findOneByVersion(requestAgent.substring(requestAgent.indexOf(APP_VERSION_KEY) + APP_VERSION_KEY.length()).trim())
+                        .ifPresent(finalUser::setVersion);
+            }
+        }
     }
 
     /**

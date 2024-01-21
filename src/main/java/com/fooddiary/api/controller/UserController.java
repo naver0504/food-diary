@@ -1,7 +1,5 @@
 package com.fooddiary.api.controller;
 
-import static com.fooddiary.api.common.constants.UserConstants.LOGIN_REQUEST_KEY;
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
@@ -53,12 +51,12 @@ public class UserController {
     public ResponseEntity<HttpStatus> isLogin(HttpServletRequest request) throws GeneralSecurityException, IOException, InterruptedException {
         User user;
         try {
-            user = userService.getValidUser(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY));
+            user = userService.getValidUser(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY), request.getHeader(UserConstants.REQUEST_AGENT_KEY));
         } catch (IllegalArgumentException e) { // 잘못된 구글 토큰값이 들어올때
-            throw new LoginException(LOGIN_REQUEST_KEY);
+            throw new LoginException(UserConstants.LOGIN_REQUEST_KEY);
         }
         if (user == null) {
-            throw new LoginException(LOGIN_REQUEST_KEY);
+            throw new LoginException(UserConstants.LOGIN_REQUEST_KEY);
         }
         return ResponseEntity.ok().build();
     }

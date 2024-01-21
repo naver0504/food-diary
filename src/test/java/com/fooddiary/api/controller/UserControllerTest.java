@@ -48,6 +48,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.fooddiary.api.common.constants.UserConstants.REQUEST_AGENT_KEY;
 import static com.fooddiary.api.common.util.HttpUtil.makeHeader;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -132,11 +133,12 @@ public class UserControllerTest {
      */
     @Test
     void is_login() throws Exception {
-        given(userService.getValidUser(anyString(), anyString())).willReturn(new User());
-
+        given(userService.getValidUser(anyString(), anyString(), anyString())).willReturn(new User());
+        HttpHeaders httpHeaders = makeHeader();
+        httpHeaders.add(REQUEST_AGENT_KEY, "android; 1.0.0");
         mockMvc.perform(get("/user/is-login")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .headers(makeHeader()))
+                                .headers(httpHeaders))
                .andExpect(status().isOk())
                .andDo(document("is login"));
     }
