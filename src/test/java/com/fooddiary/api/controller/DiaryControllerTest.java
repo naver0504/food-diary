@@ -31,6 +31,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -169,14 +171,17 @@ public class DiaryControllerTest {
         final byte[] requestPlaceInfo = objectMapper.writeValueAsString(placeInfoDTO).getBytes(StandardCharsets.UTF_8);
         final MockPart jsonPart = new MockPart("placeInfo", "json", requestPlaceInfo);
         jsonPart.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("createTime", LocalDate.now().toString());
+        params.add("isCurrent", "true");
 
-        doNothing().when(diaryService).createDiary(any(List.class), any(LocalDate.class), any(PlaceInfoDTO.class), any(User.class));
+        doNothing().when(diaryService).createDiary(any(List.class), any(LocalDate.class), any(boolean.class), any(PlaceInfoDTO.class), any(User.class));
 
         mockMvc.perform(multipart("/diary/new")
                         .file(mockMultipartFile)
                         .file(mockMultipartFile2)
                         .part(jsonPart)
-                        .queryParam("createTime", LocalDate.now().toString())
+                        .queryParams(params)
                         .headers(makeHeader())
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk()).andDo(document("new diary"));
