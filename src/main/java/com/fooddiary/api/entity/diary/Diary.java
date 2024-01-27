@@ -8,7 +8,6 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +29,6 @@ public class Diary {
 
     @Column(nullable = false)
     private LocalDateTime createTime; // 사용자가 선택한 식사일기 시간
-    //@Embedded
-    //private Time time;
 
     @Enumerated(EnumType.STRING)
     private DiaryTime diaryTime;
@@ -58,9 +55,10 @@ public class Diary {
     @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DiaryTag> diaryTags = new ArrayList<>();
 
-    public static Diary createDiary(final LocalDate dateTime, final User user, final DiaryTime diaryTime, final PlaceInfoDTO placeInfo) {
+    public static Diary createDiary(final LocalDate dateTime, final User user, final boolean isCurrent, final PlaceInfoDTO placeInfo) {
+        final DiaryTime diaryTime = isCurrent ? DiaryTime.getTime(LocalDateTime.now()) : DiaryTime.ETC;
         final Diary diary = new Diary();
-        diary.setCreateTime(makeCreateTime(dateTime, diaryTime));
+        diary.setCreateTime(DiaryTime.makeCreateTime(dateTime, diaryTime));
         diary.setCreateAt(LocalDateTime.now());
         diary.setDiaryTime(diaryTime);
         diary.setUser(user);
@@ -73,34 +71,7 @@ public class Diary {
         return diary;
     }
 
-    public static LocalDateTime makeCreateTime(final LocalDate dateTime, final DiaryTime diaryTime) {
-        switch (diaryTime) {
-            case BREAKFAST -> {
-                return dateTime.atTime(LocalTime.of(8, 0));
-            }
-            case BRUNCH -> {
-                return dateTime.atTime(LocalTime.of(10, 0));
-            }
-            case LUNCH -> {
-                return dateTime.atTime(LocalTime.of(12, 0));
-            }
-            case SNACK -> {
-                return dateTime.atTime(LocalTime.of(14, 0));
-            }
-            case LINNER -> {
-                return dateTime.atTime(LocalTime.of(16, 0));
-            }
-            case DINNER -> {
-                return dateTime.atTime(LocalTime.of(18, 0));
-            }
-            case LATESNACK -> {
-                return dateTime.atTime(LocalTime.of(21, 0));
-            }
-            default -> {
-                return dateTime.atStartOfDay();
-            }
-        }
-    }
+
 
     public void setGeography(final Double longitude, final Double latitude) {
         if(longitude.equals(-200D) && latitude.equals(-200D)) {

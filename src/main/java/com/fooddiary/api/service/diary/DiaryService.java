@@ -13,7 +13,6 @@ import com.fooddiary.api.common.util.ImageUtils;
 import com.fooddiary.api.dto.request.diary.DiaryMemoRequestDTO;
 import com.fooddiary.api.dto.response.diary.*;
 import com.fooddiary.api.entity.diary.*;
-import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.repository.ImageRepository;
 import com.fooddiary.api.repository.diary.*;
 import com.fooddiary.api.service.ImageService;
@@ -49,7 +48,7 @@ public class DiaryService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public void createDiary(final List<MultipartFile> files, final LocalDate createDate, final PlaceInfoDTO placeInfoDTO,
+    public void createDiary(final List<MultipartFile> files, final LocalDate createDate, final boolean isCurrent, final PlaceInfoDTO placeInfoDTO,
                             final User user) {
         final LocalDateTime startDate = createDate.atStartOfDay();
         final LocalDateTime endDate = createDate.plusDays(1L).atStartOfDay().minusSeconds(1L).withNano(999999000);
@@ -60,7 +59,7 @@ public class DiaryService {
             throw new BizException("register only 10 per day");
         }
 
-        final Diary newDiary = Diary.createDiary(createDate, user, DiaryTime.ETC, placeInfoDTO);
+        final Diary newDiary = Diary.createDiary(createDate, user, isCurrent, placeInfoDTO);
         diaryRepository.save(newDiary);
         imageService.storeImage(newDiary, files, user);
     }

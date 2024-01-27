@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.fooddiary.api.entity.diary.DiaryTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -111,7 +112,7 @@ public class DiaryTransactionService {
 
             diary.setMemo(diaryMemoRequestDTO.getMemo());
             diary.setDiaryTags(diaryTagList);
-            diary.setCreateTime(Diary.makeCreateTime(diary.getCreateTime().toLocalDate(), diaryMemoRequestDTO.getDiaryTime()));
+            diary.setCreateTime(DiaryTime.makeCreateTime(diary.getCreateTime().toLocalDate(), diaryMemoRequestDTO.getDiaryTime()));
             diary.setDiaryTime(diaryMemoRequestDTO.getDiaryTime());
             diary.setUpdateAt(LocalDateTime.now());
             diary.setPlace(diaryMemoRequestDTO.getPlace());

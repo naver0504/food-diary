@@ -1,6 +1,8 @@
 package com.fooddiary.api.entity.diary;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,4 +77,34 @@ public enum DiaryTime {
     public String getCode() {
         return code;
     }
+
+    public static LocalDateTime makeCreateTime(final LocalDate dateTime, final DiaryTime diaryTime) {
+        switch (diaryTime) {
+            case BREAKFAST -> {
+                return dateTime.atTime(LocalTime.of(8, 0));
+            }
+            case BRUNCH -> {
+                return dateTime.atTime(LocalTime.of(10, 0));
+            }
+            case LUNCH -> {
+                return dateTime.atTime(LocalTime.of(12, 0));
+            }
+            case SNACK -> {
+                return dateTime.atTime(LocalTime.of(14, 0));
+            }
+            case LINNER -> {
+                return dateTime.atTime(LocalTime.of(16, 0));
+            }
+            case DINNER -> {
+                return dateTime.atTime(LocalTime.of(18, 0));
+            }
+            case LATESNACK -> {
+                return dateTime.atTime(LocalTime.of(21, 0));
+            }
+            default -> {
+                return dateTime.atStartOfDay();
+            }
+        }
+    }
+
 }
