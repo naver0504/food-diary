@@ -292,8 +292,9 @@ public class UserService {
             // pw reset
             final String tempPw = Random.RandomString(pwResetSize);
 
-            final String username = "jasuil1212@gmail.com"; // todo - my.food.diarybook@gmail.com 에서 직접 보내는 것으로 변경예정, 현재는 대신 보내고 있음
-            final String password = "vyyqzspyrhfmzivy";
+            // todo - 개발자의 gmail계정으로 대신 보내고 있음. https://support.google.com/mail/answer/22370?hl=ko
+            final String username = "jasuil1212@gmail.com";
+            final String password = "dosu avrp opbv hydc";
 
             final Properties prop = new Properties();
             prop.put("mail.smtp.host", "smtp.gmail.com");
