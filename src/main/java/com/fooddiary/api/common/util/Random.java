@@ -4,7 +4,7 @@ import java.security.SecureRandom;
 
 public final class Random {
     public static String RandomString(int length) {
-    String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    String SALTCHARS = "1234567890";
     StringBuilder salt = new StringBuilder();
     SecureRandom rnd = new SecureRandom();
     while (salt.length() < length) { // length of the random string.

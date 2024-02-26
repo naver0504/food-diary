@@ -306,8 +306,9 @@ public class UserService {
             // pw reset
             final String tempPw = Random.RandomString(pwResetSize);
 
+            // todo - 개발자의 gmail계정으로 대신 보내고 있음. https://support.google.com/mail/answer/22370?hl=ko
             final String username = "jasuil1212@gmail.com";
-            final String password = "vyyqzspyrhfmzivy";
+            final String password = "dosu avrp opbv hydc";
 
             final Properties prop = new Properties();
             prop.put("mail.smtp.host", "smtp.gmail.com");
@@ -327,7 +328,7 @@ public class UserService {
 
             try {
                 final Message message = new MimeMessage(session);
-                message.setFrom(new InternetAddress("jasuil1212@gmail.com"));
+                message.setFrom(new InternetAddress("my.food.diarybook@gmail.com"));
                 message.setRecipients(
                         RecipientType.TO,
                         InternetAddress.parse(user.getEmail())
