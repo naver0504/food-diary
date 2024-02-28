@@ -177,12 +177,12 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
             		(
             		    select t.tag_name as categoryName, count(t.tag_name) as c, 'TAG' as categoryType from diary as d1 
                         inner join diary_tag as dt on d1.id = dt.diary_id inner join tag as t on t.id = dt.tag_id 
-                        where d1.user_id = :userId and t.tag_name like :condition group by t.tag_name 
+                        where d1.user_id = :userId and upper(t.tag_name) like upper(:condition) group by t.tag_name 
                     )
                     union all
                     (
                         select d2.place as categoryName, count(d2.place) as c, 'PLACE' as categoryType from diary as d2
-                        where d2.place like :condition and d2.user_id = :userId group by d2.place
+                        where upper(d2.place) like upper(:condition) and d2.user_id = :userId group by d2.place
                     )
                     union all
                     (
