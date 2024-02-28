@@ -71,7 +71,7 @@ public class ImageService {
 
             try {
                 inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
-                final ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath);
+                final ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0));
                 final ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
                 final String storeThumbnailFilename = "t_" + UUID.randomUUID() + '_' + file.getOriginalFilename();
                 inputIntoFileStorage(dirPath, storeThumbnailFilename, thumbnailInputStream);
@@ -102,7 +102,7 @@ public class ImageService {
             metadata.setContentLength(file.getSize());
             metadata.setContentType(file.getContentType());
 
-            try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0), user, amazonS3, bucket, basePath);
+            try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(files.get(0));
                  ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray())) {
                 inputIntoFileStorage(dirPath, storeFilename, file.getInputStream());
 
@@ -179,7 +179,7 @@ public class ImageService {
                 Objects.requireNonNull(file.getOriginalFilename()));
         final String dirPath = ImageUtils.getDirPath(basePath, user);
 
-        try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(file, user, amazonS3, bucket, basePath);
+        try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(file);
              ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray())) {
             fileStorageService.deleteImage(dirPath + image.getStoredFileName());
             fileStorageService.deleteImage(dirPath + image.getThumbnailFileName());
@@ -202,7 +202,7 @@ public class ImageService {
                 Objects.requireNonNull(file.getOriginalFilename()));
         final String dirPath = ImageUtils.getDirPath(basePath, user);
 
-        try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(file, user, amazonS3, bucket, basePath);
+        try (ByteArrayOutputStream thumbnailOutputStream = ImageUtils.createThumbnailImage(file);
              ByteArrayInputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray())) {
             fileStorageService.deleteImage(dirPath + image.getStoredFileName());
             fileStorageService.deleteImage(dirPath + image.getThumbnailFileName());

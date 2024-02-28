@@ -39,8 +39,7 @@ public class ImageUtils {
         return storeFilename;
     }
 
-    public static ByteArrayOutputStream createThumbnailImage(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) throws IOException {
-        final String originalFilename = file.getOriginalFilename();
+    public static ByteArrayOutputStream createThumbnailImage(final MultipartFile file) throws IOException {
         final String fileContentType = getFileContentType(Objects.requireNonNull(file.getContentType()));
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         final BufferedImage originalImage;
