@@ -3,6 +3,7 @@ package com.fooddiary.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fooddiary.api.common.constants.Profiles;
 import com.fooddiary.api.common.interceptor.Interceptor;
+import com.fooddiary.api.dto.request.user.CheckPasswordDTO;
 import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
 import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
 import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
@@ -394,6 +395,30 @@ public class UserControllerTest {
                 .andExpectAll(status().isOk(),
                         content().json(objectMapper.writeValueAsString(responseDTO)))
                 .andDo(document("diary statistics"));
+    }
+
+    /**
+     * 식사일기 전체 삭제, 탈퇴시 사용하는 전용계정 비밀번호 확인 API
+     * @throws Exception
+     */
+    @Test
+    void check_password() throws Exception {
+        CheckPasswordDTO checkPasswordDTO = new CheckPasswordDTO();
+        checkPasswordDTO.setPassword("amuguna");
+
+        UserResponseDTO userResponseDto = new UserResponseDTO();
+        userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
+        when(userService.checkPassword(any(User.class), eq(checkPasswordDTO.getPassword())))
+                .thenReturn(userResponseDto);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        mockMvc.perform(post("/user/check-password")
+                        .content(objectMapper.writeValueAsString(checkPasswordDTO))
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(makeHeader()))
+                .andExpectAll(status().isOk(),
+                content().json(objectMapper.writeValueAsString(userResponseDto))).andDo(document("check password"));
     }
 
 }

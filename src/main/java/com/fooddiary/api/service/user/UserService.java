@@ -729,4 +729,16 @@ public class UserService {
     public DiaryStatisticsQueryDslResponseDTO getStatistics(int userId) {
         return diaryQuerydslRepository.selectDiaryStatistics(userId);
     }
+
+    public UserResponseDTO checkPassword(User user, String password) {
+        final UserResponseDTO userResponseDto = new UserResponseDTO();
+
+        if (!passwordEncoder.matches(password, user.getPw())) {
+            userResponseDto.setStatus(UserResponseDTO.Status.INVALID_PASSWORD);
+            return userResponseDto;
+        }
+
+        userResponseDto.setStatus(UserResponseDTO.Status.SUCCESS);
+        return userResponseDto;
+    }
 }
