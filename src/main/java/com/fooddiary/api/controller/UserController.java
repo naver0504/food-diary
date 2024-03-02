@@ -3,7 +3,9 @@ package com.fooddiary.api.controller;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+import com.fooddiary.api.dto.request.user.*;
 import org.apache.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,10 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fooddiary.api.common.constants.UserConstants;
 import com.fooddiary.api.common.exception.LoginException;
-import com.fooddiary.api.dto.request.user.UserLoginRequestDTO;
-import com.fooddiary.api.dto.request.user.UserNewPasswordRequestDTO;
-import com.fooddiary.api.dto.request.user.UserNewRequestDTO;
-import com.fooddiary.api.dto.request.user.UserResetPasswordRequestDTO;
 import com.fooddiary.api.dto.response.diary.DiaryStatisticsQueryDslResponseDTO;
 import com.fooddiary.api.dto.response.user.RefreshTokenResponseDTO;
 import com.fooddiary.api.dto.response.user.UserInfoResponseDTO;
@@ -102,7 +100,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/google-login-callback")
-    public void GoogleSignCallback(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void googleSignCallback(HttpServletRequest request, HttpServletResponse response) throws Exception {
         userService.googleSignCallback(request, response);
     }
 
@@ -120,5 +118,16 @@ public class UserController {
     @GetMapping("/statistics")
     public ResponseEntity<DiaryStatisticsQueryDslResponseDTO> statistics(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(userService.getStatistics(user.getId()));
+    }
+
+    /**
+     * 식사일기 전체 삭제, 탈퇴시 사용하는 전용계정 비밀번호 확인 API
+     * @param user
+     * @param checkPasswordDTO
+     * @return
+     */
+    @PostMapping(path = "/check-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponseDTO> checkPassword(@AuthenticationPrincipal User user, @RequestBody CheckPasswordDTO checkPasswordDTO) {
+        return ResponseEntity.ok(userService.checkPassword(user, checkPasswordDTO.getPassword()));
     }
 }
