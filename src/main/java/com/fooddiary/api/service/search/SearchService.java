@@ -103,15 +103,8 @@ public class SearchService {
 
         final List<String> diaryTimeList = DiaryTime.getTime(searchCond).stream().map(DiaryTime::name).collect(Collectors.toList());
         final String condition = "%" + searchCond + "%";
-        final List<ConditionSearchSQLDTO> searchResultWithCondition;
-
-        boolean lowerCase = isLowerCase(searchCond);
-
-        if (lowerCase) {
-            searchResultWithCondition = searchRepository.getSearchResultWithLowerCondition(user.getId(), condition, diaryTimeList);
-        } else  {
-            searchResultWithCondition = searchRepository.getSearchResultWithUpperCondition(user.getId(), condition, diaryTimeList);
-        }
+        final List<ConditionSearchSQLDTO> searchResultWithCondition = isLowerCase(searchCond) == true ?
+                searchRepository.getSearchResultWithLowerCondition(user.getId(), condition, diaryTimeList) : searchRepository.getSearchResultWithUpperCondition(user.getId(), condition, diaryTimeList);
 
         searchResultWithCondition
                 .forEach(
