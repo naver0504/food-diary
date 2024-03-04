@@ -104,7 +104,14 @@ public class SearchService {
         final List<String> diaryTimeList = DiaryTime.getTime(searchCond).stream().map(DiaryTime::name).collect(Collectors.toList());
         final String condition = "%" + searchCond + "%";
         final List<ConditionSearchSQLDTO> searchResultWithCondition;
-        searchResultWithCondition = searchRepository.getSearchResultWithCondition(user.getId(), condition, diaryTimeList);
+
+        boolean lowerCase = isLowerCase(searchCond);
+
+        if (lowerCase) {
+            searchResultWithCondition = searchRepository.getSearchResultWithLowerCondition(user.getId(), condition, diaryTimeList);
+        } else  {
+            searchResultWithCondition = searchRepository.getSearchResultWithUpperCondition(user.getId(), condition, diaryTimeList);
+        }
 
         searchResultWithCondition
                 .forEach(
@@ -172,6 +179,14 @@ public class SearchService {
                 .categoryName(tagName)
                 .build();
         diarySearchResponseDTOList.add(diarySearchResponseDTO);
+    }
+
+    private boolean isLowerCase(final String searchCond) {
+        if(searchCond.charAt(0) >= 'a' && searchCond.charAt(0) <= 'z') {
+            return true;
+        }
+
+        return false;
     }
 
 }
