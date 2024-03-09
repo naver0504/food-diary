@@ -2,6 +2,7 @@ package com.fooddiary.api.service.search;
 
 import com.fooddiary.api.common.exception.BizException;
 import com.fooddiary.api.dto.request.search.CategoryType;
+import com.fooddiary.api.dto.response.search.ConditionSearchSQLDTO;
 import com.fooddiary.api.dto.response.search.DiarySearchResponseDTO;
 import com.fooddiary.api.dto.response.search.DiarySearchSQLDTO;
 import com.fooddiary.api.dto.response.search.SearchSQLDTO;
@@ -102,12 +103,13 @@ public class SearchService {
 
         final List<String> diaryTimeList = DiaryTime.getTime(searchCond).stream().map(DiaryTime::name).collect(Collectors.toList());
         final String condition = "%" + searchCond + "%";
-        final List<SearchSQLDTO> searchResultWithCondition;
-        searchResultWithCondition = searchRepository.getSearchResultWithCondition(user.getId(), condition, diaryTimeList);
+        final List<ConditionSearchSQLDTO> searchResultWithCondition = isLowerCase(searchCond) == true ?
+                searchRepository.getSearchResultWithLowerCondition(user.getId(), condition, diaryTimeList) : searchRepository.getSearchResultWithUpperCondition(user.getId(), condition, diaryTimeList);
+
         searchResultWithCondition
                 .forEach(
                         searchSQLDTO -> {
-                            final String categoryName = searchSQLDTO.getCategoryName();
+                            final String categoryName = new String(searchSQLDTO.getCategoryName());
                             final CategoryType categoryType = searchSQLDTO.getCategoryType();
                             final List<TimelineDiaryDTO> diaryList = new ArrayList<>();
                             switch (categoryType) {
@@ -140,6 +142,8 @@ public class SearchService {
                             addDiarySearchResponseDTO(diarySearchResponseDTOList, categoryName, diaryList, categoryType);
                         }
                 );
+
+
         return diarySearchResponseDTOList;
     }
 
@@ -168,6 +172,14 @@ public class SearchService {
                 .categoryName(tagName)
                 .build();
         diarySearchResponseDTOList.add(diarySearchResponseDTO);
+    }
+
+    private boolean isLowerCase(final String searchCond) {
+        if(searchCond.charAt(0) >= 'a' && searchCond.charAt(0) <= 'z') {
+            return true;
+        }
+
+        return false;
     }
 
 }

@@ -1,5 +1,6 @@
 package com.fooddiary.api.repository.search;
 
+import com.fooddiary.api.dto.response.search.ConditionSearchSQLDTO;
 import com.fooddiary.api.dto.response.search.DiarySearchSQLDTO;
 import com.fooddiary.api.dto.response.search.SearchSQLDTO;
 import com.fooddiary.api.entity.diary.Diary;
@@ -86,7 +87,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
                 from image 
             ) as x 
             on d.id = x.diary_id
-            where d.user_id = :userId and d.place = :place and n <= 1
+            where d.user_id = :userId and binary(d.place) = :place and n <= 1
             order by d.id desc, x.update_at desc
             """, nativeQuery = true)
     List<DiarySearchSQLDTO> getSearchResultWithPlaceNoLimit(@Param("userId") int id, @Param("place") String place);
@@ -120,41 +121,9 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
             on d.id = x.diary_id
             inner join diary_tag as dt on (dt.diary_id = d.id)
             inner join tag as t on (t.id = dt.tag_id)
-            where d.user_id = :userId and t.tag_name = :tagName and n <= 1
+            where d.user_id = :userId and binary(t.tag_name) = :tagName and n <= 1
             order by d.id desc, x.update_at desc""", nativeQuery = true)
     List<DiarySearchSQLDTO> getSearchResultWithTagNoLimit(@Param("userId") int id, @Param("tagName") String tagName);
-
-
-
-    @Query(
-            value = """
-            select d.id, d.place, x.thumbnail_file_name as thumbnailFileName from diary as d 
-            inner join 
-            ( 
-                select diary_id, thumbnail_file_name, update_at,  
-                row_number() over (partition by diary_id order by update_at desc) as n 
-                from image
-            ) as x
-            on d.id = x.diary_id
-            where d.user_id = :userId and d.place like :place and n <= 1
-            order by d.id desc, x.update_at desc""", nativeQuery = true)
-    List<DiarySearchSQLDTO.DiarySearchWithPlaceSQLDTO> getSearchResultContainPlace(@Param("userId") int id, @Param("place") String place);
-
-    @Query(
-            value = """
-            select d.id, t.tag_name as tagName, x.thumbnail_file_name as thumbnailFileName from diary as d 
-            inner join 
-            ( 
-                select diary_id, thumbnail_file_name, update_at,  
-                row_number() over (partition by diary_id order by update_at desc) as n 
-                from image 
-            ) as x 
-            on d.id = x.diary_id
-            inner join diary_tag as dt on (dt.diary_id = d.id)
-            inner join tag as t on (t.id = dt.tag_id)
-            where d.user_id = :userId and t.tag_name like :tagName  and n <= 1
-            order by d.id desc, x.update_at desc""", nativeQuery = true)
-    List<DiarySearchSQLDTO.DiarySearchWithTagSQLDTO> getSearchResultContainTagName(@Param("userId") int id, @Param("tagName") String tagName);
 
     @Query(
             value = """
@@ -175,25 +144,46 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
             select u.categoryName, u.categoryType from
             	(
             		(
-            		    select t.tag_name as categoryName, count(t.tag_name) as c, 'TAG' as categoryType from diary as d1 
+            		    select binary(t.tag_name) as categoryName, count(t.tag_name) as c, 'TAG' as categoryType, t.tag_name as org from diary as d1
                         inner join diary_tag as dt on d1.id = dt.diary_id inner join tag as t on t.id = dt.tag_id 
-                        where d1.user_id = :userId and t.tag_name like :condition group by t.tag_name 
+                        where d1.user_id = :userId and t.tag_name like :condition group by binary(t.tag_name), t.id 
                     )
                     union all
                     (
-                        select d2.place as categoryName, count(d2.place) as c, 'PLACE' as categoryType from diary as d2
-                        where d2.place like :condition and d2.user_id = :userId group by d2.place
+                        select binary(d2.place) as categoryName, count(d2.place) as c, 'PLACE' as categoryType, d2.place as org from diary as d2
+                        where d2.place like :condition and d2.user_id = :userId group by binary(d2.place), d2.id 
                     )
                     union all
                     (
-                        select d1.diary_time as categoryName, count(d1.diary_time) as c, 'DIARY_TIME' as categoryType  from diary as d1 
-                        where d1.user_id = :userId and  d1.diary_time in :diaryTimeList group by d1.diary_time
+                        select binary(d1.diary_time) as categoryName, count(d1.diary_time) as c, 'DIARY_TIME' as categoryType, d1.diary_time as org  from diary as d1 
+                        where d1.user_id = :userId and  d1.diary_time in :diaryTimeList group by binary(d1.diary_time), d1.id 
                     )
             	) as u 
-            order by u.c desc """, nativeQuery = true)
-    List<SearchSQLDTO> getSearchResultWithCondition(@Param("userId") int userId, @Param("condition") String condition, @Param("diaryTimeList") List<String> diaryTimeList);
+            order by u.c desc, org, u.categoryName desc """, nativeQuery = true)
+    List<ConditionSearchSQLDTO> getSearchResultWithLowerCondition(@Param("userId") int userId, @Param("condition") String condition, @Param("diaryTimeList") List<String> diaryTimeList);
 
-
+    @Query(
+            value = """
+            select u.categoryName, u.categoryType from
+            	(
+            		(
+            		    select binary(t.tag_name) as categoryName, count(t.tag_name) as c, 'TAG' as categoryType, t.tag_name as org from diary as d1
+                        inner join diary_tag as dt on d1.id = dt.diary_id inner join tag as t on t.id = dt.tag_id 
+                        where d1.user_id = :userId and t.tag_name like :condition group by binary(t.tag_name), t.id 
+                    )
+                    union all
+                    (
+                        select binary(d2.place) as categoryName, count(d2.place) as c, 'PLACE' as categoryType, d2.place as org from diary as d2
+                        where d2.place like :condition and d2.user_id = :userId group by binary(d2.place), d2.id 
+                    )
+                    union all
+                    (
+                        select binary(d1.diary_time) as categoryName, count(d1.diary_time) as c, 'DIARY_TIME' as categoryType, d1.diary_time as org  from diary as d1 
+                        where d1.user_id = :userId and  d1.diary_time in :diaryTimeList group by binary(d1.diary_time), d1.id 
+                    )
+            	) as u 
+            order by u.c desc, org, u.categoryName asc """, nativeQuery = true)
+    List<ConditionSearchSQLDTO> getSearchResultWithUpperCondition(@Param("userId") int userId, @Param("condition") String condition, @Param("diaryTimeList") List<String> diaryTimeList);
 
 
 }
