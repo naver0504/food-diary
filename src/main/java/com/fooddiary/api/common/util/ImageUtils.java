@@ -11,9 +11,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -22,8 +23,8 @@ import java.util.UUID;
 @Slf4j
 public class ImageUtils {
 
-    public static final int THUMBNAIL_WIDTH = 44;
-    public static final int THUMBNAIL_HEIGHT = 44;
+    public static final int THUMBNAIL_WIDTH = 150;
+    public static final int THUMBNAIL_HEIGHT = 150;
 
     @NotNull
     public static String getDirPath(final String basePath, final User user) {
@@ -34,12 +35,11 @@ public class ImageUtils {
 
     @NotNull
     public static String createImageName(final String originalFilename) {
-        final String storeFilename = UUID.randomUUID().toString() + "_" + originalFilename;
+        final String storeFilename = UUID.randomUUID() + "_" + originalFilename;
         return storeFilename;
     }
 
-    public static ByteArrayOutputStream createThumbnailImage(final MultipartFile file, final User user, final AmazonS3 amazonS3, final String bucket, final String basePath) {
-        final String originalFilename = file.getOriginalFilename();
+    public static ByteArrayOutputStream createThumbnailImage(final MultipartFile file) throws IOException {
         final String fileContentType = getFileContentType(Objects.requireNonNull(file.getContentType()));
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         final BufferedImage originalImage;
@@ -50,8 +50,10 @@ public class ImageUtils {
             Thumbnails.of(originalImage)
                     .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
                     .keepAspectRatio(false)
+                    .outputQuality(1)
                     .outputFormat(fileContentType)
                     .toOutputStream(outputStream);
+
         } catch (IOException e) {
             log.error("IOException {}", e.getMessage());
             throw new RuntimeException(e.getMessage());
