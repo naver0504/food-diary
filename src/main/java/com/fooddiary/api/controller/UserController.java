@@ -84,12 +84,12 @@ public class UserController {
     @PostMapping("/resign")
     public ResponseEntity<Void> resign(HttpServletRequest request, @AuthenticationPrincipal User user)
             throws IOException, InterruptedException, GeneralSecurityException {
-        userService.resign(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY), user);
+        userService.resign(request.getHeader(UserConstants.LOGIN_FROM_KEY), request.getHeader(UserConstants.TOKEN_KEY), request.getHeader(UserConstants.REQUEST_AGENT_KEY), user);
         return ResponseEntity.ok(null);
     }
 
     @PostMapping("/delete-all-images")
-    public ResponseEntity<Void> deleteAllImage(HttpServletRequest request) {
+    public ResponseEntity<Void> deleteAllImages() {
         userResignService.deleteAllImages((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(null);
     }

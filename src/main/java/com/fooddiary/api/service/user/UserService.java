@@ -482,11 +482,11 @@ public class UserService {
         }
         return refreshTokenResponseDTO;
     }
-    public void resign(String loginFrom, String token, User user)
+    public void resign(String loginFrom, String token, String requestAgent, User user)
             throws IOException, InterruptedException {
         switch (loginFrom) {
             case GOOGLE -> {
-                unlinkGoogle(token);
+                if (requestAgent != null && requestAgent.contains("browser")) unlinkGoogle(token);
                 if (user != null) {
                     user.setStatus(Status.SUSPENDED);
                     userRepository.save(user);
@@ -494,7 +494,7 @@ public class UserService {
                 }
             }
             case KAKAO -> {
-                unlinkKakao(token);
+                if (requestAgent != null && requestAgent.contains("browser")) unlinkKakao(token);
                 if (user != null) {
                     user.setStatus(Status.SUSPENDED);
                     userRepository.save(user);
@@ -518,6 +518,7 @@ public class UserService {
     /**
      * 내 계정에 앱이 로그아웃, 이용해제 되었는지 확인
      * https://support.google.com/accounts/answer/3466521?hl=ko#remove-access
+     * https://developers.google.com/identity/protocols/oauth2/web-server?hl=ko#tokenrevoke
      * @param token
      * @throws IOException
      * @throws InterruptedException

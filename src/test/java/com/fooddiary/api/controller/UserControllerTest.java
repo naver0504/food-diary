@@ -17,6 +17,7 @@ import com.fooddiary.api.entity.diary.DiaryTime;
 import com.fooddiary.api.entity.user.Role;
 import com.fooddiary.api.entity.user.Status;
 import com.fooddiary.api.entity.user.User;
+import com.fooddiary.api.service.user.UserResignService;
 import com.fooddiary.api.service.user.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,6 +78,8 @@ public class UserControllerTest {
     Interceptor interceptor;
     @MockBean
     UserService userService;
+    @MockBean
+    UserResignService userResignService;
     @Autowired
     WebApplicationContext context;
     MockMvc mockMvc;
@@ -419,6 +422,24 @@ public class UserControllerTest {
                 .headers(makeHeader()))
                 .andExpectAll(status().isOk(),
                 content().json(objectMapper.writeValueAsString(userResponseDto))).andDo(document("check password"));
+    }
+
+    @Test
+    void resign() throws Exception {
+        doNothing().when(userService).resign(anyString(), anyString(), anyString(), any(User.class));
+        mockMvc.perform(post("/user/resign")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .headers(makeHeader()))
+                .andExpect(status().isOk()).andDo(document("resign"));
+    }
+
+    @Test
+    void deleteAllImages() throws Exception {
+        doNothing().when(userResignService).deleteAllImages(any(User.class));
+        mockMvc.perform(post("/user/delete-all-images")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .headers(makeHeader()))
+                .andExpect(status().isOk()).andDo(document("delete all images"));
     }
 
 }
