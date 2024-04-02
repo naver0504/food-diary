@@ -109,13 +109,18 @@ public class DiaryTransactionService {
                 diaryTag.getTag().getDiaryTags().remove(diaryTag);
             }
             diaryTagRepository.deleteAll(diaryTagMap.values());
-
-            diary.setMemo(diaryMemoRequestDTO.getMemo());
+            // not blank만 저장하도록 한다.
+            if (StringUtils.hasText(diaryMemoRequestDTO.getMemo())) {
+                diary.setMemo(diaryMemoRequestDTO.getMemo());
+            }
             diary.setDiaryTags(diaryTagList);
             diary.setCreateTime(DiaryTime.makeCreateTime(diary.getCreateTime().toLocalDate(), diaryMemoRequestDTO.getDiaryTime()));
             diary.setDiaryTime(diaryMemoRequestDTO.getDiaryTime());
             diary.setUpdateAt(LocalDateTime.now());
-            diary.setPlace(diaryMemoRequestDTO.getPlace());
+            // not blank만 저장하도록 한다.
+            if (StringUtils.hasText(diaryMemoRequestDTO.getPlace())) {
+                diary.setPlace(diaryMemoRequestDTO.getPlace());
+            }
             diary.setGeography(diaryMemoRequestDTO.getLongitude(), diaryMemoRequestDTO.getLatitude());
             diaryRepository.save(diary);
         }
