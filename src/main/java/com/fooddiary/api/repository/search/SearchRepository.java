@@ -159,7 +159,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
                         where d1.user_id = :userId and  d1.diary_time in :diaryTimeList group by binary(d1.diary_time), d1.id 
                     )
             	) as u 
-            order by u.c desc, org, u.categoryName desc """, nativeQuery = true)
+            order by u.c desc, u.categoryName desc, org""", nativeQuery = true)
     List<ConditionSearchSQLDTO> getSearchResultWithLowerCondition(@Param("userId") int userId, @Param("condition") String condition, @Param("diaryTimeList") List<String> diaryTimeList);
 
     @Query(
@@ -182,7 +182,7 @@ public interface SearchRepository extends JpaRepository<Diary, Integer> {
                         where d1.user_id = :userId and  d1.diary_time in :diaryTimeList group by binary(d1.diary_time), d1.id 
                     )
             	) as u 
-            order by u.c desc, org, u.categoryName asc """, nativeQuery = true)
+            order by u.c desc, u.categoryName asc, org """, nativeQuery = true)
     List<ConditionSearchSQLDTO> getSearchResultWithUpperCondition(@Param("userId") int userId, @Param("condition") String condition, @Param("diaryTimeList") List<String> diaryTimeList);
 
 
