@@ -25,7 +25,6 @@ ext {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
 	implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.471'
 	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-ses
@@ -38,6 +37,8 @@ dependencies {
 	implementation group: 'software.amazon.awssdk', name: 'dynamodb-enhanced', version: '2.20.77'
 	// https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
 	implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.3'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 
 	// https://mvnrepository.com/artifact/net.coobird/thumbnailator
 	implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.20'

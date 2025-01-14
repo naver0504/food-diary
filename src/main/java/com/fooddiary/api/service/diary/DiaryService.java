@@ -244,4 +244,12 @@ public class DiaryService {
         return homeDayResponseDTO;
     }
 
+
+    public Set<Integer> getEmptyMonthsInAYear(final int year, final User user) {
+        Set<Integer> emptyMonth = new HashSet<>();
+        for(int i=1; i<13; i++) emptyMonth.add(i);
+        emptyMonth.removeAll(diaryQuerydslRepository.getEmptyMonthsInAYear(year, user.getId()));
+        return emptyMonth;
+    }
+
 }

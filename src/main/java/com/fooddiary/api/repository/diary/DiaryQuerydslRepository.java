@@ -10,11 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static com.fooddiary.api.entity.diary.QDiary.diary;
 
@@ -108,5 +106,15 @@ return null;
         diaryStatisticsQueryDslReponseDTO.setTotalCount(totalSum.get());
 
         return diaryStatisticsQueryDslReponseDTO;
+    }
+
+    public Set<Integer> getEmptyMonthsInAYear(final int year, final int userId) {
+        return jpaQueryFactory.select(diary.createTime.month(), diary.createTime.month().count())
+                .from(diary)
+                .where(diary.user.id.eq(userId).and(diary.createTime.year().eq(year)))
+                .groupBy(diary.createTime.month())
+                .fetch()
+                .stream()
+                .map(tuple -> tuple.get(0, Integer.class)).collect(Collectors.toSet());
     }
 }

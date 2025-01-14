@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/diary")
@@ -146,5 +147,16 @@ public class DiaryController {
     public ResponseEntity<HomeDayResponseDTO> homeDay(@RequestParam final LocalDate date,
                                                       @AuthenticationPrincipal final User user) {
         return ResponseEntity.ok(diaryService.getHomeDay(date, user));
+    }
+
+    /**
+     * 선택한 년도에서 식사일기가 없는 달을 반환합니다.
+     * @param year
+     * @param user
+     * @return 식사일기가 없는 달 set
+     */
+    @GetMapping("{year}/empty-months")
+    public ResponseEntity<Set<Integer>> getEmptyMonthsInAYear(@PathVariable(value = "year") int year, @AuthenticationPrincipal final User user) {
+        return ResponseEntity.ok(diaryService.getEmptyMonthsInAYear(year, user));
     }
 }

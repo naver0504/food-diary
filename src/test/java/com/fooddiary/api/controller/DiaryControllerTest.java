@@ -39,10 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static com.fooddiary.api.common.util.HttpUtil.makeHeader;
 import static org.mockito.ArgumentMatchers.any;
@@ -299,6 +296,25 @@ public class DiaryControllerTest {
                         .headers(makeHeader()))
                 .andExpect(status().isOk())
                 .andDo(document("delete diary"));
+    }
+
+    @Test
+    void get_empty_months_in_a_year() throws Exception {
+        final Set<Integer> emptyMonthsInYear = Set.of(1,2,3,4,6,7,8,11);
+
+        when(diaryService.getEmptyMonthsInAYear(eq(2024), any(User.class))).thenReturn(emptyMonthsInYear);
+
+        final MockHttpServletResponse mockHttpServletResponse =  mockMvc.perform(get("/diary/{year}/empty-months", 2024)
+                        .headers(makeHeader()))
+                .andExpect(status().isOk())
+                .andDo(document("get empty months in a year"))
+                .andReturn()
+                .getResponse();
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Assertions.assertEquals(
+                mockHttpServletResponse.getContentAsString(StandardCharsets.UTF_8),
+                objectMapper.writeValueAsString(emptyMonthsInYear));
     }
 
     private void setMemo(DiaryMemoResponseDTO diaryMemoResponseDTO) {
